@@ -610,7 +610,9 @@ export class DisassemblerView implements ProjectView {
     }
     var startpc = pc < 0 ? pc-disasmWindow : Math.max(0, pc-disasmWindow); // for 32-bit PCs w/ hi bit set
     let text = disassemble(startpc, pc-startpc) + disassemble(pc, disasmWindow);
-    this.disasmview.setValue(text);
+    this.disasmview.dispatch({
+      changes: { from: 0, to: this.disasmview.state.doc.length, insert: text }
+    })
     if (moveCursor) {
       this.disasmview.setCursor(selline, 0);
     }

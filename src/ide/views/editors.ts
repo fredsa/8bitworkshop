@@ -432,7 +432,7 @@ export class SourceEditor implements ProjectView {
     this.refreshListing();
     this.refreshDebugState(moveCursor);
   }
-  
+
   tick() {
     this.refreshDebugState(false);
   }
@@ -564,7 +564,7 @@ export class DisassemblerView implements ProjectView {
     var startpc = pc < 0 ? pc-disasmWindow : Math.max(0, pc-disasmWindow); // for 32-bit PCs w/ hi bit set
     let text = disassemble(startpc, pc-startpc) + disassemble(pc, disasmWindow);
     this.disasmview.setValue(text);
-    if (moveCursor) { 
+    if (moveCursor) {
       this.disasmview.setCursor(selline, 0);
     }
     jumpToLine(this.disasmview, selline);
@@ -597,7 +597,7 @@ export class ListingView extends DisassemblerView implements ProjectView {
   refreshListing() {
     // lookup corresponding assemblyfile for this file, using listing
     var lst = current_project.getListingForFile(this.path);
-    // TODO? 
+    // TODO?
     this.assemblyfile = lst && (lst.assemblyfile || lst.sourcefile);
   }
 
@@ -608,7 +608,9 @@ export class ListingView extends DisassemblerView implements ProjectView {
     var asmtext = this.assemblyfile.text;
     var disasmview = this.getDisasmView();
     // TODO: sometimes it picks one without a text file
-    disasmview.setValue(asmtext);
+    this.disasmview.dispatch({
+      changes: {from: 0, to: this.disasmview.state.doc.length, insert: asmtext}
+    })
     // go to PC
     if (!platform.saveState) return;
     var state = lastDebugState || platform.saveState();

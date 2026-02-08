@@ -93,6 +93,12 @@ const MODEDEFS = {
   ecs: { theme: 'mbo', isAsm: true },
 }
 
+const ourTheme = EditorView.theme({
+  "&": {
+    maxHeight: "100%"
+  }
+});
+
 export var textMapFunctions = {
   input: null
 };

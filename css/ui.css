@@ -105,6 +105,9 @@
   background-color:#333;
   overflow:hidden;
 }
+div.editor {
+  height: 100%;
+}
 div.memdump {
   background-color: #333;
   color: #66ff66;

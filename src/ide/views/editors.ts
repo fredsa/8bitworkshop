@@ -6,8 +6,8 @@ import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
 
 import { basicSetup } from "codemirror"
-import { EditorView, WidgetType, Decoration, ViewUpdate } from "@codemirror/view"
-import { StateField, StateEffect } from "@codemirror/state"
+import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine } from "@codemirror/view"
+import { StateField, StateEffect, EditorState } from "@codemirror/state"
 import { oneDark } from "@codemirror/theme-one-dark";
 import { StreamLanguage } from "@codemirror/language"
 import { clike } from "@codemirror/legacy-modes/mode/clike";
@@ -147,7 +147,8 @@ export class SourceEditor implements ProjectView {
     var modedef = MODEDEFS[this.mode] || MODEDEFS.default;
     var isAsm = isAsmOverride || modedef.isAsm;
     var lineWrap = !!modedef.lineWrap;
-    var theme = modedef.theme || MODEDEFS.default.theme;
+    // var theme = modedef.theme || MODEDEFS.default.theme;
+    var theme = oneDark;
     var lineNums = !modedef.noLineNumbers && !isMobileDevice;
     if (qs['embed']) {
       lineNums = false; // no line numbers while embedded
@@ -162,8 +163,10 @@ export class SourceEditor implements ProjectView {
       extensions: [
         basicSetup,
         StreamLanguage.define(clike({ name: "our-clike" })),
-        oneDark,
+        theme,
+        ourTheme,
         EditorState.tabSize.of(8),
+        lineWrap ? EditorView.lineWrapping : [],
         EditorView.updateListener.of(update => {
           // update file in project (and recompile) when edits made
           this.editorChanged();
@@ -548,6 +551,10 @@ export class DisassemblerView implements ProjectView {
       extensions: [
         basicSetup,
         oneDark, // TODO Use 'cobalt' theme.
+        ourTheme,
+        EditorState.tabSize.of(8),
+        EditorState.readOnly.of(true),
+        highlightActiveLine(),
       ],
     });
   }

@@ -5,7 +5,12 @@ import { CodeAnalyzer } from "../../common/analysis";
 import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
 
-declare var CodeMirror;
+import { basicSetup } from "codemirror"
+import { keymap, EditorView } from "@codemirror/view"
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
+import { oneDark } from "@codemirror/theme-one-dark";
+import { StreamLanguage } from "@codemirror/language"
+import { clike } from "@codemirror/legacy-modes/mode/clike";
 
 // helper function for editor
 function jumpToLine(ed, i:number) {
@@ -75,7 +80,7 @@ export class SourceEditor implements ProjectView {
     this.newEditor(div, asmOverride);
     if (text) {
       this.setText(text); // TODO: this calls setCode() and builds... it shouldn't
-      this.editor.setSelection({line:0,ch:0}, {line:0,ch:0}, {scroll:true}); // move cursor to start
+      // this.editor.dispatch({selection:EditorSelection.range(0, 42), scrollIntoView: true});
     }
     this.setupEditor();
     if (current_project.getToolForFilename(this.path).startsWith("remote:")) {
@@ -103,21 +108,26 @@ export class SourceEditor implements ProjectView {
     var gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-info"];
     if (isAsm) gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-bytes", "gutter-clock", "gutter-info"];
     if (modedef.noGutters || isMobileDevice) gutters = ["gutter-info"];
-    this.editor = CodeMirror(parent, {
-      theme: theme,
-      lineNumbers: lineNums,
-      matchBrackets: true,
-      tabSize: 8,
-      indentAuto: true,
-      lineWrapping: lineWrap,
-      gutters: gutters
+    this.editor = new EditorView({
+      parent: parent,
+      extensions: [
+        basicSetup,
+        history(),
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        StreamLanguage.define(clike({name:"our-clike"})),
+        oneDark,
+        EditorView.updateListener.of(update => {
+          // update file in project (and recompile) when edits made
+          this.editorChanged();
+        }),
+      ],
     });
   }
 
   editorChanged() {
     clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout( () => {
-      current_project.updateFile(this.path, this.editor.getValue());
+      current_project.updateFile(this.path, this.editor.state.doc.toString());
     }, this.refreshDelayMsec);
     if (this.markHighlight) {
       this.markHighlight.clear();
@@ -126,10 +136,6 @@ export class SourceEditor implements ProjectView {
   }
 
   setupEditor() {
-    // update file in project (and recompile) when edits made
-    this.editor.on('changes', (ed, changeobj) => {
-      this.editorChanged();
-    });
     // inspect symbol when it's highlighted (double-click)
     this.editor.on('cursorActivity', (ed) => {
       this.inspectUnderCursor();
@@ -175,9 +181,11 @@ export class SourceEditor implements ProjectView {
 
   setText(text:string) {
     var i,j;
-    var oldtext = this.editor.getValue();
+    var oldtext = this.editor.state.doc.toString();
     if (oldtext != text) {
-      this.editor.setValue(text);
+      this.editor.dispatch({
+        changes: {from: 0, to: this.editor.state.doc.length, insert: text}
+      });
       /*
       // find minimum range to undo
       for (i=0; i<oldtext.length && i<text.length && text[i] == oldtext[i]; i++) { }
@@ -211,7 +219,7 @@ export class SourceEditor implements ProjectView {
   }
 
   getValue() : string {
-    return this.editor.getValue();
+    return this.editor.state.doc.toString();
   }
 
   getPath() : string { return this.path; }
@@ -488,12 +496,12 @@ export class DisassemblerView implements ProjectView {
   }
 
   newEditor(parent : HTMLElement) {
-    this.disasmview = CodeMirror(parent, {
-      mode: 'z80', // TODO: pick correct one
-      theme: 'cobalt',
-      tabSize: 8,
-      readOnly: true,
-      styleActiveLine: true
+    this.disasmview = new EditorView({
+      parent: parent,
+      extensions: [
+        basicSetup,
+        oneDark, // TODO Use 'cobalt' theme.
+      ],
     });
   }
 

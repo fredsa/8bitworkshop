@@ -33,14 +33,12 @@ class ValueWidget extends WidgetType {
 const showValueEffect = StateEffect.define<{pos: number, val: any} | null>();
 
 const valueDecorationField = StateField.define({
-  create() { console.log("create"); return Decoration.none },
+  create() { return Decoration.none },
   update(decorations, tr) {
-    console.log("update", decorations, tr);
     // Map existing decorations if the document changes
     decorations = decorations.map(tr.changes);
 
     for (let e of tr.effects) {
-      console.log("effect", e);
       if (e.is(showValueEffect)) {
         if (e.value === null || !e.value) {
           return Decoration.none; // Clear decorations

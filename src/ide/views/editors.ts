@@ -155,8 +155,6 @@ export class SourceEditor implements ProjectView {
       doc: text, // TODO: this calls setCode() and builds... it shouldn't
       extensions: [
         basicSetup,
-        // history(),
-        // keymap.of([...defaultKeymap, ...historyKeymap]),
         StreamLanguage.define(clike({ name: "our-clike" })),
         oneDark,
         EditorView.updateListener.of(update => {

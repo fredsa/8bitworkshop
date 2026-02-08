@@ -8,9 +8,64 @@ import { hex, rpad } from "../../common/util";
 import { basicSetup } from "codemirror"
 import { keymap, EditorView } from "@codemirror/view"
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
+import { EditorSelection, EditorState, EditorStateConfig, StateField, StateEffect } from "@codemirror/state"
 import { oneDark } from "@codemirror/theme-one-dark";
 import { StreamLanguage } from "@codemirror/language"
 import { clike } from "@codemirror/legacy-modes/mode/clike";
+
+// Decorator widget to show values.
+class ValueWidget extends WidgetType {
+  value: string;
+
+  constructor(value: string) {
+    super()
+    this.value = value
+  }
+
+  toDOM() {
+    let span = document.createElement("span")
+    span.textContent = ` : ${this.value}`
+    span.style = `
+    font-size: 0.8em;
+    color: #777;
+    background: #eee;
+    padding: 2px 4px;
+    border-radius: 3px;
+    margin-left: 4px;
+    `
+    return span
+  }
+}
+
+// Effect to pass the position and value to the state.
+const showValueEffect = StateEffect.define<{pos: number, val: any} | null>();
+
+const valueDecorationField = StateField.define({
+  create() { console.log("create"); return Decoration.none },
+  update(decorations, tr) {
+    console.log("update", decorations, tr);
+    // Map existing decorations if the document changes
+    decorations = decorations.map(tr.changes);
+
+    for (let e of tr.effects) {
+      console.log("effect", e);
+      if (e.is(showValueEffect)) {
+        if (e.value === null || !e.value) {
+          return Decoration.none; // Clear decorations
+        }
+        // Add a widget at the end of the selection
+        return Decoration.set([
+          Decoration.widget({
+            widget: new ValueWidget(e.value.val),
+            side: 1 // Appears after the text
+          }).range(e.value.pos)
+        ])
+      }
+    }
+    return decorations;
+  },
+  provide: f => EditorView.decorations.from(f),
+});
 
 // helper function for editor
 function jumpToLine(ed, i:number) {
@@ -119,6 +174,15 @@ export class SourceEditor implements ProjectView {
         EditorView.updateListener.of(update => {
           // update file in project (and recompile) when edits made
           this.editorChanged();
+
+        }),
+
+        // inspect symbol when it's highlighted (double-click)
+        valueDecorationField,
+        EditorView.updateListener.of(update => {
+          if (update.selectionSet) {
+            this.inspectUnderCursor(update);
+          }
         }),
       ],
     });
@@ -136,10 +200,6 @@ export class SourceEditor implements ProjectView {
   }
 
   setupEditor() {
-    // inspect symbol when it's highlighted (double-click)
-    this.editor.on('cursorActivity', (ed) => {
-      this.inspectUnderCursor();
-    });
     // gutter clicked
     this.editor.on("gutterClick", (cm, n) => {
       this.toggleBreakpoint(n);
@@ -152,14 +212,24 @@ export class SourceEditor implements ProjectView {
     });
   }
 
-  inspectUnderCursor() {
-    var start = this.editor.getCursor(true);
-    var end = this.editor.getCursor(false);
-    if (start.line == end.line && start.ch < end.ch && end.ch-start.ch < 80) {
-      var name = this.editor.getSelection();
-      this.inspect(name);
+  inspectUnderCursor(update: ViewUpdate) {
+    // TODO: handle multi-select
+    const range = update.state.selection.main;
+    const selectedText = update.state.sliceDoc(range.from, range.to).trim();
+
+    var result;
+    if (platform.inspect) {
+      result = platform.inspect(selectedText);
+    }
+
+    if (!range.empty && result && result.length < 80) {
+      update.view.dispatch({
+        effects: showValueEffect.of({ pos: range.to, val: result })
+      });
     } else {
-      this.inspect(null);
+      update.view.dispatch({
+        effects: showValueEffect.of(null)
+      });
     }
   }
 

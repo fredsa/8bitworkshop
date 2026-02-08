@@ -75,7 +75,7 @@ export class FileWorkingStore implements WorkingStore {
     var entry = this.workfs[path];
     if (!entry || !compareData(entry.data, data) || entry.encoding != encoding) {
       this.workfs[path] = entry = { path: path, data: data, encoding: encoding, ts: this.newVersion() };
-      console.log('+++', entry.path, entry.encoding, entry.data.length, entry.ts);
+      // console.log('+++', entry.path, entry.encoding, entry.data.length, entry.ts);
     }
     return entry;
   }
@@ -239,7 +239,10 @@ export const builder = new Builder();
 
 var _t1;
 export function starttime() { _t1 = new Date(); }
-export function endtime(msg) { var _t2 = new Date(); console.log(msg, _t2.getTime() - _t1.getTime(), "ms"); }
+export function endtime(msg) {
+  var _t2 = new Date();
+  // console.log(msg, _t2.getTime() - _t1.getTime(), "ms");
+}
 
 ///
 
@@ -268,7 +271,7 @@ export function populateEntry(fs, path: string, entry: FileEntry, options: Build
   fs.writeFile(path, data, { encoding: entry.encoding });
   var time = new Date(entry.ts);
   fs.utime(path, time, time);
-  console.log("<<<", path, entry.data.length);
+  // console.log("<<<", path, entry.data.length);
 }
 
 // can call multiple times (from populateFiles)
@@ -340,7 +343,7 @@ export function populateExtraFiles(step: BuildStep, fs, extrafiles) {
         var data = new Uint8Array(xhr.response);
         fs.writeFile(xfn, data, { encoding: 'binary' });
         putWorkFile(xfn, data);
-        console.log(":::", xfn, data.length);
+        // console.log(":::", xfn, data.length);
       } else {
         throw Error("Could not load extra file " + xpath);
       }
@@ -356,7 +359,7 @@ export function staleFiles(step: BuildStep, targets: string[]) {
     if (!entry || step.maxts > entry.ts)
       return true;
   }
-  console.log("unchanged", step.maxts, targets);
+  // console.log("unchanged", step.maxts, targets);
   return false;
 }
 
@@ -368,7 +371,7 @@ export function anyTargetChanged(step: BuildStep, targets: string[]) {
     if (!entry || entry.ts > step.maxts)
       return true;
   }
-  console.log("unchanged", step.maxts, targets);
+  // console.log("unchanged", step.maxts, targets);
   return false;
 }
 
@@ -395,11 +398,11 @@ export function fixParamsWithDefines(path: string, params) {
         var index = ident2index[ident];
         if (index >= 0) {
           libargs[index] = ident + "=" + value;
-          console.log('Using libargs', index, libargs[index]);
+          // console.log('Using libargs', index, libargs[index]);
           // TODO: MMC3 mapper switch
           if (ident == 'NES_MAPPER' && value == '4') {
             params.cfgfile = 'nesbanked.cfg';
-            console.log("using config file", params.cfgfile);
+            // console.log("using config file", params.cfgfile);
           }
         } else if (ident == 'CFGFILE' && value) {
           params.cfgfile = value;

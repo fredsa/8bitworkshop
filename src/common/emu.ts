@@ -76,16 +76,16 @@ export class RasterVideo {
     this.height = height;
     this.options = options;
   }
-  
+
   canvas : HTMLCanvasElement;
   ctx : CanvasRenderingContext2D;
   imageData : ImageData;
   datau32 : Uint32Array;
   vcanvas : JQuery;
-  
+
   paddle_x = 255;
   paddle_y = 255;
-  
+
   setRotate(rotate:number) {
     var canvas = this.canvas;
     if (rotate) {
@@ -158,7 +158,7 @@ export class VectorVideo extends RasterVideo {
   gamma = 0.8;
   sx : number;
   sy : number;
-  
+
   create() {
     super.create();
     this.sx = this.width/1024.0;
@@ -252,7 +252,7 @@ export var useRequestAnimationFrame : boolean = false;
 
 export class AnimationTimer {
 
-  callback;  
+  callback;
   running : boolean = false;
   pulsing : boolean = false;
   nextts = 0;
@@ -261,7 +261,7 @@ export class AnimationTimer {
   frameRate;
   intervalMsec;
   useReqAnimFrame = useRequestAnimationFrame && typeof window.requestAnimationFrame === 'function'; // need for unit test
-  
+
   constructor(frequencyHz:number, callback:() => void) {
     this.frameRate = frequencyHz;
     this.intervalMsec = 1000.0 / frequencyHz;
@@ -283,7 +283,7 @@ export class AnimationTimer {
     else
       setTimeout(fn, msec);
   }
-  
+
   nextFrame(ts:number) {
     if (ts > this.nextts) {
       if (this.running) {
@@ -292,7 +292,7 @@ export class AnimationTimer {
       if (this.nframes == 0)
         this.startts = ts;
       if (this.nframes++ == 300) {
-        console.log("Avg framerate: " + this.nframes*1000/(ts-this.startts) + " fps");
+        // console.log("Avg framerate: " + this.nframes*1000/(ts-this.startts) + " fps");
       }
     }
     this.nextts += this.intervalMsec;
@@ -503,8 +503,8 @@ export const Keys = {
 
 function _metakeyflags(e) {
   return (e.shiftKey?KeyFlags.Shift:0) |
-        (e.ctrlKey?KeyFlags.Ctrl:0) | 
-        (e.altKey?KeyFlags.Alt:0) | 
+        (e.ctrlKey?KeyFlags.Ctrl:0) |
+        (e.altKey?KeyFlags.Alt:0) |
         (e.metaKey?KeyFlags.Meta:0);
 }
 
@@ -725,7 +725,7 @@ export class VirtualTextScroller {
     parent.appendChild(div);
     this.maindiv = div;
   }
-  
+
   create(workspace : HTMLElement, maxRowCount : number, fn : (row:number) => VirtualTextLine) {
     this.getLineAt = fn;
     this.memorylist = new VirtualList({

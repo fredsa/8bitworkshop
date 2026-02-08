@@ -12,8 +12,34 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { StreamLanguage } from "@codemirror/language"
 import { clike } from "@codemirror/legacy-modes/mode/clike";
 
+// Highlight program counter line.
+const currentPcEffect = StateEffect.define<number | null>();
+
+const currentPcDecoration = Decoration.line({
+  attributes: { class: "cm-currentpc" }
+});
+
+const currentPcLineField = StateField.define({
+  create() { return Decoration.none },
+  update(lines, tr) {
+    // Map existing decorations across document changes.
+    lines = lines.map(tr.changes)
+
+    for (let e of tr.effects) {
+      if (e.is(currentPcEffect)) {
+        if (e.value === null) return Decoration.none;
+
+        const line = tr.state.doc.line(e.value);
+        return Decoration.set([currentPcDecoration.range(line.from)]);
+      }
+    }
+    return lines;
+  },
+  provide: f => EditorView.decorations.from(f),
+});
+
 // Decorator widget to show values.
-class ValueWidget extends WidgetType {
+class ShowValueWidget extends WidgetType {
   constructor(readonly value: string) { super() }
 
   toDOM() {
@@ -32,21 +58,20 @@ class ValueWidget extends WidgetType {
 // Effect to pass the position and value to the state.
 const showValueEffect = StateEffect.define<{ pos: number, val: any } | null>();
 
-const valueDecorationField = StateField.define({
+const showValueDecorationField = StateField.define({
   create() { return Decoration.none },
   update(decorations, tr) {
-    // Map existing decorations if the document changes
+    // Map existing decorations if the document changes.
     decorations = decorations.map(tr.changes);
 
     for (let e of tr.effects) {
       if (e.is(showValueEffect)) {
         if (e.value === null || !e.value) {
-          return Decoration.none; // Clear decorations
+          return Decoration.none;
         }
-        // Add a widget at the end of the selection
         return Decoration.set([
           Decoration.widget({
-            widget: new ValueWidget(e.value.val),
+            widget: new ShowValueWidget(e.value.val),
             block: true,
             side: 1 // Appears after the text
           }).range(e.value.pos)
@@ -59,10 +84,9 @@ const valueDecorationField = StateField.define({
 });
 
 // helper function for editor
-function jumpToLine(ed, i: number) {
-  var t = ed.charCoords({ line: i, ch: 0 }, "local").top;
-  var middleHeight = ed.getScrollerElement().offsetHeight / 2;
-  ed.scrollTo(null, t - middleHeight - 5);
+function jumpToLine(ed: EditorView, i: number) {
+  const line = ed.state.doc.line(i);
+  ed.dispatch({ effects: EditorView.scrollIntoView(line.from, { y: "center" }) });
 }
 
 function createTextSpan(text: string, className: string): HTMLElement {
@@ -96,7 +120,28 @@ const MODEDEFS = {
 const ourTheme = EditorView.theme({
   "&": {
     maxHeight: "100%"
-  }
+  },
+  ".cm-currentpc": {
+    backgroundColor: "#7e2a70",
+  },
+  ".currentpc-marker": {
+    color: "#ff66ee",
+  },
+  ".currentpc-span-blocked": {
+    backgroundColor: "#7e2a70",
+  },
+  ".currentpc-marker-blocked": {
+    color: "#ffee33",
+  },
+});
+
+const disassemblyTheme = EditorView.theme({
+  "&": {
+    maxHeight: "100%"
+  },
+  ".cm-activeLine": {
+    backgroundColor: "#003399",
+  },
 });
 
 export var textMapFunctions = {
@@ -115,8 +160,6 @@ export class SourceEditor implements ProjectView {
   dirtylisting = true;
   sourcefile: SourceFile;
   currentDebugLine: SourceLocation;
-  markCurrentPC; // TextMarker
-  markHighlight; // TextMarker
   errormsgs = [];
   errorwidgets = [];
   errormarks = [];
@@ -173,8 +216,10 @@ export class SourceEditor implements ProjectView {
 
         }),
 
+        currentPcLineField,
+
         // inspect symbol when it's highlighted (double-click)
-        valueDecorationField,
+        showValueDecorationField,
         EditorView.updateListener.of(update => {
           if (update.selectionSet) {
             this.inspectUnderCursor(update);
@@ -189,23 +234,23 @@ export class SourceEditor implements ProjectView {
     this.updateTimer = setTimeout(() => {
       current_project.updateFile(this.path, this.editor.state.doc.toString());
     }, this.refreshDelayMsec);
-    if (this.markHighlight) {
-      this.markHighlight.clear();
-      this.markHighlight = null;
-    }
+    // if (this.markHighlight) {
+    //   this.markHighlight.clear();
+    //   this.markHighlight = null;
+    // }
   }
 
   setupEditor() {
-    // gutter clicked
-    this.editor.on("gutterClick", (cm, n) => {
-      this.toggleBreakpoint(n);
-    });
-    // set editor mode for highlighting, etc
-    this.editor.setOption("mode", this.mode);
-    // change text?
-    this.editor.on('beforeChange', (cm, chgobj) => {
-      if (textMapFunctions.input && chgobj.text) chgobj.text = chgobj.text.map(textMapFunctions.input);
-    });
+    // // gutter clicked
+    // this.editor.on("gutterClick", (cm, n) => {
+    //   this.toggleBreakpoint(n);
+    // });
+    // // set editor mode for highlighting, etc
+    // this.editor.setOption("mode", this.mode);
+    // // change text?
+    // this.editor.on('beforeChange', (cm, chgobj) => {
+    //   if (textMapFunctions.input && chgobj.text) chgobj.text = chgobj.text.map(textMapFunctions.input);
+    // });
   }
 
   inspectUnderCursor(update: ViewUpdate) {
@@ -245,7 +290,7 @@ export class SourceEditor implements ProjectView {
       */
       // clear history if setting empty editor
       if (oldtext == '') {
-        this.editor.clearHistory();
+        // TODO this.editor.clearHistory();
       }
     }
   }
@@ -259,12 +304,14 @@ export class SourceEditor implements ProjectView {
     //this.editor.setSelection({line:start, ch:0}, {line:end, ch:0});
     var cls = 'hilite-span'
     var markOpts = { className: cls, inclusiveLeft: true };
-    this.markHighlight = this.editor.markText({ line: start, ch: 0 }, { line: end, ch: 0 }, markOpts);
-    this.editor.scrollIntoView({ from: { line: start, ch: 0 }, to: { line: end, ch: 0 } });
+    // this.markHighlight = this.editor.markText({ line: start, ch: 0 }, { line: end, ch: 0 }, markOpts);
+    // this.editor.scrollIntoView({ from: { line: start, ch: 0 }, to: { line: end, ch: 0 } });
   }
 
   replaceSelection(start: number, end: number, text: string) {
-    this.editor.setSelection(this.editor.posFromIndex(start), this.editor.posFromIndex(end));
+    // this.editor.setSelection(this.editor.posFromIndex(start), this.editor.posFromIndex(end));
+    // TODO:verify
+    this.editor.dispatch({ selection: { start, end } });
     this.editor.replaceSelection(text);
   }
 
@@ -295,7 +342,7 @@ export class SourceEditor implements ProjectView {
     var div = document.createElement("div");
     div.setAttribute("class", "tooltipbox tooltiperror");
     div.appendChild(document.createTextNode("\u24cd"));
-    this.editor.setGutterMarker(line, "gutter-info", div);
+    // this.editor.setGutterMarker(line, "gutter-info", div);
     this.errormsgs.push({ line: line, msg: msg });
     // expand line widgets when mousing over errors
     $(div).mouseover((e) => {
@@ -327,7 +374,7 @@ export class SourceEditor implements ProjectView {
   clearErrors() {
     this.dirtylisting = true;
     // clear line widgets
-    this.editor.clearGutter("gutter-info");
+    // this.editor.clearGutter("gutter-info");
     this.errormsgs = [];
     while (this.errorwidgets.length) this.errorwidgets.shift().clear();
     while (this.errormarks.length) this.errormarks.shift().clear();
@@ -339,28 +386,28 @@ export class SourceEditor implements ProjectView {
     // update editor annotations
     // TODO: recreate editor if gutter-bytes is used (verilog)
     this.clearErrors();
-    this.editor.clearGutter("gutter-bytes");
-    this.editor.clearGutter("gutter-offset");
-    this.editor.clearGutter("gutter-clock");
+    // this.editor.clearGutter("gutter-bytes");
+    // this.editor.clearGutter("gutter-offset");
+    // this.editor.clearGutter("gutter-clock");
     var lstlines = this.sourcefile.lines || [];
     for (var info of lstlines) {
       //if (info.path && info.path != this.path) continue;
       if (info.offset >= 0) {
-        this.setGutter("gutter-offset", info.line - 1, hex(info.offset & 0xffff, 4));
+        // this.setGutter("gutter-offset", info.line-1, hex(info.offset&0xffff,4));
       }
       if (info.insns) {
         var insnstr = info.insns.length > 9 ? ("...") : info.insns;
-        this.setGutter("gutter-bytes", info.line - 1, insnstr);
+        // this.setGutter("gutter-bytes", info.line-1, insnstr);
         if (info.iscode) {
           // TODO: labels trick this part?
           if (info.cycles) {
-            this.setGutter("gutter-clock", info.line - 1, info.cycles + "");
+            // this.setGutter("gutter-clock", info.line-1, info.cycles+"");
           } else if (platform.getOpcodeMetadata) {
             var opcode = parseInt(info.insns.split(" ")[0], 16);
             var meta = platform.getOpcodeMetadata(opcode, info.offset);
             if (meta && meta.minCycles) {
               var clockstr = meta.minCycles + "";
-              this.setGutter("gutter-clock", info.line - 1, clockstr);
+              // this.setGutter("gutter-clock", info.line-1, clockstr);
             }
           }
         }
@@ -374,16 +421,16 @@ export class SourceEditor implements ProjectView {
       // do not replace existing marker
     } else {
       var textel = document.createTextNode(text);
-      this.editor.setGutterMarker(line, type, textel);
+      // this.editor.setGutterMarker(line, type, textel);
     }
   }
 
   setGutterBytes(line: number, s: string) {
-    this.setGutter("gutter-bytes", line - 1, s);
+    // this.setGutter("gutter-bytes", line-1, s);
   }
 
   setTimingResult(result: CodeAnalyzer): void {
-    this.editor.clearGutter("gutter-bytes");
+    // this.editor.clearGutter("gutter-bytes");
     if (this.sourcefile == null) return;
     // show the lines
     for (const line of Object.keys(this.sourcefile.line2offset)) {
@@ -408,39 +455,49 @@ export class SourceEditor implements ProjectView {
     var blocked = platform.isBlocked && platform.isBlocked();
 
     var addCurrentMarker = (line: SourceLocation) => {
-      var div = document.createElement("div");
-      var cls = blocked ? 'currentpc-marker-blocked' : 'currentpc-marker';
-      div.classList.add(cls);
-      div.appendChild(document.createTextNode("\u25b6"));
-      this.editor.setGutterMarker(line.line - 1, "gutter-info", div);
+      // var div = document.createElement("div");
+      // var cls = blocked ? 'currentpc-marker-blocked' : 'currentpc-marker';
+      // div.classList.add(cls);
+      // div.appendChild(document.createTextNode("\u25b6"));
+      // this.editor.setGutterMarker(line.line - 1, "gutter-info", div);
+
+      this.editor.dispatch({
+        effects: [
+          currentPcEffect.of(line.line),
+          // Optional: follow the execution point
+          EditorView.scrollIntoView(this.editor.state.doc.line(line.line).from, { y: "center" }),
+        ]
+      });
+
     }
 
     this.clearCurrentLine(moveCursor);
     if (line) {
       addCurrentMarker(line);
-      if (moveCursor) {
-        this.editor.setCursor({ line: line.line - 1, ch: line.start || 0 }, { scroll: true });
-      }
-      var cls = blocked ? 'currentpc-span-blocked' : 'currentpc-span';
-      var markOpts = { className: cls, inclusiveLeft: true };
-      if (line.start || line.end)
-        this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: line.start }, { line: line.line - 1, ch: line.end || line.start + 1 }, markOpts);
-      else
-        this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: 0 }, { line: line.line, ch: 0 }, markOpts);
-      this.currentDebugLine = line;
+      //   if (moveCursor) {
+      //     this.editor.setCursor({line:line.line-1,ch:line.start||0}, {scroll:true});
+      //   }
+      //   var cls = blocked ? 'currentpc-span-blocked' : 'currentpc-span';
+      //   var markOpts = { className: cls, inclusiveLeft: true };
+      //   if (line.start || line.end)
+      //     this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: line.start }, { line: line.line - 1, ch: line.end || line.start + 1 }, markOpts);
+      //   else
+      //     this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: 0 }, { line: line.line, ch: 0 }, markOpts);
+      //   this.currentDebugLine = line;
     }
   }
 
   clearCurrentLine(moveCursor: boolean) {
-    if (this.currentDebugLine) {
-      this.editor.clearGutter("gutter-info");
-      if (moveCursor) this.editor.setSelection(this.editor.getCursor());
-      this.currentDebugLine = null;
-    }
-    if (this.markCurrentPC) {
-      this.markCurrentPC.clear();
-      this.markCurrentPC = null;
-    }
+    // if (this.currentDebugLine) {
+    //   this.editor.clearGutter("gutter-info");
+    //   if (moveCursor) this.editor.setSelection(this.editor.getCursor());
+    //   this.currentDebugLine = null;
+    // }
+    // if (this.markCurrentPC) {
+    //   this.markCurrentPC.clear();
+    //   this.markCurrentPC = null;
+    // }
+    this.editor.dispatch({ effects: currentPcEffect.of(null) });
   }
 
   getActiveLine(): SourceLocation {
@@ -550,12 +607,14 @@ export class DisassemblerView implements ProjectView {
       parent: parent,
       extensions: [
         basicSetup,
+        disassemblyTheme,
         oneDark, // TODO Use 'cobalt' theme.
-        ourTheme,
+        currentPcLineField,
         EditorState.tabSize.of(8),
         EditorState.readOnly.of(true),
         highlightActiveLine(),
       ],
+      // mode: 'z80', // TODO: pick correct one
     });
   }
 
@@ -621,20 +680,23 @@ export class DisassemblerView implements ProjectView {
       changes: { from: 0, to: this.disasmview.state.doc.length, insert: text }
     })
     if (moveCursor) {
-      this.disasmview.setCursor(selline, 0);
+      const line = this.disasmview.state.doc.line(selline);
+      this.disasmview.dispatch({
+        selection: { anchor: line.from, head: line.from }
+      });
     }
     jumpToLine(this.disasmview, selline);
   }
 
   getCursorPC(): number {
-    var line = this.disasmview.getCursor().line;
-    if (line >= 0) {
-      var toks = this.disasmview.getLine(line).trim().split(/\s+/);
-      if (toks && toks.length >= 1) {
-        var pc = parseInt(toks[0], 16);
-        if (pc >= 0) return pc;
-      }
-    }
+    // var line = this.disasmview.getCursor().line;
+    // if (line >= 0) {
+    //   var toks = this.disasmview.getLine(line).trim().split(/\s+/);
+    //   if (toks && toks.length >= 1) {
+    //     var pc = parseInt(toks[0], 16);
+    //     if (pc >= 0) return pc;
+    //   }
+    // }
     return -1;
   }
 }
@@ -676,7 +738,7 @@ export class ListingView extends DisassemblerView implements ProjectView {
       if (res) {
         // set cursor while debugging
         if (moveCursor) {
-          disasmview.setCursor(res.line - 1, 0);
+          // disasmview.setCursor(res.line-1, 0);
         }
         jumpToLine(disasmview, res.line - 1);
       }

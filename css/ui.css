@@ -18,18 +18,6 @@
   text-decoration: underline;
   cursor: cell;
 }
-.currentpc-span {
-  background-color: #7e2a70;
-}
-.currentpc-marker {
-  color: #ff66ee;
-}
-.currentpc-span-blocked {
-  background-color: #7e2a70;
-}
-.currentpc-marker-blocked {
-  color: #ffee33;
-}
 .hilite-span {
   background-color: #003399;
 }
@@ -615,18 +603,18 @@ div.asset_toolbar {
   font-size: 10pt;
   line-height: 1.2;
 }
-.transcript {  
+.transcript {
   background-color: #fff;
   width: 100%;
   padding: 1.25em;
   user-select: text;
   font-family: Verdana, Geneva, sans-serif;
 }
-.transcript-bottom {  
+.transcript-bottom {
   background-color: #fff;
   width: 100%;
 }
-.transcript-split {  
+.transcript-split {
   padding: 0.5em;
   background: #eee;
   box-shadow: 0 8px 6px -6px RGBA(0,0,0,0.3);

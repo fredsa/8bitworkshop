@@ -30,7 +30,7 @@ class ValueWidget extends WidgetType {
 }
 
 // Effect to pass the position and value to the state.
-const showValueEffect = StateEffect.define<{pos: number, val: any} | null>();
+const showValueEffect = StateEffect.define<{ pos: number, val: any } | null>();
 
 const valueDecorationField = StateField.define({
   create() { return Decoration.none },
@@ -59,13 +59,13 @@ const valueDecorationField = StateField.define({
 });
 
 // helper function for editor
-function jumpToLine(ed, i:number) {
-  var t = ed.charCoords({line: i, ch: 0}, "local").top;
+function jumpToLine(ed, i: number) {
+  var t = ed.charCoords({ line: i, ch: 0 }, "local").top;
   var middleHeight = ed.getScrollerElement().offsetHeight / 2;
   ed.scrollTo(null, t - middleHeight - 5);
 }
 
-function createTextSpan(text:string, className:string) : HTMLElement {
+function createTextSpan(text: string, className: string): HTMLElement {
   var span = document.createElement("span");
   span.setAttribute("class", className);
   span.appendChild(document.createTextNode(text));
@@ -104,17 +104,17 @@ export var textMapFunctions = {
 };
 
 export class SourceEditor implements ProjectView {
-  constructor(path:string, mode:string) {
+  constructor(path: string, mode: string) {
     this.path = path;
     this.mode = mode;
   }
-  path : string;
-  mode : string;
+  path: string;
+  mode: string;
   editor;
   updateTimer = null;
   dirtylisting = true;
-  sourcefile : SourceFile;
-  currentDebugLine : SourceLocation;
+  sourcefile: SourceFile;
+  currentDebugLine: SourceLocation;
   markCurrentPC; // TextMarker
   markHighlight; // TextMarker
   errormsgs = [];
@@ -123,12 +123,12 @@ export class SourceEditor implements ProjectView {
   inspectWidget;
   refreshDelayMsec = 300;
 
-  createDiv(parent:HTMLElement) {
+  createDiv(parent: HTMLElement) {
     var div = document.createElement('div');
     div.setAttribute("class", "editor");
     parent.appendChild(div);
     var text = current_project.getFile(this.path) as string;
-    var asmOverride = text && this.mode=='verilog' && /__asm\b([\s\S]+?)\b__endasm\b/.test(text);
+    var asmOverride = text && this.mode == 'verilog' && /__asm\b([\s\S]+?)\b__endasm\b/.test(text);
     this.newEditor(div, text, asmOverride);
     this.setupEditor();
     if (current_project.getToolForFilename(this.path).startsWith("remote:")) {
@@ -143,7 +143,7 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  newEditor(parent:HTMLElement, text:string, isAsmOverride?:boolean) {
+  newEditor(parent: HTMLElement, text: string, isAsmOverride?: boolean) {
     var modedef = MODEDEFS[this.mode] || MODEDEFS.default;
     var isAsm = isAsmOverride || modedef.isAsm;
     var lineWrap = !!modedef.lineWrap;
@@ -186,7 +186,7 @@ export class SourceEditor implements ProjectView {
 
   editorChanged() {
     clearTimeout(this.updateTimer);
-    this.updateTimer = setTimeout( () => {
+    this.updateTimer = setTimeout(() => {
       current_project.updateFile(this.path, this.editor.state.doc.toString());
     }, this.refreshDelayMsec);
     if (this.markHighlight) {
@@ -229,12 +229,12 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  setText(text:string) {
-    var i,j;
+  setText(text: string) {
+    var i, j;
     var oldtext = this.editor.state.doc.toString();
     if (oldtext != text) {
       this.editor.dispatch({
-        changes: {from: 0, to: this.editor.state.doc.length, insert: text}
+        changes: { from: 0, to: this.editor.state.doc.length, insert: text }
       });
       /*
       // find minimum range to undo
@@ -250,60 +250,60 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  insertText(text:string) {
+  insertText(text: string) {
     var cur = this.editor.getCursor();
     this.editor.replaceRange(text, cur, cur);
   }
 
-  highlightLines(start:number, end:number) {
+  highlightLines(start: number, end: number) {
     //this.editor.setSelection({line:start, ch:0}, {line:end, ch:0});
     var cls = 'hilite-span'
-    var markOpts = {className:cls, inclusiveLeft:true};
-    this.markHighlight = this.editor.markText({line:start,ch:0}, {line:end,ch:0}, markOpts);
-    this.editor.scrollIntoView({from:{line:start,ch:0}, to:{line:end,ch:0}});
+    var markOpts = { className: cls, inclusiveLeft: true };
+    this.markHighlight = this.editor.markText({ line: start, ch: 0 }, { line: end, ch: 0 }, markOpts);
+    this.editor.scrollIntoView({ from: { line: start, ch: 0 }, to: { line: end, ch: 0 } });
   }
 
-  replaceSelection(start:number, end:number, text:string) {
+  replaceSelection(start: number, end: number, text: string) {
     this.editor.setSelection(this.editor.posFromIndex(start), this.editor.posFromIndex(end));
     this.editor.replaceSelection(text);
   }
 
-  getValue() : string {
+  getValue(): string {
     return this.editor.state.doc.toString();
   }
 
-  getPath() : string { return this.path; }
+  getPath(): string { return this.path; }
 
   addError(info: WorkerError) {
     // only mark errors with this filename, or without any filename
     if (!info.path || this.path.endsWith(info.path)) {
       var numLines = this.editor.lineCount();
-      var line = info.line-1;
+      var line = info.line - 1;
       if (isNaN(line) || line < 0 || line >= numLines) line = 0;
       this.addErrorMarker(line, info.msg);
       if (info.start != null) {
-        var markOpts = {className:"mark-error", inclusiveLeft:true};
-        var start = {line:line, ch:info.end?info.start:info.start-1};
-        var end = {line:line, ch:info.end?info.end:info.start};
+        var markOpts = { className: "mark-error", inclusiveLeft: true };
+        var start = { line: line, ch: info.end ? info.start : info.start - 1 };
+        var end = { line: line, ch: info.end ? info.end : info.start };
         var mark = this.editor.markText(start, end, markOpts);
         this.errormarks.push(mark);
       }
     }
   }
 
-  addErrorMarker(line:number, msg:string) {
+  addErrorMarker(line: number, msg: string) {
     var div = document.createElement("div");
     div.setAttribute("class", "tooltipbox tooltiperror");
     div.appendChild(document.createTextNode("\u24cd"));
     this.editor.setGutterMarker(line, "gutter-info", div);
-    this.errormsgs.push({line:line, msg:msg});
+    this.errormsgs.push({ line: line, msg: msg });
     // expand line widgets when mousing over errors
     $(div).mouseover((e) => {
       this.expandErrors();
     });
   }
 
-  addErrorLine(line:number, msg:string) {
+  addErrorLine(line: number, msg: string) {
     var errspan = createTextSpan(msg, "tooltiperrorline");
     this.errorwidgets.push(this.editor.addLineWidget(line, errspan));
   }
@@ -315,7 +315,7 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  markErrors(errors:WorkerError[]) {
+  markErrors(errors: WorkerError[]) {
     // TODO: move cursor to error line if offscreen?
     this.clearErrors();
     errors = errors.slice(0, MAX_ERRORS);
@@ -333,7 +333,7 @@ export class SourceEditor implements ProjectView {
     while (this.errormarks.length) this.errormarks.shift().clear();
   }
 
-  getSourceFile() : SourceFile { return this.sourcefile; }
+  getSourceFile(): SourceFile { return this.sourcefile; }
 
   updateListing() {
     // update editor annotations
@@ -346,21 +346,21 @@ export class SourceEditor implements ProjectView {
     for (var info of lstlines) {
       //if (info.path && info.path != this.path) continue;
       if (info.offset >= 0) {
-        this.setGutter("gutter-offset", info.line-1, hex(info.offset&0xffff,4));
+        this.setGutter("gutter-offset", info.line - 1, hex(info.offset & 0xffff, 4));
       }
       if (info.insns) {
         var insnstr = info.insns.length > 9 ? ("...") : info.insns;
-        this.setGutter("gutter-bytes", info.line-1, insnstr);
+        this.setGutter("gutter-bytes", info.line - 1, insnstr);
         if (info.iscode) {
           // TODO: labels trick this part?
           if (info.cycles) {
-            this.setGutter("gutter-clock", info.line-1, info.cycles+"");
+            this.setGutter("gutter-clock", info.line - 1, info.cycles + "");
           } else if (platform.getOpcodeMetadata) {
             var opcode = parseInt(info.insns.split(" ")[0], 16);
             var meta = platform.getOpcodeMetadata(opcode, info.offset);
             if (meta && meta.minCycles) {
-              var clockstr = meta.minCycles+"";
-              this.setGutter("gutter-clock", info.line-1, clockstr);
+              var clockstr = meta.minCycles + "";
+              this.setGutter("gutter-clock", info.line - 1, clockstr);
             }
           }
         }
@@ -368,7 +368,7 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  setGutter(type:string, line:number, text:string) {
+  setGutter(type: string, line: number, text: string) {
     var lineinfo = this.editor.lineInfo(line);
     if (lineinfo && lineinfo.gutterMarkers && lineinfo.gutterMarkers[type]) {
       // do not replace existing marker
@@ -378,11 +378,11 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  setGutterBytes(line:number, s:string) {
-    this.setGutter("gutter-bytes", line-1, s);
+  setGutterBytes(line: number, s: string) {
+    this.setGutter("gutter-bytes", line - 1, s);
   }
 
-  setTimingResult(result:CodeAnalyzer) : void {
+  setTimingResult(result: CodeAnalyzer): void {
     this.editor.clearGutter("gutter-bytes");
     if (this.sourcefile == null) return;
     // show the lines
@@ -391,7 +391,7 @@ export class SourceEditor implements ProjectView {
       let clocks = result.pc2clockrange[pc];
       var minclocks = clocks && clocks.minclocks;
       var maxclocks = clocks && clocks.maxclocks;
-      if (minclocks>=0 && maxclocks>=0) {
+      if (minclocks >= 0 && maxclocks >= 0) {
         var s;
         if (maxclocks == minclocks)
           s = minclocks + "";
@@ -404,34 +404,34 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  setCurrentLine(line:SourceLocation, moveCursor:boolean) {
+  setCurrentLine(line: SourceLocation, moveCursor: boolean) {
     var blocked = platform.isBlocked && platform.isBlocked();
 
-    var addCurrentMarker = (line:SourceLocation) => {
+    var addCurrentMarker = (line: SourceLocation) => {
       var div = document.createElement("div");
       var cls = blocked ? 'currentpc-marker-blocked' : 'currentpc-marker';
       div.classList.add(cls);
       div.appendChild(document.createTextNode("\u25b6"));
-      this.editor.setGutterMarker(line.line-1, "gutter-info", div);
+      this.editor.setGutterMarker(line.line - 1, "gutter-info", div);
     }
 
     this.clearCurrentLine(moveCursor);
     if (line) {
       addCurrentMarker(line);
       if (moveCursor) {
-        this.editor.setCursor({line:line.line-1,ch:line.start||0}, {scroll:true});
+        this.editor.setCursor({ line: line.line - 1, ch: line.start || 0 }, { scroll: true });
       }
       var cls = blocked ? 'currentpc-span-blocked' : 'currentpc-span';
-      var markOpts = {className:cls, inclusiveLeft:true};
+      var markOpts = { className: cls, inclusiveLeft: true };
       if (line.start || line.end)
-        this.markCurrentPC = this.editor.markText({line:line.line-1,ch:line.start}, {line:line.line-1,ch:line.end||line.start+1}, markOpts);
+        this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: line.start }, { line: line.line - 1, ch: line.end || line.start + 1 }, markOpts);
       else
-        this.markCurrentPC = this.editor.markText({line:line.line-1,ch:0}, {line:line.line,ch:0}, markOpts);
+        this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: 0 }, { line: line.line, ch: 0 }, markOpts);
       this.currentDebugLine = line;
     }
   }
 
-  clearCurrentLine(moveCursor:boolean) {
+  clearCurrentLine(moveCursor: boolean) {
     if (this.currentDebugLine) {
       this.editor.clearGutter("gutter-info");
       if (moveCursor) this.editor.setSelection(this.editor.getCursor());
@@ -443,7 +443,7 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  getActiveLine() : SourceLocation {
+  getActiveLine(): SourceLocation {
     if (this.sourcefile) {
       var cpustate = lastDebugState && lastDebugState.c;
       if (!cpustate && platform.getCPUState && !platform.isRunning())
@@ -456,7 +456,7 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  refreshDebugState(moveCursor:boolean) {
+  refreshDebugState(moveCursor: boolean) {
     // TODO: only if line changed
     // TODO: remove after compilation
     this.clearCurrentLine(moveCursor);
@@ -487,15 +487,15 @@ export class SourceEditor implements ProjectView {
     this.refreshDebugState(false);
   }
 
-  getLine(line : number) {
-    return this.editor.getLine(line-1);
+  getLine(line: number) {
+    return this.editor.getLine(line - 1);
   }
 
-  getCurrentLine() : number {
-    return this.editor.getCursor().line+1;
+  getCurrentLine(): number {
+    return this.editor.getCursor().line + 1;
   }
 
-  getCursorPC() : number {
+  getCursorPC(): number {
     var line = this.getCurrentLine();
     while (this.sourcefile && line >= 0) {
       var pc = this.sourcefile.line2offset[line];
@@ -512,7 +512,7 @@ export class SourceEditor implements ProjectView {
   toggleBreakpoint(lineno: number) {
     // TODO: we have to always start at beginning of frame
     if (this.sourcefile != null) {
-      var targetPC = this.sourcefile.line2offset[lineno+1];
+      var targetPC = this.sourcefile.line2offset[lineno + 1];
       /*
       var bpid = "pc" + targetPC;
       if (platform.hasBreakpoint(bpid)) {
@@ -537,7 +537,7 @@ export class DisassemblerView implements ProjectView {
 
   getDisasmView() { return this.disasmview; }
 
-  createDiv(parent : HTMLElement) {
+  createDiv(parent: HTMLElement) {
     var div = document.createElement('div');
     div.setAttribute("class", "editor");
     parent.appendChild(div);
@@ -545,7 +545,7 @@ export class DisassemblerView implements ProjectView {
     return div;
   }
 
-  newEditor(parent : HTMLElement) {
+  newEditor(parent: HTMLElement) {
     this.disasmview = new EditorView({
       parent: parent,
       extensions: [
@@ -586,17 +586,17 @@ export class DisassemblerView implements ProjectView {
         */
         let bytes = "";
         let comment = "";
-        for (let i=0; i<disasm.nbytes; i++)
-          bytes += hex(platform.readAddress(a+i));
+        for (let i = 0; i < disasm.nbytes; i++)
+          bytes += hex(platform.readAddress(a + i));
         while (bytes.length < 14)
           bytes += ' ';
         let dstr = disasm.line;
         if (addr2symbol && disasm.isaddr) { // TODO: move out
-          dstr = dstr.replace(/([^#])[$]([0-9A-F]+)/, (substr:string, ...args:any[]):string => {
+          dstr = dstr.replace(/([^#])[$]([0-9A-F]+)/, (substr: string, ...args: any[]): string => {
             let addr = parseInt(args[1], 16);
             let sym = addr2symbol[addr];
             if (sym) return (args[0] + sym);
-            sym = addr2symbol[addr-1];
+            sym = addr2symbol[addr - 1];
             if (sym) return (args[0] + sym + "+1");
             return substr;
           });
@@ -607,7 +607,7 @@ export class DisassemblerView implements ProjectView {
             comment = "; " + sym;
           }
         }
-        let dline = hex(a, 4) + "\t" + rpad(bytes,14) + "\t" + rpad(dstr,30) + comment + "\n";
+        let dline = hex(a, 4) + "\t" + rpad(bytes, 14) + "\t" + rpad(dstr, 30) + comment + "\n";
         s += dline;
         if (a == pc) selline = curline;
         curline++;
@@ -615,8 +615,8 @@ export class DisassemblerView implements ProjectView {
       }
       return s;
     }
-    var startpc = pc < 0 ? pc-disasmWindow : Math.max(0, pc-disasmWindow); // for 32-bit PCs w/ hi bit set
-    let text = disassemble(startpc, pc-startpc) + disassemble(pc, disasmWindow);
+    var startpc = pc < 0 ? pc - disasmWindow : Math.max(0, pc - disasmWindow); // for 32-bit PCs w/ hi bit set
+    let text = disassemble(startpc, pc - startpc) + disassemble(pc, disasmWindow);
     this.disasmview.dispatch({
       changes: { from: 0, to: this.disasmview.state.doc.length, insert: text }
     })
@@ -626,7 +626,7 @@ export class DisassemblerView implements ProjectView {
     jumpToLine(this.disasmview, selline);
   }
 
-  getCursorPC() : number {
+  getCursorPC(): number {
     var line = this.disasmview.getCursor().line;
     if (line >= 0) {
       var toks = this.disasmview.getLine(line).trim().split(/\s+/);
@@ -642,10 +642,10 @@ export class DisassemblerView implements ProjectView {
 ///
 
 export class ListingView extends DisassemblerView implements ProjectView {
-  assemblyfile : SourceFile;
-  path : string;
+  assemblyfile: SourceFile;
+  path: string;
 
-  constructor(lstfn : string) {
+  constructor(lstfn: string) {
     super();
     this.path = lstfn;
   }
@@ -665,7 +665,7 @@ export class ListingView extends DisassemblerView implements ProjectView {
     var disasmview = this.getDisasmView();
     // TODO: sometimes it picks one without a text file
     this.disasmview.dispatch({
-      changes: {from: 0, to: this.disasmview.state.doc.length, insert: asmtext}
+      changes: { from: 0, to: this.disasmview.state.doc.length, insert: asmtext }
     })
     // go to PC
     if (!platform.saveState) return;
@@ -676,9 +676,9 @@ export class ListingView extends DisassemblerView implements ProjectView {
       if (res) {
         // set cursor while debugging
         if (moveCursor) {
-          disasmview.setCursor(res.line-1, 0);
+          disasmview.setCursor(res.line - 1, 0);
         }
-        jumpToLine(disasmview, res.line-1);
+        jumpToLine(disasmview, res.line - 1);
       }
     }
   }

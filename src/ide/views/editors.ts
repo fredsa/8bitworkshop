@@ -167,9 +167,9 @@ export class SourceEditor implements ProjectView {
       parent: parent,
       extensions: [
         basicSetup,
-        history(),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
-        StreamLanguage.define(clike({name:"our-clike"})),
+        // history(),
+        // keymap.of([...defaultKeymap, ...historyKeymap]),
+        StreamLanguage.define(clike({ name: "our-clike" })),
         oneDark,
         EditorView.updateListener.of(update => {
           // update file in project (and recompile) when edits made

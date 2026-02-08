@@ -123,11 +123,7 @@ export class SourceEditor implements ProjectView {
     parent.appendChild(div);
     var text = current_project.getFile(this.path) as string;
     var asmOverride = text && this.mode=='verilog' && /__asm\b([\s\S]+?)\b__endasm\b/.test(text);
-    this.newEditor(div, asmOverride);
-    if (text) {
-      this.setText(text); // TODO: this calls setCode() and builds... it shouldn't
-      // this.editor.dispatch({selection:EditorSelection.range(0, 42), scrollIntoView: true});
-    }
+    this.newEditor(div, text, asmOverride);
     this.setupEditor();
     if (current_project.getToolForFilename(this.path).startsWith("remote:")) {
       this.refreshDelayMsec = 1000; // remote URLs get slower refresh
@@ -141,7 +137,7 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  newEditor(parent:HTMLElement, isAsmOverride?:boolean) {
+  newEditor(parent:HTMLElement, text:string, isAsmOverride?:boolean) {
     var modedef = MODEDEFS[this.mode] || MODEDEFS.default;
     var isAsm = isAsmOverride || modedef.isAsm;
     var lineWrap = !!modedef.lineWrap;
@@ -156,6 +152,7 @@ export class SourceEditor implements ProjectView {
     if (modedef.noGutters || isMobileDevice) gutters = ["gutter-info"];
     this.editor = new EditorView({
       parent: parent,
+      doc: text, // TODO: this calls setCode() and builds... it shouldn't
       extensions: [
         basicSetup,
         // history(),

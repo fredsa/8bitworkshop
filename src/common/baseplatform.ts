@@ -99,7 +99,7 @@ export interface Platform {
   disassemble?(addr:number, readfn:(addr:number)=>number) : DisasmLine;
   readAddress?(addr:number) : number;
   readVRAMAddress?(addr:number) : number;
-  
+
   setFrameRate?(fps:number) : void;
   getFrameRate?() : number;
 
@@ -120,7 +120,7 @@ export interface Platform {
   getPC?() : number;
   getOriginPC?() : number;
   newCodeAnalyzer?() : CodeAnalyzer;
-  
+
   getPlatformName?() : string;
   getMemoryMap?() : MemoryMap;
 
@@ -139,7 +139,7 @@ export interface Platform {
 
   debugSymbols? : DebugSymbols;
   getDebugTree?() : {};
-  
+
   startProbing?() : ProbeRecorder;
   stopProbing?() : void;
 
@@ -339,10 +339,10 @@ export abstract class BaseDebugPlatform extends BasePlatform {
     return this.debugBreakState != null;
   }
   breakpointHit(targetClock : number, reason? : string) {
-    console.log(this.debugTargetClock, targetClock, this.debugClock, this.isStable());
+    // console.log(this.debugTargetClock, targetClock, this.debugClock, this.isStable());
     this.debugTargetClock = targetClock;
     this.debugBreakState = this.saveState();
-    console.log("Breakpoint at clk", this.debugClock, "PC", this.debugBreakState.c.PC.toString(16));
+    // console.log("Breakpoint at clk", this.debugClock, "PC", this.debugBreakState.c.PC.toString(16));
     this.pause();
     if (this.onBreakpointHit) {
       this.onBreakpointHit(this.debugBreakState, reason);
@@ -780,7 +780,7 @@ export abstract class BaseMachinePlatform<T extends Machine> extends BaseDebugPl
   abstract getToolForFilename(s:string) : string;
   abstract getDefaultExtension() : string;
   abstract getPresets() : Preset[];
-  
+
   constructor(mainElement : HTMLElement) {
     super();
     this.mainElement = mainElement;
@@ -798,7 +798,7 @@ export abstract class BaseMachinePlatform<T extends Machine> extends BaseDebugPl
   getCPUState()  { return this.machine.cpu.saveState(); }
   loadControlsState(s)   { this.machine.loadControlsState(s); }
   saveControlsState()    { return this.machine.saveControlsState(); }
-  
+
   async start() {
     this.machine = this.newMachine();
     const m = this.machine;
@@ -809,7 +809,7 @@ export abstract class BaseMachinePlatform<T extends Machine> extends BaseDebugPl
     var videoFrequency;
     if (hasVideo(m)) {
       var vp = m.getVideoParams();
-      this.video = new RasterVideo(this.mainElement, vp.width, vp.height, 
+      this.video = new RasterVideo(this.mainElement, vp.width, vp.height,
         {overscan: !!vp.overscan,
            rotate: vp.rotate|0,
            aspect: vp.aspect});

@@ -6,34 +6,26 @@ import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
 
 import { basicSetup } from "codemirror"
-import { keymap, EditorView } from "@codemirror/view"
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
-import { EditorSelection, EditorState, EditorStateConfig, StateField, StateEffect } from "@codemirror/state"
+import { EditorView, WidgetType, Decoration, ViewUpdate } from "@codemirror/view"
+import { StateField, StateEffect } from "@codemirror/state"
 import { oneDark } from "@codemirror/theme-one-dark";
 import { StreamLanguage } from "@codemirror/language"
 import { clike } from "@codemirror/legacy-modes/mode/clike";
 
 // Decorator widget to show values.
 class ValueWidget extends WidgetType {
-  value: string;
-
-  constructor(value: string) {
-    super()
-    this.value = value
-  }
+  constructor(readonly value: string) { super() }
 
   toDOM() {
-    let span = document.createElement("span")
-    span.textContent = ` : ${this.value}`
-    span.style = `
-    font-size: 0.8em;
-    color: #777;
-    background: #eee;
-    padding: 2px 4px;
-    border-radius: 3px;
-    margin-left: 4px;
-    `
-    return span
+    let div = document.createElement("div");
+    div.textContent = `${this.value}`;
+    div.style.cssText = `
+      color: #ccccff;
+      background-color: #000066;
+      display: inline-block;
+    `;
+    div.className = "cm-line";
+    return div
   }
 }
 
@@ -57,6 +49,7 @@ const valueDecorationField = StateField.define({
         return Decoration.set([
           Decoration.widget({
             widget: new ValueWidget(e.value.val),
+            block: true,
             side: 1 // Appears after the text
           }).range(e.value.pos)
         ])
@@ -230,22 +223,6 @@ export class SourceEditor implements ProjectView {
       update.view.dispatch({
         effects: showValueEffect.of(null)
       });
-    }
-  }
-
-  inspect(ident : string) : void {
-    var result;
-    if (platform.inspect) {
-      result = platform.inspect(ident);
-    }
-    if (this.inspectWidget) {
-      this.inspectWidget.clear();
-      this.inspectWidget = null;
-    }
-    if (result) {
-      var infospan = createTextSpan(result, "tooltipinfoline");
-      var line = this.editor.getCursor().line;
-      this.inspectWidget = this.editor.addLineWidget(line, infospan, {above:false});
     }
   }
 

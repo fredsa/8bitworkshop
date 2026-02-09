@@ -5,6 +5,7 @@ import { CodeAnalyzer } from "../../common/analysis";
 import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
 import { asm6502 } from "../../parser/lang-6502";
+import { basic } from "../../parser/lang-basic";
 import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
 
@@ -209,6 +210,7 @@ export class SourceEditor implements ProjectView {
         parser = asm6502();
         break;
       case 'basic':
+        parser = basic();
         break;
       case 'bataribasic':
         break;

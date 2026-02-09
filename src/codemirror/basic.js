@@ -112,7 +112,7 @@ CodeMirror.defineMode("basic", function(conf, parserConf) {
                 return 'number';
             }
         }
-        
+
         // Handle RAM
         if (stream.match(/\bREM/i)) {
             stream.skipToEnd();
@@ -266,7 +266,7 @@ CodeMirror.defineMode("basic", function(conf, parserConf) {
         },
 
         /* TODO: indentation
-        
+
         indent: function(state, textAfter) {
             var trueText = textAfter.replace(/^\s+|\s+$/g, '') ;
             if (trueText.match(closing) || trueText.match(doubleClosing) || trueText.match(middle)) return conf.indentUnit*(state.currentIndent-1);

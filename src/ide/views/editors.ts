@@ -12,7 +12,6 @@ import { cobalt } from "../../themes/cobalt";
 import { basicSetup } from "codemirror"
 import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap } from "@codemirror/view"
 import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
-import { oneDark } from "@codemirror/theme-one-dark";
 import { indentUnit } from "@codemirror/language"
 import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";

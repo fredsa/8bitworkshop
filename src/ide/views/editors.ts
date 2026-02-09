@@ -4,10 +4,11 @@ import { SourceFile, WorkerError, SourceLocation } from "../../common/workertype
 import { CodeAnalyzer } from "../../common/analysis";
 import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
+import { asm6502 } from "../../parser/lang-6502";
 
 import { basicSetup } from "codemirror"
 import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap } from "@codemirror/view"
-import { StateField, StateEffect, EditorState } from "@codemirror/state"
+import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
 import { oneDark } from "@codemirror/theme-one-dark";
 import { indentUnit, StreamLanguage } from "@codemirror/language"
 import { clike } from "@codemirror/legacy-modes/mode/clike";
@@ -201,12 +202,18 @@ export class SourceEditor implements ProjectView {
     var gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-info"];
     if (isAsm) gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-bytes", "gutter-clock", "gutter-info"];
     if (modedef.noGutters || isMobileDevice) gutters = ["gutter-info"];
+    var parser: Extension = StreamLanguage.define(clike({ name: "our-clike" }));
+    switch (this.mode) {
+      case '6502':
+        parser = asm6502();
+        break;
+    }
     this.editor = new EditorView({
       parent: parent,
       doc: text, // TODO: this calls setCode() and builds... it shouldn't
       extensions: [
         basicSetup,
-        StreamLanguage.define(clike({ name: "our-clike" })),
+        parser,
         theme,
         ourTheme,
         EditorState.tabSize.of(8),

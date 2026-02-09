@@ -10,11 +10,45 @@ import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
 
 import { basicSetup } from "codemirror"
-import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap } from "@codemirror/view"
+import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap, gutter, GutterMarker } from "@codemirror/view";
 import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
 import { indentUnit } from "@codemirror/language"
 import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
+
+// 1. An effect to carry the new offset map (Line Number -> Hex Address)
+const setOffsets = StateEffect.define<Map<number, number>>();
+
+// 2. The StateField that manages the offset data
+const offsetField = StateField.define<Map<number, number>>({
+  create() { return new Map(); },
+  update(value, tr) {
+    // Look for the setOffsets effect in the transaction
+    for (let e of tr.effects) if (e.is(setOffsets)) value = e.value;
+    return value;
+  }
+});
+
+// 3. The Gutter Marker
+class OffsetMarker extends GutterMarker {
+  constructor(readonly hex: string) { super(); }
+  toDOM() { return document.createTextNode(this.hex); }
+}
+
+const offsetGutter = gutter({
+  class: "cm-asm-offset",
+  lineMarker(view, line) {
+    const offsets = view.state.field(offsetField);
+    const lineNum = view.state.doc.lineAt(line.from).number;
+    const addr = offsets.get(lineNum);
+
+    // Only return a marker if the compiler provided an address for this line
+    if (addr !== undefined) {
+      return new OffsetMarker(addr.toString(16).padStart(4, '0').toUpperCase());
+    }
+    return null;
+  }
+});
 
 // Highlight program counter line.
 const currentPcEffect = StateEffect.define<number | null>();
@@ -248,13 +282,16 @@ export class SourceEditor implements ProjectView {
         indentUnit.of("        "),
         keymap.of([indentWithTab]),
         lineWrap ? EditorView.lineWrapping : [],
-        EditorView.updateListener.of(update => {
-          // update file in project (and recompile) when edits made
-          this.editorChanged();
-
-        }),
-
+        // update file in project (and recompile) when edits made
         currentPcLineField,
+        offsetField,
+        offsetGutter,
+
+        EditorView.updateListener.of(update => {
+          if (update.docChanged) {
+            this.editorChanged();
+          }
+        }),
 
         // inspect symbol when it's highlighted (double-click)
         showValueDecorationField,
@@ -425,13 +462,15 @@ export class SourceEditor implements ProjectView {
     // TODO: recreate editor if gutter-bytes is used (verilog)
     this.clearErrors();
     // this.editor.clearGutter("gutter-bytes");
-    // this.editor.clearGutter("gutter-offset");
     // this.editor.clearGutter("gutter-clock");
     var lstlines = this.sourcefile.lines || [];
+
+    const newOffsets = new Map();
+
     for (var info of lstlines) {
       //if (info.path && info.path != this.path) continue;
       if (info.offset >= 0) {
-        // this.setGutter("gutter-offset", info.line-1, hex(info.offset&0xffff,4));
+        newOffsets.set(info.line - 1, hex(info.offset & 0xffff, 4));
       }
       if (info.insns) {
         var insnstr = info.insns.length > 9 ? ("...") : info.insns;
@@ -451,6 +490,10 @@ export class SourceEditor implements ProjectView {
         }
       }
     }
+    this.editor.dispatch({
+      effects: setOffsets.of(newOffsets)
+    });
+
   }
 
   setGutter(type: string, line: number, text: string) {

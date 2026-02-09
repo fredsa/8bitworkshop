@@ -5,6 +5,7 @@ import { CodeAnalyzer } from "../../common/analysis";
 import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
 import { asm6502 } from "../../parser/lang-6502";
+import { mbo } from "../../themes/mbo";
 
 import { basicSetup } from "codemirror"
 import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap } from "@codemirror/view"
@@ -193,7 +194,7 @@ export class SourceEditor implements ProjectView {
     var isAsm = isAsmOverride || modedef.isAsm;
     var lineWrap = !!modedef.lineWrap;
     // var theme = modedef.theme || MODEDEFS.default.theme;
-    var theme = oneDark;
+    var theme = mbo;
     var lineNums = !modedef.noLineNumbers && !isMobileDevice;
     if (qs['embed']) {
       lineNums = false; // no line numbers while embedded

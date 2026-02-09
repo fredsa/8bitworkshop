@@ -16,38 +16,77 @@ import { indentUnit } from "@codemirror/language"
 import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
 
-// 1. An effect to carry the new offset map (Line Number -> Hex Address)
-const setOffsets = StateEffect.define<Map<number, number>>();
+const setOffset = StateEffect.define<Map<number, number>>();
+const setBytes = StateEffect.define<Map<number, string>>();
+const setClock = StateEffect.define<Map<number, string>>();
 
-// 2. The StateField that manages the offset data
 const offsetField = StateField.define<Map<number, number>>({
   create() { return new Map(); },
   update(value, tr) {
-    // Look for the setOffsets effect in the transaction
-    for (let e of tr.effects) if (e.is(setOffsets)) value = e.value;
+    for (let e of tr.effects) if (e.is(setOffset)) value = e.value;
     return value;
   }
 });
 
-// 3. The Gutter Marker
+const bytesField = StateField.define<Map<number, string>>({
+  create() { return new Map(); },
+  update(value, tr) {
+    for (let e of tr.effects) if (e.is(setBytes)) value = e.value;
+    return value;
+  }
+});
+
+const clockField = StateField.define<Map<number, string>>({
+  create() { return new Map(); },
+  update(value, tr) {
+    for (let e of tr.effects) if (e.is(setClock)) value = e.value;
+    return value;
+  }
+});
+
 class OffsetMarker extends GutterMarker {
   constructor(readonly hex: string) { super(); }
   toDOM() { return document.createTextNode(this.hex); }
 }
 
+class BytesMarker extends GutterMarker {
+  constructor(readonly bytes: string) { super(); }
+  toDOM() { return document.createTextNode(this.bytes); }
+}
+
+class ClockMarker extends GutterMarker {
+  constructor(readonly clock: string) { super(); }
+  toDOM() { return document.createTextNode(this.clock); }
+}
+
 const offsetGutter = gutter({
-  class: "cm-asm-offset",
+  class: "gutter-offset",
   lineMarker(view, line) {
     const offsets = view.state.field(offsetField);
     const lineNum = view.state.doc.lineAt(line.from).number;
     const addr = offsets.get(lineNum);
-
-    // Only return a marker if the compiler provided an address for this line
-    if (addr !== undefined) {
-      return new OffsetMarker(addr.toString(16).padStart(4, '0').toUpperCase());
-    }
-    return null;
+    return addr ? new OffsetMarker(addr.toString(16).padStart(4, '0').toUpperCase()) : null;
   }
+});
+
+const bytesGutter = gutter({
+  class: "gutter-bytes",
+  lineMarker(view, line) {
+    const bytesMap = view.state.field(bytesField);
+    const lineNum = view.state.doc.lineAt(line.from).number;
+    const bytesValue = bytesMap.get(lineNum);
+    return bytesValue ? new BytesMarker(bytesValue) : null;
+  },
+});
+
+const clockGutter = gutter({
+  class: "gutter-clock",
+  lineMarker(view, line) {
+    const clockMap = view.state.field(clockField);
+    const lineNum = view.state.doc.lineAt(line.from).number;
+    const clockValue = clockMap.get(lineNum);
+    return clockValue ? new ClockMarker(clockValue) : null;
+  },
 });
 
 // Highlight program counter line.
@@ -171,6 +210,18 @@ const ourTheme = EditorView.theme({
   ".currentpc-marker-blocked": {
     color: "#ffee33",
   },
+  ".gutter-offset": {
+    marginRight: "0.25em",
+  },
+  ".gutter-bytes": {
+    marginLeft: "0.25em",
+    marginRight: "0.25em",
+    opacity: 0.7,
+  },
+  ".gutter-clock": {
+    marginLeft: "0.25em",
+    marginRight: "0.25em",
+  },
 });
 
 const disassemblyTheme = EditorView.theme({
@@ -286,6 +337,10 @@ export class SourceEditor implements ProjectView {
         currentPcLineField,
         offsetField,
         offsetGutter,
+        bytesField,
+        bytesGutter,
+        clockField,
+        clockGutter,
 
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
@@ -461,11 +516,11 @@ export class SourceEditor implements ProjectView {
     // update editor annotations
     // TODO: recreate editor if gutter-bytes is used (verilog)
     this.clearErrors();
-    // this.editor.clearGutter("gutter-bytes");
-    // this.editor.clearGutter("gutter-clock");
     var lstlines = this.sourcefile.lines || [];
 
     const newOffsets = new Map();
+    const newBytes = new Map();
+    const newClocks = new Map();
 
     for (var info of lstlines) {
       //if (info.path && info.path != this.path) continue;
@@ -474,24 +529,28 @@ export class SourceEditor implements ProjectView {
       }
       if (info.insns) {
         var insnstr = info.insns.length > 9 ? ("...") : info.insns;
-        // this.setGutter("gutter-bytes", info.line-1, insnstr);
+        newBytes.set(info.line - 1, insnstr);
         if (info.iscode) {
           // TODO: labels trick this part?
           if (info.cycles) {
-            // this.setGutter("gutter-clock", info.line-1, info.cycles+"");
+            newClocks.set(info.line - 1, info.cycles + "");
           } else if (platform.getOpcodeMetadata) {
             var opcode = parseInt(info.insns.split(" ")[0], 16);
             var meta = platform.getOpcodeMetadata(opcode, info.offset);
             if (meta && meta.minCycles) {
               var clockstr = meta.minCycles + "";
-              // this.setGutter("gutter-clock", info.line-1, clockstr);
+              newClocks.set(info.line - 1, clockstr);
             }
           }
         }
       }
     }
     this.editor.dispatch({
-      effects: setOffsets.of(newOffsets)
+      effects: [
+        setOffset.of(newOffsets),
+        setBytes.of(newBytes),
+        setClock.of(newClocks),
+      ]
     });
 
   }

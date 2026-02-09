@@ -31,25 +31,25 @@ export const mboTheme = EditorView.theme({
   ".cm-linenumber": {
     color: "#dadada"
   }
-}, {dark: true})
+}, {dark: true});
 
 // 2. Syntax Highlighting Styles
 export const mboHighlightStyle = HighlightStyle.define([
-  {tag: t.comment, color: "#95958a"},
   {tag: [t.atom, t.number, t.bool], color: "#00a8c6"},
   {tag: [t.keyword, t.operator], color: "#ffb928"},
-  {tag: t.string, color: "#ffcf6c"},
   {tag: [t.variableName, t.definition(t.variableName)], color: "#ffffec"},
-  {tag: t.propertyName, color: "#9ddfe9"},
   {tag: t.attributeName, color: "#9ddfe9"},
-  {tag: t.tagName, color: "#9ddfe9"},
   {tag: t.bracket, color: "#fffffc", fontWeight: "bold"},
+  {tag: t.comment, color: "#95958a"},
+  {tag: t.invalid, color: "#ffffec", borderBottom: "1px solid #636363"},
   {tag: t.link, color: "#f54b07"},
-  {tag: t.invalid, color: "#ffffec", borderBottom: "1px solid #636363"}
-])
+  {tag: t.propertyName, color: "#9ddfe9"},
+  {tag: t.string, color: "#ffcf6c"},
+  {tag: t.tagName, color: "#9ddfe9"},
+]);
 
 // 3. Combined Extension
 export const mbo = [
   mboTheme,
-  syntaxHighlighting(mboHighlightStyle)
-]
+  syntaxHighlighting(mboHighlightStyle),
+];

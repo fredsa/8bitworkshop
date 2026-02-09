@@ -6,13 +6,14 @@ import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
 import { asm6502 } from "../../parser/lang-6502";
 import { mbo } from "../../themes/mbo";
+import { cobalt } from "../../themes/cobalt";
 
 import { basicSetup } from "codemirror"
 import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap } from "@codemirror/view"
 import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
 import { oneDark } from "@codemirror/theme-one-dark";
-import { indentUnit, StreamLanguage } from "@codemirror/language"
-import { clike } from "@codemirror/legacy-modes/mode/clike";
+import { indentUnit } from "@codemirror/language"
+import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
 
 // Highlight program counter line.
@@ -107,17 +108,17 @@ export const PC_LINE_LOOKAHEAD = 64;
 const MAX_ERRORS = 200;
 
 const MODEDEFS = {
-  default: { theme: 'mbo' }, // NOTE: Not merged w/ other modes
+  default: { theme: mbo }, // NOTE: Not merged w/ other modes
   '6502': { isAsm: true },
   z80: { isAsm: true },
   jsasm: { isAsm: true },
   gas: { isAsm: true },
   vasm: { isAsm: true },
-  inform6: { theme: 'cobalt' },
+  inform6: { theme: cobalt },
   markdown: { lineWrap: true },
   fastbasic: { noGutters: true },
   basic: { noLineNumbers: true, noGutters: true }, // TODO: not used?
-  ecs: { theme: 'mbo', isAsm: true },
+  ecs: { theme: mbo, isAsm: true },
 }
 
 const ourTheme = EditorView.theme({
@@ -193,8 +194,7 @@ export class SourceEditor implements ProjectView {
     var modedef = MODEDEFS[this.mode] || MODEDEFS.default;
     var isAsm = isAsmOverride || modedef.isAsm;
     var lineWrap = !!modedef.lineWrap;
-    // var theme = modedef.theme || MODEDEFS.default.theme;
-    var theme = mbo;
+    var theme = modedef.theme || MODEDEFS.default.theme;
     var lineNums = !modedef.noLineNumbers && !isMobileDevice;
     if (qs['embed']) {
       lineNums = false; // no line numbers while embedded
@@ -203,10 +203,36 @@ export class SourceEditor implements ProjectView {
     var gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-info"];
     if (isAsm) gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-bytes", "gutter-clock", "gutter-info"];
     if (modedef.noGutters || isMobileDevice) gutters = ["gutter-info"];
-    var parser: Extension = StreamLanguage.define(clike({ name: "our-clike" }));
+    var parser: Extension;
     switch (this.mode) {
       case '6502':
         parser = asm6502();
+        break;
+      case 'basic':
+        break;
+      case 'bataribasic':
+        break;
+      case 'ecs':
+        break;
+      case 'fastbasic':
+        break;
+      case 'gas':
+        break;
+      case 'inform6':
+        break;
+      case 'markdown':
+        break;
+      case 'text/x-csrc':
+        // parser = StreamLanguage.define(clike({ name: "our-clike" }));
+        parser = cpp();
+        break;
+      case 'text/x-wiz':
+        break;
+      case 'vasm':
+        break;
+      case 'verilog':
+        break;
+      case 'z80':
         break;
     }
     this.editor = new EditorView({
@@ -214,7 +240,7 @@ export class SourceEditor implements ProjectView {
       doc: text, // TODO: this calls setCode() and builds... it shouldn't
       extensions: [
         basicSetup,
-        parser,
+        parser || [],
         theme,
         ourTheme,
         EditorState.tabSize.of(8),
@@ -619,7 +645,7 @@ export class DisassemblerView implements ProjectView {
       extensions: [
         basicSetup,
         disassemblyTheme,
-        oneDark, // TODO Use 'cobalt' theme.
+        cobalt,
         currentPcLineField,
         EditorState.tabSize.of(8),
         EditorState.readOnly.of(true),

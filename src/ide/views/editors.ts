@@ -11,7 +11,7 @@ import { cobalt } from "../../themes/cobalt";
 
 import { basicSetup } from "codemirror"
 import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap, gutter, GutterMarker } from "@codemirror/view";
-import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
+import { StateField, StateEffect, EditorState, Extension, Transaction } from "@codemirror/state"
 import { indentUnit } from "@codemirror/language"
 import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
@@ -25,7 +25,7 @@ const offsetField = StateField.define<Map<number, number>>({
   update(value, tr) {
     for (let e of tr.effects) if (e.is(setOffset)) value = e.value;
     return value;
-  }
+  },
 });
 
 const bytesField = StateField.define<Map<number, string>>({
@@ -33,7 +33,7 @@ const bytesField = StateField.define<Map<number, string>>({
   update(value, tr) {
     for (let e of tr.effects) if (e.is(setBytes)) value = e.value;
     return value;
-  }
+  },
 });
 
 const clockField = StateField.define<Map<number, string>>({
@@ -41,7 +41,7 @@ const clockField = StateField.define<Map<number, string>>({
   update(value, tr) {
     for (let e of tr.effects) if (e.is(setClock)) value = e.value;
     return value;
-  }
+  },
 });
 
 class OffsetMarker extends GutterMarker {
@@ -66,7 +66,10 @@ const offsetGutter = gutter({
     const lineNum = view.state.doc.lineAt(line.from).number;
     const addr = offsets.get(lineNum);
     return addr ? new OffsetMarker(addr.toString(16).padStart(4, '0').toUpperCase()) : null;
-  }
+  },
+  lineMarkerChange(update) {
+    return update.startState.field(offsetField) !== update.state.field(offsetField);
+  },
 });
 
 const bytesGutter = gutter({
@@ -77,6 +80,9 @@ const bytesGutter = gutter({
     const bytesValue = bytesMap.get(lineNum);
     return bytesValue ? new BytesMarker(bytesValue) : null;
   },
+  lineMarkerChange(update) {
+    return update.startState.field(bytesField) !== update.state.field(bytesField);
+  },
 });
 
 const clockGutter = gutter({
@@ -86,6 +92,9 @@ const clockGutter = gutter({
     const lineNum = view.state.doc.lineAt(line.from).number;
     const clockValue = clockMap.get(lineNum);
     return clockValue ? new ClockMarker(clockValue) : null;
+  },
+  lineMarkerChange(update) {
+    return update.startState.field(clockField) !== update.state.field(clockField);
   },
 });
 
@@ -323,7 +332,7 @@ export class SourceEditor implements ProjectView {
     }
     this.editor = new EditorView({
       parent: parent,
-      doc: text, // TODO: this calls setCode() and builds... it shouldn't
+      doc: text,
       extensions: [
         basicSetup,
         parser || [],
@@ -333,7 +342,6 @@ export class SourceEditor implements ProjectView {
         indentUnit.of("        "),
         keymap.of([indentWithTab]),
         lineWrap ? EditorView.lineWrapping : [],
-        // update file in project (and recompile) when edits made
         currentPcLineField,
         offsetField,
         offsetGutter,
@@ -342,6 +350,7 @@ export class SourceEditor implements ProjectView {
         clockField,
         clockGutter,
 
+        // update file in project (and recompile) when edits made
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
             this.editorChanged();
@@ -362,6 +371,7 @@ export class SourceEditor implements ProjectView {
   editorChanged() {
     clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout(() => {
+      console.error("editorChanged");
       current_project.updateFile(this.path, this.editor.state.doc.toString());
     }, this.refreshDelayMsec);
     // if (this.markHighlight) {
@@ -550,9 +560,8 @@ export class SourceEditor implements ProjectView {
         setOffset.of(newOffsets),
         setBytes.of(newBytes),
         setClock.of(newClocks),
-      ]
+      ],
     });
-
   }
 
   setGutter(type: string, line: number, text: string) {

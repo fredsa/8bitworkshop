@@ -205,7 +205,7 @@ const MODEDEFS = {
 
 const ourTheme = EditorView.theme({
   "&": {
-    maxHeight: "100%"
+    height: "100%",
   },
   ".cm-currentpc": {
     backgroundColor: "#7e2a70",

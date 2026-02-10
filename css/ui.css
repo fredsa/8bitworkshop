@@ -1,15 +1,6 @@
 .dbg_info {
   font-size: 0.8em;
 }
-.gutter-offset {
-  width: 3em;
-}
-.gutter-bytes {
-  width: 6em;
-}
-.gutter-clock {
-  width: 0.5em;
-}
 .gutter-info {
   width: 1em;
   cursor: cell;

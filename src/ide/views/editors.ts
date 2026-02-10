@@ -374,7 +374,6 @@ export class SourceEditor implements ProjectView {
   editorChanged() {
     clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout(() => {
-      console.error("editorChanged");
       current_project.updateFile(this.path, this.editor.state.doc.toString());
     }, this.refreshDelayMsec);
     // if (this.markHighlight) {

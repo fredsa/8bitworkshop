@@ -8,6 +8,7 @@ import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
 import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
+import { offset, bytes, clock } from "./gutter";
 
 import { basicSetup } from "codemirror"
 import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap, gutter, GutterMarker } from "@codemirror/view";
@@ -15,88 +16,6 @@ import { StateField, StateEffect, EditorState, Extension, Transaction } from "@c
 import { indentUnit } from "@codemirror/language"
 import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
-
-const setOffset = StateEffect.define<Map<number, number>>();
-const setBytes = StateEffect.define<Map<number, string>>();
-const setClock = StateEffect.define<Map<number, string>>();
-
-const offsetField = StateField.define<Map<number, number>>({
-  create() { return new Map(); },
-  update(value, tr) {
-    for (let e of tr.effects) if (e.is(setOffset)) value = e.value;
-    return value;
-  },
-});
-
-const bytesField = StateField.define<Map<number, string>>({
-  create() { return new Map(); },
-  update(value, tr) {
-    for (let e of tr.effects) if (e.is(setBytes)) value = e.value;
-    return value;
-  },
-});
-
-const clockField = StateField.define<Map<number, string>>({
-  create() { return new Map(); },
-  update(value, tr) {
-    for (let e of tr.effects) if (e.is(setClock)) value = e.value;
-    return value;
-  },
-});
-
-class OffsetMarker extends GutterMarker {
-  constructor(readonly hex: string) { super(); }
-  toDOM() { return document.createTextNode(this.hex); }
-}
-
-class BytesMarker extends GutterMarker {
-  constructor(readonly bytes: string) { super(); }
-  toDOM() { return document.createTextNode(this.bytes); }
-}
-
-class ClockMarker extends GutterMarker {
-  constructor(readonly clock: string) { super(); }
-  toDOM() { return document.createTextNode(this.clock); }
-}
-
-const offsetGutter = gutter({
-  class: "gutter-offset",
-  lineMarker(view, line) {
-    const offsets = view.state.field(offsetField);
-    const lineNum = view.state.doc.lineAt(line.from).number;
-    const addr = offsets.get(lineNum);
-    return addr ? new OffsetMarker(addr.toString(16).padStart(4, '0').toUpperCase()) : null;
-  },
-  lineMarkerChange(update) {
-    return update.startState.field(offsetField) !== update.state.field(offsetField);
-  },
-});
-
-const bytesGutter = gutter({
-  class: "gutter-bytes",
-  lineMarker(view, line) {
-    const bytesMap = view.state.field(bytesField);
-    const lineNum = view.state.doc.lineAt(line.from).number;
-    const bytesValue = bytesMap.get(lineNum);
-    return bytesValue ? new BytesMarker(bytesValue) : null;
-  },
-  lineMarkerChange(update) {
-    return update.startState.field(bytesField) !== update.state.field(bytesField);
-  },
-});
-
-const clockGutter = gutter({
-  class: "gutter-clock",
-  lineMarker(view, line) {
-    const clockMap = view.state.field(clockField);
-    const lineNum = view.state.doc.lineAt(line.from).number;
-    const clockValue = clockMap.get(lineNum);
-    return clockValue ? new ClockMarker(clockValue) : null;
-  },
-  lineMarkerChange(update) {
-    return update.startState.field(clockField) !== update.state.field(clockField);
-  },
-});
 
 // Highlight program counter line.
 const currentPcEffect = StateEffect.define<number | null>();
@@ -346,12 +265,12 @@ export class SourceEditor implements ProjectView {
         keymap.of([indentWithTab]),
         lineWrap ? EditorView.lineWrapping : [],
         currentPcLineField,
-        offsetField,
-        offsetGutter,
-        bytesField,
-        bytesGutter,
-        clockField,
-        clockGutter,
+        offset.field,
+        offset.gutter,
+        bytes.field,
+        bytes.gutter,
+        clock.field,
+        clock.gutter,
 
         // update file in project (and recompile) when edits made
         EditorView.updateListener.of(update => {
@@ -559,9 +478,9 @@ export class SourceEditor implements ProjectView {
     }
     this.editor.dispatch({
       effects: [
-        setOffset.of(newOffsets),
-        setBytes.of(newBytes),
-        setClock.of(newClocks),
+        offset.set.of(newOffsets),
+        bytes.set.of(newBytes),
+        clock.set.of(newClocks),
       ],
     });
   }

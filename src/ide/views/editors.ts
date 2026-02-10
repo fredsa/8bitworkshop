@@ -231,6 +231,9 @@ const ourTheme = EditorView.theme({
     marginLeft: "0.25em",
     marginRight: "0.25em",
   },
+  "& .cm-lineNumbers .cm-gutterElement": {
+    color: "#99cc99",
+  },
 });
 
 const disassemblyTheme = EditorView.theme({

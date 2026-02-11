@@ -676,13 +676,15 @@ export class DisassemblerView implements ProjectView {
     this.disasmview = new EditorView({
       parent: parent,
       extensions: [
-        basicSetup,
+        rectangularSelection(),
+        crosshairCursor(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
         disassemblyTheme,
         cobalt,
         currentPcLineField,
         EditorState.tabSize.of(8),
         EditorState.readOnly.of(true),
-        highlightActiveLine(),
       ],
       // mode: 'z80', // TODO: pick correct one
     });

@@ -4,7 +4,8 @@ import { gutter, GutterMarker } from "@codemirror/view";
 const setOffset = StateEffect.define<Map<number, number>>();
 const setBytes = StateEffect.define<Map<number, string>>();
 const setClock = StateEffect.define<Map<number, string>>();
-const setErrors = StateEffect.define<Set<number>>();
+const setErrors = StateEffect.define<Map<number, string>>();
+const showErrorMessage = StateEffect.define<{ line: number, msg: string, toggle?: boolean } | null>();
 
 const offsetField = StateField.define<Map<number, number>>({
     create() { return new Map(); },
@@ -30,10 +31,35 @@ const clockField = StateField.define<Map<number, string>>({
     },
 });
 
-const errorField = StateField.define<Set<number>>({
-    create() { return new Set(); },
+const errorField = StateField.define<Map<number, string>>({
+    create() { return new Map(); },
     update(value, tr) {
         for (let e of tr.effects) if (e.is(setErrors)) value = e.value;
+        return value;
+    },
+});
+
+// Track which lines have error messages currently shown.
+const shownErrorLinesField = StateField.define<Set<number>>({
+    create() { return new Set(); },
+    update(value, tr) {
+        for (let e of tr.effects) {
+            if (e.is(showErrorMessage)) {
+                const newSet = new Set(value);
+                if (e.value === null) {
+                    // Clear all shown messages
+                    return new Set();
+                } else if (e.value.toggle) {
+                    // Toggle specific line
+                    if (newSet.has(e.value.line)) {
+                        newSet.delete(e.value.line);
+                    } else {
+                        newSet.add(e.value.line);
+                    }
+                    return newSet;
+                }
+            }
+        }
         return value;
     },
 });
@@ -54,12 +80,14 @@ class ClockMarker extends GutterMarker {
 }
 
 class ErrorMarker extends GutterMarker {
+    constructor(readonly line: number, readonly msg: string) { super(); }
+
     toDOM() {
         const span = document.createElement("span");
         span.innerHTML = "ⓧ";
         span.style.color = "red";
         span.style.cursor = "pointer";
-        span.title = "Hover for error";
+        span.title = this.msg;
         return span;
     }
 }
@@ -108,12 +136,26 @@ const errorGutter = gutter({
     lineMarker(view, line) {
         const errors = view.state.field(errorField);
         const lineNum = view.state.doc.lineAt(line.from).number;
-        return errors.has(lineNum) ? new ErrorMarker() : null;
+        const msg = errors.get(lineNum);
+        return msg ? new ErrorMarker(lineNum, msg) : null;
     },
     lineMarkerChange(update) {
         return update.startState.field(errorField) !== update.state.field(errorField);
     },
-    initialSpacer: () => new ErrorMarker(),
+    initialSpacer: () => new ErrorMarker(0, ""),
+    domEventHandlers: {
+        click(view, line) {
+            const errors = view.state.field(errorField);
+            const lineNum = view.state.doc.lineAt(line.from).number;
+            const msg = errors.get(lineNum);
+            if (msg) {
+                view.dispatch({
+                    effects: showErrorMessage.of({ line: lineNum, msg, toggle: true })
+                });
+            }
+            return true;
+        }
+    }
 });
 
 export const offset = {
@@ -138,4 +180,6 @@ export const errorMarkers = {
     set: setErrors,
     field: errorField,
     gutter: errorGutter,
+    shownLinesField: shownErrorLinesField,
+    showMessage:showErrorMessage
 };

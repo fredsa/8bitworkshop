@@ -11,12 +11,96 @@ import { cobalt } from "../../themes/cobalt";
 import { offset, bytes, clock, errorMarkers } from "./gutter";
 
 import { basicSetup } from "codemirror"
-import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap, rectangularSelection, crosshairCursor } from "@codemirror/view";
+import { EditorView, WidgetType, Decoration, DecorationSet, ViewUpdate, highlightActiveLine, keymap, rectangularSelection, crosshairCursor } from "@codemirror/view";
 import { highlightSelectionMatches } from "@codemirror/search"
 import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
 import { indentUnit } from "@codemirror/language"
 import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
+
+// Error message widget to show below error lines
+class ErrorMessageWidget extends WidgetType {
+  constructor(readonly message: string) { super() }
+
+  toDOM() {
+    let div = document.createElement("div");
+    div.textContent = this.message;
+    div.style.cssText = `
+      color: #ff6666;
+      background-color: #330000;
+      padding: 4px 8px;
+      margin: 2px 0;
+      border-left: 3px solid #ff0000;
+      font-family: monospace;
+    `;
+    return div;
+  }
+}
+
+// State field to manage error message decorations (supports multiple messages)
+const errorMessageField = StateField.define<DecorationSet>({
+  create() { return Decoration.none; },
+  update(decorations, tr) {
+    // Map existing decorations across document changes
+    decorations = decorations.map(tr.changes);
+
+    for (let e of tr.effects) {
+      if (e.is(errorMarkers.showMessage)) {
+        if (e.value === null || !e.value) {
+          // Clear all messages
+          return Decoration.none;
+        } else if (e.value.toggle) {
+          // Build new decoration set with toggled message
+          const widgets: any[] = [];
+
+          // Collect existing decorations
+          const existingMessages = new Map<number, string>();
+          decorations.between(0, tr.state.doc.length, (from, to, value) => {
+            try {
+              const lineNum = tr.state.doc.lineAt(to).number;
+              if (value.spec.widget instanceof ErrorMessageWidget) {
+                existingMessages.set(lineNum, (value.spec.widget as ErrorMessageWidget).message);
+              }
+            } catch {}
+          });
+
+          // Check if we're adding or removing this line's message
+          const isCurrentlyShown = existingMessages.has(e.value.line);
+
+          if (isCurrentlyShown) {
+            // Remove the message
+            existingMessages.delete(e.value.line);
+          } else {
+            // Add the new message
+            existingMessages.set(e.value.line, e.value.msg);
+          }
+
+          // Build sorted decorations
+          const sortedLines = Array.from(existingMessages.keys()).sort((a, b) => a - b);
+          sortedLines.forEach(lineNum => {
+            try {
+              const line = tr.state.doc.line(lineNum);
+              widgets.push(
+                Decoration.widget({
+                  widget: new ErrorMessageWidget(existingMessages.get(lineNum)!),
+                  block: true,
+                  side: 1
+                }).range(line.to)
+              );
+            } catch {
+              // Line doesn't exist, skip
+            }
+          });
+
+          return Decoration.set(widgets, true);
+        }
+      }
+    }
+    return decorations;
+  },
+  provide: f => EditorView.decorations.from(f),
+});
+
 
 // Highlight program counter line.
 const currentPcEffect = StateEffect.define<number | null>();
@@ -181,7 +265,6 @@ export class SourceEditor implements ProjectView {
   dirtylisting = true;
   sourcefile: SourceFile;
   currentDebugLine: SourceLocation;
-  errorwidgets = [];
   inspectWidget;
   refreshDelayMsec = 300;
 
@@ -272,6 +355,8 @@ export class SourceEditor implements ProjectView {
         clock.gutter,
         errorMarkers.field,
         errorMarkers.gutter,
+        errorMarkers.shownLinesField,
+        errorMessageField,
 
         // update file in project (and recompile) when edits made
         EditorView.updateListener.of(update => {
@@ -383,23 +468,18 @@ export class SourceEditor implements ProjectView {
 
   getPath(): string { return this.path; }
 
-  addErrorLine(line: number, msg: string) {
-    var errspan = createTextSpan(msg, "tooltiperrorline");
-    this.errorwidgets.push(this.editor.addLineWidget(line, errspan));
-  }
-
   markErrors(errors: WorkerError[]) {
     // TODO: move cursor to error line if offscreen?
     this.clearErrors();
     errors = errors.slice(0, MAX_ERRORS);
-    const newErrors = new Set<number>();
+    const newErrors = new Map<number, string>();
     for (var info of errors) {
       // only mark errors with this filename, or without any filename
       if (!info.path || this.path.endsWith(info.path)) {
         var numLines = this.editor.state.doc.lines;
         var line = info.line - 1;
         if (isNaN(line) || line < 0 || line >= numLines) line = 0;
-        newErrors.add(info.line - 1);
+        newErrors.set(info.line - 1, info.msg);
       }
     }
     this.editor.dispatch({
@@ -413,11 +493,10 @@ export class SourceEditor implements ProjectView {
     this.dirtylisting = true;
     this.editor.dispatch({
       effects: [
-        errorMarkers.set.of(new Set()),
+        errorMarkers.set.of(new Map()),
+        errorMarkers.showMessage.of(null),
       ],
     });
-
-    while (this.errorwidgets.length) this.errorwidgets.shift().clear();
   }
 
   getSourceFile(): SourceFile { return this.sourcefile; }

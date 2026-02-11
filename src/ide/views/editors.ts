@@ -8,11 +8,12 @@ import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
 import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
-import { offset, bytes, clock } from "./gutter";
+import { offset, bytes, clock, errorMarkers } from "./gutter";
 
 import { basicSetup } from "codemirror"
-import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap, gutter, GutterMarker } from "@codemirror/view";
-import { StateField, StateEffect, EditorState, Extension, Transaction } from "@codemirror/state"
+import { EditorView, WidgetType, Decoration, ViewUpdate, highlightActiveLine, keymap, rectangularSelection, crosshairCursor } from "@codemirror/view";
+import { highlightSelectionMatches } from "@codemirror/search"
+import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
 import { indentUnit } from "@codemirror/language"
 import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
@@ -180,9 +181,7 @@ export class SourceEditor implements ProjectView {
   dirtylisting = true;
   sourcefile: SourceFile;
   currentDebugLine: SourceLocation;
-  errormsgs = [];
   errorwidgets = [];
-  errormarks = [];
   inspectWidget;
   refreshDelayMsec = 300;
 
@@ -271,6 +270,8 @@ export class SourceEditor implements ProjectView {
         bytes.gutter,
         clock.field,
         clock.gutter,
+        errorMarkers.field,
+        errorMarkers.gutter,
 
         // update file in project (and recompile) when edits made
         EditorView.updateListener.of(update => {
@@ -382,63 +383,41 @@ export class SourceEditor implements ProjectView {
 
   getPath(): string { return this.path; }
 
-  addError(info: WorkerError) {
-    // only mark errors with this filename, or without any filename
-    if (!info.path || this.path.endsWith(info.path)) {
-      var numLines = this.editor.state.doc.lines;
-      var line = info.line - 1;
-      if (isNaN(line) || line < 0 || line >= numLines) line = 0;
-      this.addErrorMarker(line, info.msg);
-      if (info.start != null) {
-        var markOpts = { className: "mark-error", inclusiveLeft: true };
-        var start = { line: line, ch: info.end ? info.start : info.start - 1 };
-        var end = { line: line, ch: info.end ? info.end : info.start };
-        var mark = this.editor.markText(start, end, markOpts);
-        this.errormarks.push(mark);
-      }
-    }
-  }
-
-  addErrorMarker(line: number, msg: string) {
-    var div = document.createElement("div");
-    div.setAttribute("class", "tooltipbox tooltiperror");
-    div.appendChild(document.createTextNode("\u24cd"));
-    // this.editor.setGutterMarker(line, "gutter-info", div);
-    this.errormsgs.push({ line: line, msg: msg });
-    // expand line widgets when mousing over errors
-    $(div).mouseover((e) => {
-      this.expandErrors();
-    });
-  }
-
   addErrorLine(line: number, msg: string) {
     var errspan = createTextSpan(msg, "tooltiperrorline");
     this.errorwidgets.push(this.editor.addLineWidget(line, errspan));
-  }
-
-  expandErrors() {
-    var e;
-    while (e = this.errormsgs.shift()) {
-      this.addErrorLine(e.line, e.msg);
-    }
   }
 
   markErrors(errors: WorkerError[]) {
     // TODO: move cursor to error line if offscreen?
     this.clearErrors();
     errors = errors.slice(0, MAX_ERRORS);
+    const newErrors = new Set<number>();
     for (var info of errors) {
-      this.addError(info);
+      // only mark errors with this filename, or without any filename
+      if (!info.path || this.path.endsWith(info.path)) {
+        var numLines = this.editor.state.doc.lines;
+        var line = info.line - 1;
+        if (isNaN(line) || line < 0 || line >= numLines) line = 0;
+        newErrors.add(info.line - 1);
+      }
     }
+    this.editor.dispatch({
+      effects: [
+        errorMarkers.set.of(newErrors),
+      ],
+    });
   }
 
   clearErrors() {
     this.dirtylisting = true;
-    // clear line widgets
-    // this.editor.clearGutter("gutter-info");
-    this.errormsgs = [];
+    this.editor.dispatch({
+      effects: [
+        errorMarkers.set.of(new Set()),
+      ],
+    });
+
     while (this.errorwidgets.length) this.errorwidgets.shift().clear();
-    while (this.errormarks.length) this.errormarks.shift().clear();
   }
 
   getSourceFile(): SourceFile { return this.sourcefile; }

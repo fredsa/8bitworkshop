@@ -4,6 +4,7 @@ import { gutter, GutterMarker } from "@codemirror/view";
 const setOffset = StateEffect.define<Map<number, number>>();
 const setBytes = StateEffect.define<Map<number, string>>();
 const setClock = StateEffect.define<Map<number, string>>();
+const setErrors = StateEffect.define<Set<number>>();
 
 const offsetField = StateField.define<Map<number, number>>({
     create() { return new Map(); },
@@ -29,6 +30,14 @@ const clockField = StateField.define<Map<number, string>>({
     },
 });
 
+const errorField = StateField.define<Set<number>>({
+    create() { return new Set(); },
+    update(value, tr) {
+        for (let e of tr.effects) if (e.is(setErrors)) value = e.value;
+        return value;
+    },
+});
+
 class OffsetMarker extends GutterMarker {
     constructor(readonly hex: string) { super(); }
     toDOM() { return document.createTextNode(this.hex); }
@@ -42,6 +51,17 @@ class BytesMarker extends GutterMarker {
 class ClockMarker extends GutterMarker {
     constructor(readonly clock: string) { super(); }
     toDOM() { return document.createTextNode(this.clock); }
+}
+
+class ErrorMarker extends GutterMarker {
+    toDOM() {
+        const span = document.createElement("span");
+        span.innerHTML = "ⓧ";
+        span.style.color = "red";
+        span.style.cursor = "pointer";
+        span.title = "Hover for error";
+        return span;
+    }
 }
 
 const offsetGutter = gutter({
@@ -83,6 +103,19 @@ const clockGutter = gutter({
     },
 });
 
+const errorGutter = gutter({
+    class: "cm-error-gutter",
+    lineMarker(view, line) {
+        const errors = view.state.field(errorField);
+        const lineNum = view.state.doc.lineAt(line.from).number;
+        return errors.has(lineNum) ? new ErrorMarker() : null;
+    },
+    lineMarkerChange(update) {
+        return update.startState.field(errorField) !== update.state.field(errorField);
+    },
+    initialSpacer: () => new ErrorMarker(),
+});
+
 export const offset = {
     set: setOffset,
     field: offsetField,
@@ -99,4 +132,10 @@ export const clock = {
     set: setClock,
     field: clockField,
     gutter: clockGutter,
+};
+
+export const errorMarkers = {
+    set: setErrors,
+    field: errorField,
+    gutter: errorGutter,
 };

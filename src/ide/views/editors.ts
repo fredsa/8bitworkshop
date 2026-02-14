@@ -62,7 +62,7 @@ const errorMessageField = StateField.define<DecorationSet>({
               if (value.spec.widget instanceof ErrorMessageWidget) {
                 existingMessages.set(lineNum, (value.spec.widget as ErrorMessageWidget).message);
               }
-            } catch {}
+            } catch { }
           });
 
           // Check if we're adding or removing this line's message
@@ -604,25 +604,34 @@ export class SourceEditor implements ProjectView {
     this.clearCurrentLine(moveCursor);
     if (line) {
       addCurrentMarker(line);
-      //   if (moveCursor) {
-      //     this.editor.setCursor({line:line.line-1,ch:line.start||0}, {scroll:true});
-      //   }
+      if (moveCursor) {
+        // this.editor.setCursor({ line: line.line - 1, ch: line.start || 0 }, { scroll: true });
+        const targetLine = this.editor.state.doc.line(line.line);
+        const pos = targetLine.from + (line.start || 0);
+        this.editor.dispatch({
+          selection: { anchor: pos, head: pos },
+          effects: EditorView.scrollIntoView(pos, { y: "center" })
+        });
+      }
       //   var cls = blocked ? 'currentpc-span-blocked' : 'currentpc-span';
       //   var markOpts = { className: cls, inclusiveLeft: true };
       //   if (line.start || line.end)
       //     this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: line.start }, { line: line.line - 1, ch: line.end || line.start + 1 }, markOpts);
       //   else
       //     this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: 0 }, { line: line.line, ch: 0 }, markOpts);
-      //   this.currentDebugLine = line;
+      this.currentDebugLine = line;
     }
   }
 
   clearCurrentLine(moveCursor: boolean) {
-    // if (this.currentDebugLine) {
-    //   this.editor.clearGutter("gutter-info");
-    //   if (moveCursor) this.editor.setSelection(this.editor.getCursor());
-    //   this.currentDebugLine = null;
-    // }
+    if (this.currentDebugLine) {
+      // this.editor.clearGutter("gutter-info");
+      if (moveCursor) {
+        const pos = this.editor.state.selection.main.head;
+        this.editor.dispatch({ selection: { anchor: pos, head: pos } });
+      }
+      this.currentDebugLine = null;
+    }
     // if (this.markCurrentPC) {
     //   this.markCurrentPC.clear();
     //   this.markCurrentPC = null;
@@ -675,11 +684,12 @@ export class SourceEditor implements ProjectView {
   }
 
   getLine(line: number) {
-    return this.editor.getLine(line - 1);
+    return this.editor.state.doc.line(line).text;
   }
 
   getCurrentLine(): number {
-    return this.editor.getCursor().line + 1;
+    const pos = this.editor.state.selection.main.head;
+    return this.editor.state.doc.lineAt(pos).number;
   }
 
   getCursorPC(): number {

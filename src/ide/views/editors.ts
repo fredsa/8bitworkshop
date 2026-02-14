@@ -624,7 +624,6 @@ export class SourceEditor implements ProjectView {
 
   clearCurrentLine(moveCursor: boolean) {
     if (this.currentDebugLine) {
-      this.editor.dispatch({ effects: breakpointMarkers.set.of(null) });
       if (moveCursor) {
         const pos = this.editor.state.selection.main.head;
         this.editor.dispatch({ selection: { anchor: pos, head: pos } });

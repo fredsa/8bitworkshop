@@ -700,14 +700,6 @@ export class SourceEditor implements ProjectView {
     // TODO: we have to always start at beginning of frame
     if (this.sourcefile != null) {
       var targetPC = this.sourcefile.line2offset[lineno + 1];
-      var bpid = "pc" + targetPC;
-      if (platform.hasBreakpoint(bpid)) {
-        platform.clearBreakpoint(bpid);
-      } else {
-        platform.setBreakpoint(bpid, () => {
-          return platform.getPC() == targetPC;
-        });
-      }
       runToPC(targetPC);
     }
   }

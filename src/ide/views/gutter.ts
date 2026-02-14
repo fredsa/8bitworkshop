@@ -37,14 +37,20 @@ const breakpointField = StateField.define<Set<number>>({
     update(value, tr) {
         for (let e of tr.effects) {
             if (e.is(toggleBreakpoint)) {
-                // New set for `lineMarkerChange` detection.
-                const newSet = new Set(value);
-                if (newSet.has(e.value)) {
-                    newSet.delete(e.value);
-                } else {
-                    newSet.add(e.value);
-                }
+                // Multiple breakpoints not yet supported.
+                const newSet = new Set<number>();
+                newSet.add(e.value);
                 return newSet;
+
+                // TODO: multiple breakpoints.
+                // // New set for `lineMarkerChange` detection.
+                // const newSet = new Set(value);
+                // if (newSet.has(e.value)) {
+                //     newSet.delete(e.value);
+                // } else {
+                //     newSet.add(e.value);
+                // }
+                // return newSet;
             }
         }
         return value;
@@ -105,10 +111,10 @@ class BreakpointMarker extends GutterMarker {
 
     toDOM() {
         const span = document.createElement("span");
-        span.innerHTML = "●"; // or "🔴"
+        span.innerHTML = "▶"; // "●";
         span.style.color = "#ff0000";
         span.style.cursor = "pointer";
-        span.title = "Click to toggle breakpoint";
+        span.title = "Click to run to here"; // "Click to toggle breakpoint";
         return span;
     }
 }

@@ -4,6 +4,7 @@ import { gutter, GutterMarker } from "@codemirror/view";
 const setOffset = StateEffect.define<Map<number, number>>();
 const setBytes = StateEffect.define<Map<number, string>>();
 const setClock = StateEffect.define<Map<number, string>>();
+const toggleBreakpoint = StateEffect.define<number>();
 const setErrors = StateEffect.define<Map<number, string>>();
 const showErrorMessage = StateEffect.define<{ line: number, msg: string, toggle?: boolean } | null>();
 
@@ -31,6 +32,25 @@ const clockField = StateField.define<Map<number, string>>({
     },
 });
 
+const breakpointField = StateField.define<Set<number>>({
+    create() { return new Set(); },
+    update(value, tr) {
+        for (let e of tr.effects) {
+            if (e.is(toggleBreakpoint)) {
+                // New set for `lineMarkerChange` detection.
+                const newSet = new Set(value);
+                if (newSet.has(e.value)) {
+                    newSet.delete(e.value);
+                } else {
+                    newSet.add(e.value);
+                }
+                return newSet;
+            }
+        }
+        return value;
+    },
+});
+
 const errorField = StateField.define<Map<number, string>>({
     create() { return new Map(); },
     update(value, tr) {
@@ -45,6 +65,7 @@ const shownErrorLinesField = StateField.define<Set<number>>({
     update(value, tr) {
         for (let e of tr.effects) {
             if (e.is(showErrorMessage)) {
+                // New set for `lineMarkerChange` detection.
                 const newSet = new Set(value);
                 if (e.value === null) {
                     // Clear all shown messages
@@ -77,6 +98,19 @@ class BytesMarker extends GutterMarker {
 class ClockMarker extends GutterMarker {
     constructor(readonly clock: string) { super(); }
     toDOM() { return document.createTextNode(this.clock); }
+}
+
+class BreakpointMarker extends GutterMarker {
+    constructor(readonly line: number) { super(); }
+
+    toDOM() {
+        const span = document.createElement("span");
+        span.innerHTML = "●"; // or "🔴"
+        span.style.color = "#ff0000";
+        span.style.cursor = "pointer";
+        span.title = "Click to toggle breakpoint";
+        return span;
+    }
 }
 
 class ErrorMarker extends GutterMarker {
@@ -131,6 +165,29 @@ const clockGutter = gutter({
     },
 });
 
+const breakpointGutter = gutter({
+    class: "cm-breakpoint-gutter",
+    lineMarker(view, line) {
+        const breakpoints = view.state.field(breakpointField);
+        const lineNum = view.state.doc.lineAt(line.from).number;
+        return breakpoints.has(lineNum) ? new BreakpointMarker(lineNum) : null;
+    },
+    lineMarkerChange(update) {
+        return update.startState.field(breakpointField) !== update.state.field(breakpointField);
+    },
+    initialSpacer: () => new BreakpointMarker(0),
+    domEventHandlers: {
+        click(view, line) {
+            const lineNum = view.state.doc.lineAt(line.from).number;
+            // Dispatch effect to toggle breakpoint
+            view.dispatch({
+                effects: toggleBreakpoint.of(lineNum)
+            });
+            return true;
+        }
+    }
+});
+
 const errorGutter = gutter({
     class: "cm-error-gutter",
     lineMarker(view, line) {
@@ -174,6 +231,12 @@ export const clock = {
     set: setClock,
     field: clockField,
     gutter: clockGutter,
+};
+
+export const breakpointMarkers = {
+    set: toggleBreakpoint,
+    field: breakpointField,
+    gutter: breakpointGutter,
 };
 
 export const errorMarkers = {

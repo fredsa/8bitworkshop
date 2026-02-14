@@ -8,7 +8,7 @@ import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
 import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
-import { offset, bytes, clock, errorMarkers } from "./gutter";
+import { offset, bytes, clock, errorMarkers, breakpointMarkers } from "./gutter";
 import { textTransformFilterCompartment, createTextTransformFilterEffect } from "./filters";
 
 import { basicSetup } from "codemirror"
@@ -276,10 +276,6 @@ export class SourceEditor implements ProjectView {
     var text = current_project.getFile(this.path) as string;
     var asmOverride = text && this.mode == 'verilog' && /__asm\b([\s\S]+?)\b__endasm\b/.test(text);
     this.newEditor(div, text, asmOverride);
-    // // gutter clicked
-    // this.editor.on("gutterClick", (cm, n) => {
-    //   this.toggleBreakpoint(n);
-    // });
     this.editor.dispatch({
       effects: createTextTransformFilterEffect(textMapFunctions),
     });
@@ -360,6 +356,18 @@ export class SourceEditor implements ProjectView {
         bytes.gutter,
         clock.field,
         clock.gutter,
+        breakpointMarkers.field,
+        breakpointMarkers.gutter,
+
+        // Handle breakpoint toggle clicks
+        EditorView.updateListener.of(update => {
+          for (let effect of update.transactions.flatMap(tr => tr.effects)) {
+            if (effect.is(breakpointMarkers.set)) {
+              this.toggleBreakpoint(effect.value - 1);
+            }
+          }
+        }),
+
         errorMarkers.field,
         errorMarkers.gutter,
         errorMarkers.shownLinesField,
@@ -591,7 +599,6 @@ export class SourceEditor implements ProjectView {
           EditorView.scrollIntoView(this.editor.state.doc.line(line.line).from, { y: "center" }),
         ]
       });
-
     }
 
     this.clearCurrentLine(moveCursor);
@@ -693,7 +700,6 @@ export class SourceEditor implements ProjectView {
     // TODO: we have to always start at beginning of frame
     if (this.sourcefile != null) {
       var targetPC = this.sourcefile.line2offset[lineno + 1];
-      /*
       var bpid = "pc" + targetPC;
       if (platform.hasBreakpoint(bpid)) {
         platform.clearBreakpoint(bpid);
@@ -702,7 +708,6 @@ export class SourceEditor implements ProjectView {
           return platform.getPC() == targetPC;
         });
       }
-      */
       runToPC(targetPC);
     }
   }

@@ -416,14 +416,9 @@ export class SourceEditor implements ProjectView {
     }
   }
 
-  setGutterBytes(line: number, s: string) {
-    // this.setGutter("gutter-bytes", line-1, s);
-  }
-
   setTimingResult(result: CodeAnalyzer): void {
-    // this.editor.clearGutter("gutter-bytes");
     if (this.sourcefile == null) return;
-    // show the lines
+    var newBytes = new Map<number, string>();
     for (const line of Object.keys(this.sourcefile.line2offset)) {
       let pc = this.sourcefile.line2offset[line];
       let clocks = result.pc2clockrange[pc];
@@ -437,9 +432,14 @@ export class SourceEditor implements ProjectView {
           s = minclocks + "-" + maxclocks;
         if (maxclocks == result.MAX_CLOCKS)
           s += "+";
-        this.setGutterBytes(parseInt(line), s);
+        newBytes.set(parseInt(line), s);
       }
     }
+    this.editor.dispatch({
+      effects: [
+        bytes.set.of(newBytes),
+      ],
+    });
   }
 
   setCurrentLine(line: SourceLocation, moveCursor: boolean) {

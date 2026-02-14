@@ -17,7 +17,7 @@ import { createTextTransformFilterEffect, textTransformFilterCompartment } from 
 import { breakpointMarkers, bytes, clock, currentPcMarker, errorMarkers, offset } from "./gutter";
 
 import { indentWithTab } from "@codemirror/commands";
-import { currentPc, errorMessages, showValue } from "./visuals";
+import { currentPc, errorMessages, highlightLines, showValue } from "./visuals";
 
 // helper function for editor
 function jumpToLine(ed: EditorView, i: number) {
@@ -68,6 +68,9 @@ const ourTheme = EditorView.theme({
   },
   ".currentpc-marker-blocked": {
     color: "#ffee33",
+  },
+  ".highlight-lines": {
+    backgroundColor: "#003399 !important",
   },
   ".gutter-offset": {
     marginRight: "0.25em",
@@ -227,6 +230,8 @@ export class SourceEditor implements ProjectView {
         currentPcMarker.field,
         currentPcMarker.gutter,
 
+        highlightLines.field,
+
         textTransformFilterCompartment.of([]),
 
         // update file in project (and recompile) when edits made
@@ -252,10 +257,6 @@ export class SourceEditor implements ProjectView {
     this.updateTimer = setTimeout(() => {
       current_project.updateFile(this.path, this.editor.state.doc.toString());
     }, this.refreshDelayMsec);
-    // if (this.markHighlight) {
-    //   this.markHighlight.clear();
-    //   this.markHighlight = null;
-    // }
   }
 
   inspectUnderCursor(update: ViewUpdate) {
@@ -306,11 +307,15 @@ export class SourceEditor implements ProjectView {
   }
 
   highlightLines(start: number, end: number) {
-    //this.editor.setSelection({line:start, ch:0}, {line:end, ch:0});
-    var cls = 'hilite-span'
-    var markOpts = { className: cls, inclusiveLeft: true };
-    // this.markHighlight = this.editor.markText({ line: start, ch: 0 }, { line: end, ch: 0 }, markOpts);
-    // this.editor.scrollIntoView({ from: { line: start, ch: 0 }, to: { line: end, ch: 0 } });
+    this.editor.dispatch({
+      effects: highlightLines.effect.of({ start, end })
+    });
+    // Scroll to show start of the highlighted range.
+    const startLine = this.editor.state.doc.line(start);
+    const endLine = this.editor.state.doc.line(end);
+    this.editor.dispatch({
+      effects: EditorView.scrollIntoView(startLine.from, { y: "center" })
+    });
   }
 
   replaceSelection(start: number, end: number, text: string) {

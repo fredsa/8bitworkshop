@@ -14,7 +14,6 @@ const currentPcDecoration = Decoration.line({
 const currentPcLineField = StateField.define({
   create() { return Decoration.none },
   update(lines, tr) {
-    // Map existing decorations across document changes.
     lines = lines.map(tr.changes)
 
     for (let e of tr.effects) {
@@ -137,7 +136,6 @@ const showValueEffect = StateEffect.define<{ pos: number, val: any } | null>();
 const showValueDecorationField = StateField.define({
   create() { return Decoration.none },
   update(decorations, tr) {
-    // Map existing decorations if the document changes.
     decorations = decorations.map(tr.changes);
 
     for (let e of tr.effects) {
@@ -159,6 +157,42 @@ const showValueDecorationField = StateField.define({
   provide: f => EditorView.decorations.from(f),
 });
 
+const highlightLinesEffect = StateEffect.define<{ start: number, end: number } | null>();
+
+const highlightLinesDecoration = Decoration.line({
+  attributes: { class: "highlight-lines" }
+});
+
+const highlightLinesField = StateField.define({
+  create() { return Decoration.none },
+  update(decorations, tr) {
+    decorations = decorations.map(tr.changes);
+
+    for (let e of tr.effects) {
+      if (e.is(highlightLinesEffect)) {
+        if (e.value === null) return Decoration.none;
+
+        const { start, end } = e.value;
+        const decorationRanges: any[] = [];
+
+        // Highlight all lines in the range
+        for (let lineNum = start; lineNum <= end; lineNum++) {
+          try {
+            const line = tr.state.doc.line(lineNum);
+            decorationRanges.push(highlightLinesDecoration.range(line.from));
+          } catch {
+            // Line doesn't exist, skip
+          }
+        }
+
+        return Decoration.set(decorationRanges);
+      }
+    }
+    return decorations;
+  },
+  provide: f => EditorView.decorations.from(f),
+});
+
 export const errorMessages = {
   field: errorMessageField,
   widget: ErrorMessageWidget,
@@ -173,4 +207,9 @@ export const currentPc = {
 export const showValue = {
   effect: showValueEffect,
   field: showValueDecorationField,
+};
+
+export const highlightLines = {
+  effect: highlightLinesEffect,
+  field: highlightLinesField,
 };

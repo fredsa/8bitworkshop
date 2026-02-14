@@ -9,9 +9,6 @@
   text-decoration: underline;
   cursor: cell;
 }
-.hilite-span {
-  background-color: #003399;
-}
 .mark-error {
   text-decoration-line: underline;
   text-decoration-style: wavy;

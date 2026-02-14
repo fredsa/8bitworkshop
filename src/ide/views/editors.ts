@@ -517,21 +517,21 @@ export class SourceEditor implements ProjectView {
     for (var info of lstlines) {
       //if (info.path && info.path != this.path) continue;
       if (info.offset >= 0) {
-        newOffsets.set(info.line - 1, hex(info.offset & 0xffff, 4));
+        newOffsets.set(info.line, hex(info.offset & 0xffff, 4));
       }
       if (info.insns) {
         var insnstr = info.insns.length > 9 ? ("...") : info.insns;
-        newBytes.set(info.line - 1, insnstr);
+        newBytes.set(info.line, insnstr);
         if (info.iscode) {
           // TODO: labels trick this part?
           if (info.cycles) {
-            newClocks.set(info.line - 1, info.cycles + "");
+            newClocks.set(info.line, info.cycles + "");
           } else if (platform.getOpcodeMetadata) {
             var opcode = parseInt(info.insns.split(" ")[0], 16);
             var meta = platform.getOpcodeMetadata(opcode, info.offset);
             if (meta && meta.minCycles) {
               var clockstr = meta.minCycles + "";
-              newClocks.set(info.line - 1, clockstr);
+              newClocks.set(info.line, clockstr);
             }
           }
         }

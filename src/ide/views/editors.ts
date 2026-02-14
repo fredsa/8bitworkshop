@@ -213,13 +213,13 @@ const ourTheme = EditorView.theme({
     height: "100%",
   },
   ".cm-currentpc": {
-    backgroundColor: "#7e2a70",
+    backgroundColor: "#7e2a70 !important",
   },
   ".currentpc-marker": {
     color: "#ff66ee",
   },
   ".currentpc-span-blocked": {
-    backgroundColor: "#7e2a70",
+    backgroundColor: "#7e2a70 !important",
   },
   ".currentpc-marker-blocked": {
     color: "#ffee33",

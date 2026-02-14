@@ -1,178 +1,23 @@
-
-import { isMobileDevice, ProjectView } from "./baseviews";
-import { SourceFile, WorkerError, SourceLocation } from "../../common/workertypes";
+import { cpp } from "@codemirror/lang-cpp";
+import { indentUnit } from "@codemirror/language";
+import { highlightSelectionMatches } from "@codemirror/search";
+import { EditorState, Extension } from "@codemirror/state";
+import { crosshairCursor, EditorView, highlightActiveLine, keymap, rectangularSelection, ViewUpdate } from "@codemirror/view";
+import { basicSetup } from "codemirror";
 import { CodeAnalyzer } from "../../common/analysis";
-import { platform, current_project, lastDebugState, runToPC, qs } from "../ui";
 import { hex, rpad } from "../../common/util";
+import { SourceFile, SourceLocation, WorkerError } from "../../common/workertypes";
 import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
-import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
-import { offset, bytes, clock, errorMarkers, currentPcMarker, breakpointMarkers } from "./gutter";
-import { textTransformFilterCompartment, createTextTransformFilterEffect } from "./filters";
+import { mbo } from "../../themes/mbo";
+import { current_project, lastDebugState, platform, qs, runToPC } from "../ui";
+import { isMobileDevice, ProjectView } from "./baseviews";
+import { createTextTransformFilterEffect, textTransformFilterCompartment } from "./filters";
+import { breakpointMarkers, bytes, clock, currentPcMarker, errorMarkers, offset } from "./gutter";
 
-import { basicSetup } from "codemirror"
-import { EditorView, WidgetType, Decoration, DecorationSet, ViewUpdate, highlightActiveLine, keymap, rectangularSelection, crosshairCursor } from "@codemirror/view";
-import { highlightSelectionMatches } from "@codemirror/search"
-import { StateField, StateEffect, EditorState, Extension } from "@codemirror/state"
-import { indentUnit } from "@codemirror/language"
-import { cpp } from "@codemirror/lang-cpp";
 import { indentWithTab } from "@codemirror/commands";
-
-// Error message widget to show below error lines
-class ErrorMessageWidget extends WidgetType {
-  constructor(readonly message: string) { super() }
-
-  toDOM() {
-    let div = document.createElement("div");
-    div.textContent = this.message;
-    div.style.cssText = `
-      color: #ff6666;
-      background-color: #330000;
-      padding: 4px 8px;
-      margin: 2px 0;
-      border-left: 3px solid #ff0000;
-      font-family: monospace;
-    `;
-    return div;
-  }
-}
-
-// State field to manage error message decorations (supports multiple messages)
-const errorMessageField = StateField.define<DecorationSet>({
-  create() { return Decoration.none; },
-  update(decorations, tr) {
-    // Map existing decorations across document changes
-    decorations = decorations.map(tr.changes);
-
-    for (let e of tr.effects) {
-      if (e.is(errorMarkers.showMessage)) {
-        if (e.value === null || !e.value) {
-          // Clear all messages
-          return Decoration.none;
-        } else if (e.value.toggle) {
-          // Build new decoration set with toggled message
-          const widgets: any[] = [];
-
-          // Collect existing decorations
-          const existingMessages = new Map<number, string>();
-          decorations.between(0, tr.state.doc.length, (from, to, value) => {
-            try {
-              const lineNum = tr.state.doc.lineAt(to).number;
-              if (value.spec.widget instanceof ErrorMessageWidget) {
-                existingMessages.set(lineNum, (value.spec.widget as ErrorMessageWidget).message);
-              }
-            } catch { }
-          });
-
-          // Check if we're adding or removing this line's message
-          const isCurrentlyShown = existingMessages.has(e.value.line);
-
-          if (isCurrentlyShown) {
-            // Remove the message
-            existingMessages.delete(e.value.line);
-          } else {
-            // Add the new message
-            existingMessages.set(e.value.line, e.value.msg);
-          }
-
-          // Build sorted decorations
-          const sortedLines = Array.from(existingMessages.keys()).sort((a, b) => a - b);
-          sortedLines.forEach(lineNum => {
-            try {
-              const line = tr.state.doc.line(lineNum);
-              widgets.push(
-                Decoration.widget({
-                  widget: new ErrorMessageWidget(existingMessages.get(lineNum)!),
-                  block: true,
-                  side: 1
-                }).range(line.to)
-              );
-            } catch {
-              // Line doesn't exist, skip
-            }
-          });
-
-          return Decoration.set(widgets, true);
-        }
-      }
-    }
-    return decorations;
-  },
-  provide: f => EditorView.decorations.from(f),
-});
-
-
-// Highlight program counter line.
-const currentPcEffect = StateEffect.define<number | null>();
-
-const currentPcDecoration = Decoration.line({
-  attributes: { class: "cm-currentpc" }
-});
-
-const currentPcLineField = StateField.define({
-  create() { return Decoration.none },
-  update(lines, tr) {
-    // Map existing decorations across document changes.
-    lines = lines.map(tr.changes)
-
-    for (let e of tr.effects) {
-      if (e.is(currentPcEffect)) {
-        if (e.value === null) return Decoration.none;
-
-        const line = tr.state.doc.line(e.value);
-        return Decoration.set([currentPcDecoration.range(line.from)]);
-      }
-    }
-    return lines;
-  },
-  provide: f => EditorView.decorations.from(f),
-});
-
-// Decorator widget to show values.
-class ShowValueWidget extends WidgetType {
-  constructor(readonly value: string) { super() }
-
-  toDOM() {
-    let div = document.createElement("div");
-    div.textContent = `${this.value}`;
-    div.style.cssText = `
-      color: #ccccff;
-      background-color: #000066;
-      display: inline-block;
-    `;
-    div.className = "cm-line";
-    return div
-  }
-}
-
-// Effect to pass the position and value to the state.
-const showValueEffect = StateEffect.define<{ pos: number, val: any } | null>();
-
-const showValueDecorationField = StateField.define({
-  create() { return Decoration.none },
-  update(decorations, tr) {
-    // Map existing decorations if the document changes.
-    decorations = decorations.map(tr.changes);
-
-    for (let e of tr.effects) {
-      if (e.is(showValueEffect)) {
-        if (e.value === null || !e.value) {
-          return Decoration.none;
-        }
-        return Decoration.set([
-          Decoration.widget({
-            widget: new ShowValueWidget(e.value.val),
-            block: true,
-            side: 1 // Appears after the text
-          }).range(e.value.pos)
-        ])
-      }
-    }
-    return decorations;
-  },
-  provide: f => EditorView.decorations.from(f),
-});
+import { currentPc, errorMessages, showValue } from "./visuals";
 
 // helper function for editor
 function jumpToLine(ed: EditorView, i: number) {
@@ -353,7 +198,7 @@ export class SourceEditor implements ProjectView {
         keymap.of([indentWithTab]),
         lineWrap ? EditorView.lineWrapping : [],
 
-        currentPcLineField,
+        currentPc.field,
 
         offset.field,
         offset.gutter,
@@ -377,7 +222,7 @@ export class SourceEditor implements ProjectView {
         errorMarkers.field,
         errorMarkers.gutter,
         errorMarkers.shownLinesField,
-        errorMessageField,
+        errorMessages.field,
 
         currentPcMarker.field,
         currentPcMarker.gutter,
@@ -392,7 +237,7 @@ export class SourceEditor implements ProjectView {
         }),
 
         // inspect symbol when it's highlighted (double-click)
-        showValueDecorationField,
+        showValue.field,
         EditorView.updateListener.of(update => {
           if (update.selectionSet) {
             this.inspectUnderCursor(update);
@@ -425,11 +270,11 @@ export class SourceEditor implements ProjectView {
 
     if (!range.empty && result && result.length < 80) {
       update.view.dispatch({
-        effects: showValueEffect.of({ pos: range.to, val: result })
+        effects: showValue.effect.of({ pos: range.to, val: result })
       });
     } else {
       update.view.dispatch({
-        effects: showValueEffect.of(null)
+        effects: showValue.effect.of(null)
       });
     }
   }
@@ -599,7 +444,7 @@ export class SourceEditor implements ProjectView {
       this.editor.dispatch({
         effects: [
           currentPcMarker.set.of(line.line),
-          currentPcEffect.of(line.line),
+          currentPc.effect.of(line.line),
           // Optional: follow the execution point
           EditorView.scrollIntoView(this.editor.state.doc.line(line.line).from, { y: "center" }),
         ]
@@ -633,7 +478,7 @@ export class SourceEditor implements ProjectView {
     this.editor.dispatch({
       effects: [
         currentPcMarker.set.of(null),
-        currentPcEffect.of(null),
+        currentPc.effect.of(null),
       ]
     });
   }
@@ -741,7 +586,7 @@ export class DisassemblerView implements ProjectView {
         highlightSelectionMatches(),
         disassemblyTheme,
         cobalt,
-        currentPcLineField,
+        currentPc.field,
         EditorState.tabSize.of(8),
         EditorState.readOnly.of(true),
       ],

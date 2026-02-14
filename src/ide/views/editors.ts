@@ -9,6 +9,7 @@ import { basic } from "../../parser/lang-basic";
 import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
 import { offset, bytes, clock, errorMarkers } from "./gutter";
+import { textTransformFilterCompartment, createTextTransformFilterEffect } from "./filters";
 
 import { basicSetup } from "codemirror"
 import { EditorView, WidgetType, Decoration, DecorationSet, ViewUpdate, highlightActiveLine, keymap, rectangularSelection, crosshairCursor } from "@codemirror/view";
@@ -250,7 +251,7 @@ const disassemblyTheme = EditorView.theme({
 });
 
 export var textMapFunctions = {
-  input: null
+  input: null as ((text: string) => string) | null
 };
 
 export class SourceEditor implements ProjectView {
@@ -275,7 +276,13 @@ export class SourceEditor implements ProjectView {
     var text = current_project.getFile(this.path) as string;
     var asmOverride = text && this.mode == 'verilog' && /__asm\b([\s\S]+?)\b__endasm\b/.test(text);
     this.newEditor(div, text, asmOverride);
-    this.setupEditor();
+    // // gutter clicked
+    // this.editor.on("gutterClick", (cm, n) => {
+    //   this.toggleBreakpoint(n);
+    // });
+    this.editor.dispatch({
+      effects: createTextTransformFilterEffect(textMapFunctions),
+    });
     if (current_project.getToolForFilename(this.path).startsWith("remote:")) {
       this.refreshDelayMsec = 1000; // remote URLs get slower refresh
     }
@@ -298,9 +305,9 @@ export class SourceEditor implements ProjectView {
       lineNums = false; // no line numbers while embedded
       isAsm = false; // no opcode bytes either
     }
-    var gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-info"];
-    if (isAsm) gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-bytes", "gutter-clock", "gutter-info"];
-    if (modedef.noGutters || isMobileDevice) gutters = ["gutter-info"];
+    // var gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-info"];
+    // if (isAsm) gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-bytes", "gutter-clock", "gutter-info"];
+    // if (modedef.noGutters || isMobileDevice) gutters = ["gutter-info"];
     var parser: Extension;
     switch (this.mode) {
       case '6502':
@@ -357,6 +364,7 @@ export class SourceEditor implements ProjectView {
         errorMarkers.gutter,
         errorMarkers.shownLinesField,
         errorMessageField,
+        textTransformFilterCompartment.of([]),
 
         // update file in project (and recompile) when edits made
         EditorView.updateListener.of(update => {
@@ -385,19 +393,6 @@ export class SourceEditor implements ProjectView {
     //   this.markHighlight.clear();
     //   this.markHighlight = null;
     // }
-  }
-
-  setupEditor() {
-    // // gutter clicked
-    // this.editor.on("gutterClick", (cm, n) => {
-    //   this.toggleBreakpoint(n);
-    // });
-    // // set editor mode for highlighting, etc
-    // this.editor.setOption("mode", this.mode);
-    // // change text?
-    // this.editor.on('beforeChange', (cm, chgobj) => {
-    //   if (textMapFunctions.input && chgobj.text) chgobj.text = chgobj.text.map(textMapFunctions.input);
-    // });
   }
 
   inspectUnderCursor(update: ViewUpdate) {

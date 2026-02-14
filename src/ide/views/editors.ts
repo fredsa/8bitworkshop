@@ -8,7 +8,7 @@ import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
 import { mbo } from "../../themes/mbo";
 import { cobalt } from "../../themes/cobalt";
-import { offset, bytes, clock, errorMarkers, breakpointMarkers } from "./gutter";
+import { offset, bytes, clock, errorMarkers, currentPcMarker, breakpointMarkers } from "./gutter";
 import { textTransformFilterCompartment, createTextTransformFilterEffect } from "./filters";
 
 import { basicSetup } from "codemirror"
@@ -232,6 +232,9 @@ const ourTheme = EditorView.theme({
     marginRight: "0.25em",
     opacity: 0.7,
   },
+  ".gutter-currentpc": {
+    color: "#ff66ee",
+  },
   ".gutter-clock": {
     marginLeft: "0.25em",
     marginRight: "0.25em",
@@ -349,20 +352,23 @@ export class SourceEditor implements ProjectView {
         indentUnit.of("        "),
         keymap.of([indentWithTab]),
         lineWrap ? EditorView.lineWrapping : [],
+
         currentPcLineField,
+
         offset.field,
         offset.gutter,
+
         bytes.field,
         bytes.gutter,
+
         clock.field,
         clock.gutter,
+
         breakpointMarkers.field,
         breakpointMarkers.gutter,
-
-        // Handle breakpoint toggle clicks
         EditorView.updateListener.of(update => {
           for (let effect of update.transactions.flatMap(tr => tr.effects)) {
-            if (effect.is(breakpointMarkers.set)) {
+            if (effect.is(breakpointMarkers.set) && effect.value != null) {
               this.toggleBreakpoint(effect.value - 1);
             }
           }
@@ -372,6 +378,10 @@ export class SourceEditor implements ProjectView {
         errorMarkers.gutter,
         errorMarkers.shownLinesField,
         errorMessageField,
+
+        currentPcMarker.field,
+        currentPcMarker.gutter,
+
         textTransformFilterCompartment.of([]),
 
         // update file in project (and recompile) when edits made
@@ -586,14 +596,9 @@ export class SourceEditor implements ProjectView {
     var blocked = platform.isBlocked && platform.isBlocked();
 
     var addCurrentMarker = (line: SourceLocation) => {
-      // var div = document.createElement("div");
-      // var cls = blocked ? 'currentpc-marker-blocked' : 'currentpc-marker';
-      // div.classList.add(cls);
-      // div.appendChild(document.createTextNode("\u25b6"));
-      // this.editor.setGutterMarker(line.line - 1, "gutter-info", div);
-
       this.editor.dispatch({
         effects: [
+          currentPcMarker.set.of(line.line),
           currentPcEffect.of(line.line),
           // Optional: follow the execution point
           EditorView.scrollIntoView(this.editor.state.doc.line(line.line).from, { y: "center" }),
@@ -613,30 +618,25 @@ export class SourceEditor implements ProjectView {
           effects: EditorView.scrollIntoView(pos, { y: "center" })
         });
       }
-      //   var cls = blocked ? 'currentpc-span-blocked' : 'currentpc-span';
-      //   var markOpts = { className: cls, inclusiveLeft: true };
-      //   if (line.start || line.end)
-      //     this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: line.start }, { line: line.line - 1, ch: line.end || line.start + 1 }, markOpts);
-      //   else
-      //     this.markCurrentPC = this.editor.markText({ line: line.line - 1, ch: 0 }, { line: line.line, ch: 0 }, markOpts);
       this.currentDebugLine = line;
     }
   }
 
   clearCurrentLine(moveCursor: boolean) {
     if (this.currentDebugLine) {
-      // this.editor.clearGutter("gutter-info");
+      this.editor.dispatch({ effects: breakpointMarkers.set.of(null) });
       if (moveCursor) {
         const pos = this.editor.state.selection.main.head;
         this.editor.dispatch({ selection: { anchor: pos, head: pos } });
       }
       this.currentDebugLine = null;
     }
-    // if (this.markCurrentPC) {
-    //   this.markCurrentPC.clear();
-    //   this.markCurrentPC = null;
-    // }
-    this.editor.dispatch({ effects: currentPcEffect.of(null) });
+    this.editor.dispatch({
+      effects: [
+        currentPcMarker.set.of(null),
+        currentPcEffect.of(null),
+      ]
+    });
   }
 
   getActiveLine(): SourceLocation {

@@ -471,7 +471,6 @@ export class SourceEditor implements ProjectView {
     if (line) {
       addCurrentMarker(line);
       if (moveCursor) {
-        // this.editor.setCursor({ line: line.line - 1, ch: line.start || 0 }, { scroll: true });
         const targetLine = this.editor.state.doc.line(line.line);
         const pos = targetLine.from + (line.start || 0);
         this.editor.dispatch({
@@ -683,14 +682,17 @@ export class DisassemblerView implements ProjectView {
   }
 
   getCursorPC(): number {
-    // var line = this.disasmview.getCursor().line;
-    // if (line >= 0) {
-    //   var toks = this.disasmview.getLine(line).trim().split(/\s+/);
-    //   if (toks && toks.length >= 1) {
-    //     var pc = parseInt(toks[0], 16);
-    //     if (pc >= 0) return pc;
-    //   }
-    // }
+    const pos = this.disasmview.state.selection.main.head;
+    const lineNum = this.disasmview.state.doc.lineAt(pos).number;
+    if (lineNum >= 0) {
+      const lineText = this.disasmview.state.doc.line(lineNum).text;
+      const toks = lineText.trim().split(/\s+/);
+      if (toks && toks.length >= 1) {
+        const pc = parseInt(toks[0], 16);
+        console.log("getCursorPC",pc);
+        if (pc >= 0) return pc;
+      }
+    }
     return -1;
   }
 }

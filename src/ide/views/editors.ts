@@ -133,7 +133,6 @@ export class SourceEditor implements ProjectView {
         parser = markdown();
         break;
       case 'text/x-csrc':
-        // parser = StreamLanguage.define(clike({ name: "our-clike" }));
         parser = cpp();
         break;
       case 'text/x-wiz':

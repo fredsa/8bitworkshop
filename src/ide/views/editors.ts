@@ -10,6 +10,7 @@ import { SourceFile, SourceLocation, WorkerError } from "../../common/workertype
 import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
 import { batariBasic } from "../../parser/lang-bataribasic";
+import { fastBasic } from "../../parser/lang-fastbasic";
 import { inform6 } from "../../parser/lang-inform6";
 import { verilog } from "../../parser/lang-verilog";
 import { asmZ80 } from "../../parser/lang-z80";
@@ -127,6 +128,7 @@ export class SourceEditor implements ProjectView {
       case 'ecs':
         break;
       case 'fastbasic':
+        parser = fastBasic();
         break;
       case 'gas':
         break;

@@ -734,7 +734,9 @@ export class ListingView extends DisassemblerView implements ProjectView {
       if (res) {
         // set cursor while debugging
         if (moveCursor) {
-          // disasmview.setCursor(res.line-1, 0);
+          this.disasmview.dispatch({
+            selection: { anchor: res.line - 1, head: res.line - 1 }
+          });
         }
         jumpToLine(disasmview, res.line - 1);
       }

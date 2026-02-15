@@ -9,6 +9,8 @@ import { SourceFile, SourceLocation, WorkerError } from "../../common/workertype
 import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
 import { cobalt } from "../../themes/cobalt";
+import { disassemblyTheme } from "../../themes/disassemblyTheme";
+import { editorTheme } from "../../themes/editorTheme";
 import { mbo } from "../../themes/mbo";
 import { current_project, lastDebugState, platform, qs, runToPC } from "../ui";
 import { isMobileDevice, ProjectView } from "./baseviews";
@@ -52,51 +54,6 @@ const MODEDEFS = {
   basic: { noLineNumbers: true, noGutters: true }, // TODO: not used?
   ecs: { theme: mbo, isAsm: true },
 }
-
-const ourTheme = EditorView.theme({
-  "&": {
-    height: "100%",
-  },
-  ".cm-currentpc": {
-    backgroundColor: "#7e2a70 !important",
-  },
-  ".currentpc-marker": {
-    color: "#ff66ee",
-  },
-  ".currentpc-span-blocked": {
-    backgroundColor: "#7e2a70 !important",
-  },
-  ".currentpc-marker-blocked": {
-    color: "#ffee33",
-  },
-  ".highlight-lines": {
-    backgroundColor: "#003399 !important",
-  },
-  ".gutter-offset": {
-    marginRight: "0.25em",
-  },
-  ".gutter-bytes": {
-    marginLeft: "0.25em",
-    marginRight: "0.25em",
-    opacity: 0.7,
-  },
-  ".gutter-currentpc": {
-    color: "#ff66ee",
-  },
-  ".gutter-clock": {
-    marginLeft: "0.25em",
-    marginRight: "0.25em",
-  },
-  "& .cm-lineNumbers .cm-gutterElement": {
-    color: "#99cc99",
-  },
-});
-
-const disassemblyTheme = EditorView.theme({
-  "&": {
-    maxHeight: "100%"
-  },
-});
 
 export var textMapFunctions = {
   input: null as ((text: string) => string) | null
@@ -222,7 +179,7 @@ export class SourceEditor implements ProjectView {
         highlightActiveLineGutter(),
         highlightSelectionMatches(),
 
-        search({top: true}),
+        search({ top: true }),
         keymap.of(searchKeymap),
 
         // lintGutter(),
@@ -230,7 +187,7 @@ export class SourceEditor implements ProjectView {
 
         parser || [],
         theme,
-        ourTheme,
+        editorTheme,
         EditorState.tabSize.of(8),
         indentUnit.of("        "),
         keymap.of([indentWithTab]),
@@ -688,7 +645,7 @@ export class DisassemblerView implements ProjectView {
       const toks = lineText.trim().split(/\s+/);
       if (toks && toks.length >= 1) {
         const pc = parseInt(toks[0], 16);
-        console.log("getCursorPC",pc);
+        console.log("getCursorPC", pc);
         if (pc >= 0) return pc;
       }
     }

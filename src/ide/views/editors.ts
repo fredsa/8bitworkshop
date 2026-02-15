@@ -9,6 +9,7 @@ import { hex, rpad } from "../../common/util";
 import { SourceFile, SourceLocation, WorkerError } from "../../common/workertypes";
 import { asm6502 } from "../../parser/lang-6502";
 import { basic } from "../../parser/lang-basic";
+import { batariBasic } from "../../parser/lang-bataribasic";
 import { verilog } from "../../parser/lang-verilog";
 import { asmZ80 } from "../../parser/lang-z80";
 import { cobalt } from "../../themes/cobalt";
@@ -120,6 +121,7 @@ export class SourceEditor implements ProjectView {
         parser = basic();
         break;
       case 'bataribasic':
+        parser = batariBasic();
         break;
       case 'ecs':
         break;

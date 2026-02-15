@@ -1,8 +1,8 @@
 import { cpp } from "@codemirror/lang-cpp";
-import { indentUnit } from "@codemirror/language";
-import { highlightSelectionMatches } from "@codemirror/search";
+import { bracketMatching, foldGutter, indentOnInput, indentUnit } from "@codemirror/language";
+import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { EditorState, Extension } from "@codemirror/state";
-import { crosshairCursor, EditorView, highlightActiveLine, keymap, rectangularSelection, ViewUpdate } from "@codemirror/view";
+import { crosshairCursor, drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, highlightSpecialChars, keymap, lineNumbers, rectangularSelection, ViewUpdate } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { CodeAnalyzer } from "../../common/analysis";
 import { hex, rpad } from "../../common/util";
@@ -16,7 +16,8 @@ import { isMobileDevice, ProjectView } from "./baseviews";
 import { createTextTransformFilterEffect, textTransformFilterCompartment } from "./filters";
 import { breakpointMarkers, bytes, clock, currentPcMarker, errorMarkers, offset } from "./gutter";
 
-import { indentWithTab } from "@codemirror/commands";
+import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
+import { defaultKeymap, history, indentWithTab } from "@codemirror/commands";
 import { currentPc, errorMessages, highlightLines, showValue } from "./visuals";
 
 // helper function for editor
@@ -96,9 +97,6 @@ const disassemblyTheme = EditorView.theme({
   "&": {
     maxHeight: "100%"
   },
-  ".cm-activeLine": {
-    backgroundColor: "#003399",
-  },
 });
 
 export var textMapFunctions = {
@@ -152,9 +150,8 @@ export class SourceEditor implements ProjectView {
       lineNums = false; // no line numbers while embedded
       isAsm = false; // no opcode bytes either
     }
-    // var gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-info"];
-    // if (isAsm) gutters = ["CodeMirror-linenumbers", "gutter-offset", "gutter-bytes", "gutter-clock", "gutter-info"];
-    // if (modedef.noGutters || isMobileDevice) gutters = ["gutter-info"];
+    const minimalGutters = modedef.noGutters || isMobileDevice;
+
     var parser: Extension;
     switch (this.mode) {
       case '6502':
@@ -192,7 +189,46 @@ export class SourceEditor implements ProjectView {
       parent: parent,
       doc: text,
       extensions: [
-        basicSetup,
+
+        // Custom keybindings must appear before default keybindings.
+        keymap.of([
+          { key: "Backspace", run: deleteBracketPair },
+        ]),
+        keymap.of(defaultKeymap),
+
+        minimalGutters ? [] : lineNumbers(),
+
+        highlightSpecialChars(),
+
+        // Undo history.
+        history(),
+
+        // Code fold gutter.
+        foldGutter(),
+
+        dropCursor(),
+
+        EditorState.allowMultipleSelections.of(true),
+        drawSelection(),
+
+        indentOnInput(),
+        bracketMatching(),
+        closeBrackets(),
+
+        // Rectangular selection and crosshair cursor.
+        rectangularSelection(),
+        crosshairCursor(),
+
+        highlightActiveLine(),
+        highlightActiveLineGutter(),
+        highlightSelectionMatches(),
+
+        search({top: true}),
+        keymap.of(searchKeymap),
+
+        // lintGutter(),
+        // autocompletion(),
+
         parser || [],
         theme,
         ourTheme,
@@ -203,14 +239,18 @@ export class SourceEditor implements ProjectView {
 
         currentPc.field,
 
-        offset.field,
-        offset.gutter,
+        !minimalGutters ? [
+          offset.field,
+          offset.gutter,
+        ] : [],
 
-        bytes.field,
-        bytes.gutter,
+        isAsm && !minimalGutters ? [
+          bytes.field,
+          bytes.gutter,
 
-        clock.field,
-        clock.gutter,
+          clock.field,
+          clock.gutter,
+        ] : [],
 
         breakpointMarkers.field,
         breakpointMarkers.gutter,

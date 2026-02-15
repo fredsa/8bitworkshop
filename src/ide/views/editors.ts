@@ -627,6 +627,8 @@ export class DisassemblerView implements ProjectView {
       extensions: [
         rectangularSelection(),
         crosshairCursor(),
+        EditorState.allowMultipleSelections.of(true),
+        drawSelection(),
         highlightActiveLine(),
         highlightSelectionMatches(),
         disassemblyTheme,

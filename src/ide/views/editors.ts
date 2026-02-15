@@ -163,7 +163,7 @@ export class SourceEditor implements ProjectView {
         ]),
         keymap.of(defaultKeymap),
 
-        minimalGutters ? [] : lineNumbers(),
+        lineNums ? lineNumbers() : [],
 
         highlightSpecialChars(),
 

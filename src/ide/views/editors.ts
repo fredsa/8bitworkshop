@@ -427,16 +427,6 @@ export class SourceEditor implements ProjectView {
     });
   }
 
-  setGutter(type: string, line: number, text: string) {
-    var lineinfo = this.editor.lineInfo(line);
-    if (lineinfo && lineinfo.gutterMarkers && lineinfo.gutterMarkers[type]) {
-      // do not replace existing marker
-    } else {
-      var textel = document.createTextNode(text);
-      // this.editor.setGutterMarker(line, type, textel);
-    }
-  }
-
   setTimingResult(result: CodeAnalyzer): void {
     if (this.sourcefile == null) return;
     var newBytes = new Map<number, string>();

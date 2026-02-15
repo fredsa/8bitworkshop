@@ -2,7 +2,6 @@ import { EditorView } from "@codemirror/view"
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { tags as t } from "@lezer/highlight"
 
-// 1. Editor UI Styles
 const cobaltTheme = EditorView.theme({
   "&": {
     color: "white",
@@ -36,7 +35,6 @@ const cobaltTheme = EditorView.theme({
   },
 }, { dark: true });
 
-// 2. Syntax Highlighting Styles
 const cobaltHighlightStyle = HighlightStyle.define([
   { tag: t.comment, color: "#ccc" },
   { tag: t.atom, color: "#845dc4 " },
@@ -52,7 +50,6 @@ const cobaltHighlightStyle = HighlightStyle.define([
   { tag: t.invalid, color: "#9d1e15" },
 ]);
 
-// 3. Combined Extension
 export const cobalt = [
   cobaltTheme,
   syntaxHighlighting(cobaltHighlightStyle),

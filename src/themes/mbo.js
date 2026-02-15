@@ -28,6 +28,9 @@ export const mboTheme = EditorView.theme({
   ".cm-activeLineGutter": {
     backgroundColor: "#494b4155"
   },
+  "&.cm-focused .cm-gutterElement.cm-activeLineGutter": {
+    color: "#33ff33"
+  },
   ".cm-linenumber": {
     color: "#dadada"
   },

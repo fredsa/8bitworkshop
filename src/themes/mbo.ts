@@ -51,7 +51,7 @@ export const mboHighlightStyle = HighlightStyle.define([
   { tag: t.bracket, color: "#fffffc", fontWeight: "bold" },
   { tag: t.comment, color: "#95958a" },
   { tag: t.link, color: "#f54b07" },
-  { tag: t.meta, color: "#aaddaa" },
+  { tag: t.meta, color: "#9ddfe9" },
   { tag: t.invalid, color: "#ffffec", borderBottom: "1px solid #636363" },
 ]);
 

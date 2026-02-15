@@ -23,10 +23,10 @@ const cobaltTheme = EditorView.theme({
     borderRight: "1px solid #aaa"
   },
   ".cm-activeLine": {
-    backgroundColor: "#003399"
+    backgroundColor: "#00339933"
   },
   ".cm-activeLineGutter": {
-    backgroundColor: "#003399",
+    backgroundColor: "#00339933",
     color: "#ffee80"
   },
   "&.cm-focused .cm-matchingBracket": {

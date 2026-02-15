@@ -15,7 +15,7 @@ export const mboTheme = EditorView.theme({
     borderLeft: "1px solid #ffffec"
   },
   "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection": {
-    backgroundColor: "rgba(113, 108, 98, .99)"
+    backgroundColor: "rgba(113, 108, 98, .99) !important"
   },
   ".cm-gutters": {
     backgroundColor: "#4e4e4e",
@@ -23,10 +23,10 @@ export const mboTheme = EditorView.theme({
     borderRight: "none"
   },
   ".cm-activeLine": {
-    backgroundColor: "#494b41"
+    backgroundColor: "#494b4155"
   },
   ".cm-activeLineGutter": {
-    backgroundColor: "#494b41"
+    backgroundColor: "#494b4155"
   },
   ".cm-linenumber": {
     color: "#dadada"

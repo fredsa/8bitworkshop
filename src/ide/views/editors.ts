@@ -1,4 +1,5 @@
 import { cpp } from "@codemirror/lang-cpp";
+import { markdown } from "@codemirror/lang-markdown";
 import { bracketMatching, foldGutter, indentOnInput, indentUnit } from "@codemirror/language";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { EditorState, Extension } from "@codemirror/state";
@@ -129,6 +130,7 @@ export class SourceEditor implements ProjectView {
       case 'inform6':
         break;
       case 'markdown':
+        parser = markdown();
         break;
       case 'text/x-csrc':
         // parser = StreamLanguage.define(clike({ name: "our-clike" }));

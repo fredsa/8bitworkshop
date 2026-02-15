@@ -151,6 +151,9 @@ export class SourceEditor implements ProjectView {
       case 'z80':
         parser = asmZ80();
         break;
+      default:
+        console.warn("Unknown mode: " + this.mode);
+        break;
     }
     this.editor = new EditorView({
       parent: parent,

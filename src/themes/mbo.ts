@@ -40,7 +40,9 @@ export const mboTheme = EditorView.theme({
 
 export const mboHighlightStyle = HighlightStyle.define([
   { tag: t.keyword, color: "#ffb928" },
-  { tag: [t.name, t.variableName, t.standard(t.name)], color: "#ffffec" },
+  { tag: [t.name], color: "#88eeff" },
+  { tag: [t.variableName], color: "#ffffec" },
+  { tag: [t.standard(t.name)], color: "#ffffec" },
   { tag: [t.deleted, t.macroName], color: "#00a8c6" }, // maps to cm-variable-2
   { tag: [t.processingInstruction, t.string, t.inserted], color: "#b4fdb7" }, // Updated string color
   { tag: t.number, color: "#33aadd" }, // Updated number color

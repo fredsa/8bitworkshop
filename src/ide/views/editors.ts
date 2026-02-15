@@ -3,7 +3,6 @@ import { bracketMatching, foldGutter, indentOnInput, indentUnit } from "@codemir
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { EditorState, Extension } from "@codemirror/state";
 import { crosshairCursor, drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, highlightSpecialChars, keymap, lineNumbers, rectangularSelection, ViewUpdate } from "@codemirror/view";
-import { basicSetup } from "codemirror";
 import { CodeAnalyzer } from "../../common/analysis";
 import { hex, rpad } from "../../common/util";
 import { SourceFile, SourceLocation, WorkerError } from "../../common/workertypes";

@@ -346,13 +346,6 @@ export class SourceEditor implements ProjectView {
     });
   }
 
-  replaceSelection(start: number, end: number, text: string) {
-    // this.editor.setSelection(this.editor.posFromIndex(start), this.editor.posFromIndex(end));
-    // TODO:verify
-    this.editor.dispatch({ selection: { start, end } });
-    this.editor.replaceSelection(text);
-  }
-
   getValue(): string {
     return this.editor.state.doc.toString();
   }

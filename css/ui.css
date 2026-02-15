@@ -1,20 +1,6 @@
 .dbg_info {
   font-size: 0.8em;
 }
-.gutter-info {
-  width: 1em;
-  cursor: cell;
-}
-.CodeMirror-gutter-elt:hover {
-  text-decoration: underline;
-  cursor: cell;
-}
-.mark-error {
-  text-decoration-line: underline;
-  text-decoration-style: wavy;
-  text-decoration-color: #ff6666;
-  text-decoration-thickness: 1px;
-}
 .tooltipbox {
     position: relative;
     display: inline-block;

@@ -7,6 +7,7 @@ import { CodeAnalyzer } from "../../common/analysis";
 import { hex, rpad } from "../../common/util";
 import { SourceFile, SourceLocation, WorkerError } from "../../common/workertypes";
 import { asm6502 } from "../../parser/lang-6502";
+import { asmZ80 } from "../../parser/lang-z80";
 import { basic } from "../../parser/lang-basic";
 import { cobalt } from "../../themes/cobalt";
 import { disassemblyTheme } from "../../themes/disassemblyTheme";
@@ -139,6 +140,7 @@ export class SourceEditor implements ProjectView {
       case 'verilog':
         break;
       case 'z80':
+        parser = asmZ80();
         break;
     }
     this.editor = new EditorView({

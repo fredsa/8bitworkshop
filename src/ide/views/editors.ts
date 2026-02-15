@@ -13,6 +13,7 @@ import { batariBasic } from "../../parser/lang-bataribasic";
 import { fastBasic } from "../../parser/lang-fastbasic";
 import { inform6 } from "../../parser/lang-inform6";
 import { verilog } from "../../parser/lang-verilog";
+import { wiz } from "../../parser/lang-wiz";
 import { asmZ80 } from "../../parser/lang-z80";
 import { cobalt } from "../../themes/cobalt";
 import { disassemblyTheme } from "../../themes/disassemblyTheme";
@@ -142,6 +143,7 @@ export class SourceEditor implements ProjectView {
         parser = cpp();
         break;
       case 'text/x-wiz':
+        parser = wiz();
         break;
       case 'vasm':
         break;

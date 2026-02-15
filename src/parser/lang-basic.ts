@@ -1,3 +1,8 @@
+// CodeMirror 6 language support for BASIC
+// Migrated from CodeMirror 5 mode
+// Original copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: https://codemirror.net/5/LICENSE
+
 import { StreamLanguage, StreamParser, LanguageSupport } from "@codemirror/language";
 
 interface BasicState {

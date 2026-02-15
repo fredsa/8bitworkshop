@@ -1,5 +1,7 @@
 // CodeMirror 6 language support for 6502 assembly
 // Migrated from CodeMirror 5 mode
+// Original copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: https://codemirror.net/5/LICENSE
 
 import { StreamLanguage, StreamParser } from "@codemirror/language";
 import { LanguageSupport } from "@codemirror/language";

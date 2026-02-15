@@ -145,8 +145,6 @@ export class SourceEditor implements ProjectView {
       case 'text/x-wiz':
         parser = wiz();
         break;
-      case 'vasm':
-        break;
       case 'verilog':
         parser = verilog();
         break;

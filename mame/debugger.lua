@@ -15,16 +15,16 @@ function mamedbg.init()
     if debugging and not stopped then
       local exec_state = debugger.execution_state
       if exec_state == "stop" then
-        -- Save CPU register values NOW before execution drifts
+        -- CPU is held at breakpoint by debugger's "stop" state - no drift
+        -- Save CPU register values at the exact breakpoint PC
         lastBreakCPU = {}
         for k, v in pairs(cpu.state) do
           lastBreakCPU[k] = v.value
         end
         local pc = lastBreakCPU["PC"] or 0
-        print(string.format("[mamedbg] periodic: stopped at PC=0x%04x", pc))
-        lastBreakState = machine:buffer_save()
-        debugger:command("bpclear")
-        emu.pause()
+        print(string.format("[mamedbg] periodic: STOPPED at PC=0x%04x", pc))
+        -- Do NOT call emu.pause() — it would cause drift since the frame
+        -- completes before pausing. The debugger holds the CPU instead.
         stopped = true
       end
     end
@@ -51,32 +51,56 @@ function mamedbg.continue()
 end
 
 function mamedbg.runTo(...)
+  -- If resuming from a breakpoint, restore CPU registers to breakpoint state
+  -- (CPU drifts because emu.pause() is deferred to frame boundary)
+  if stopped and lastBreakCPU then
+    for k, v in pairs(lastBreakCPU) do
+      cpu.state[k].value = v
+    end
+    local pc = cpu.state["PC"].value
+    print(string.format("[mamedbg] runTo: restored CPU to PC=0x%04x", pc))
+  end
+
+  debugger:command("bpclear")
   local addrs = {...}
   local addrStrs = {}
   for _, addr in ipairs(addrs) do
     table.insert(addrStrs, string.format("0x%04x", addr))
     debugger:command(string.format("bpset %x", addr))
   end
-  print(string.format("[mamedbg] runTo: targets=[%s]", table.concat(addrStrs, ", ")))
-  debugger:command("g")
+
+  local pc = cpu.state["PC"].value
+  print(string.format("[mamedbg] runTo: targets=[%s], current PC=0x%04x", table.concat(addrStrs, ", "), pc))
+
   mamedbg.start()
+  emu.unpause()
+  debugger:command("g")
 end
 
 function mamedbg.runToVsync(addr)
-  debugger:command("gv")
   mamedbg.start()
+  emu.unpause()
+  debugger:command("gv")
 end
 
 function mamedbg.runUntilReturn(addr)
-  debugger:command("out")
   mamedbg.start()
+  emu.unpause()
+  debugger:command("out")
 end
 
 function mamedbg.step()
+  -- If resuming from a breakpoint, restore CPU registers to breakpoint state
+  if stopped and lastBreakCPU then
+    for k, v in pairs(lastBreakCPU) do
+      cpu.state[k].value = v
+    end
+  end
   local pc = cpu.state["PC"].value
   print(string.format("[mamedbg] step: from PC=0x%04x", pc))
-  debugger:command("step")
   mamedbg.start()
+  emu.unpause()
+  debugger:command("step")
 end
 
 function string.fromhex(str)

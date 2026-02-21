@@ -263,15 +263,16 @@ export abstract class BaseMAMEPlatform {
 
   poll() {
     if (this.onBreakpointHit && this.luacall("return tostring(mamedbg.is_stopped())") == 'true') {
+      // Pause emulation now that we've confirmed the breakpoint
+      this.luacall('emu.pause()');
       this._pause();
       // Read CPU state from saved lastBreakCPU (captured at exact breakpoint time)
-      // instead of live registers which may have drifted
       var cpuState = JSON.parse(this.luacall("return table.tojson(lastBreakCPU)"));
-      // Convert string values to numbers
       for (var key in cpuState) {
         cpuState[key] = parseInt(cpuState[key]);
       }
-      var buf = this.luacall("return string.tohex(lastBreakState)");
+      // Save buffer state now (emulation is paused, state is stable)
+      var buf = this.luacall("return string.tohex(manager:machine():buffer_save())");
       var state = { c: cpuState, buf: buf };
       console.log(`[mame-debug] poll: breakpoint hit, PC=0x${state.c.PC.toString(16)}`);
       this.onBreakpointHit(state);

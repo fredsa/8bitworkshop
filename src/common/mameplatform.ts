@@ -296,10 +296,8 @@ export abstract class BaseMAMEPlatform {
     this._resume();
   }
   runToPC(pc: number[]) {
-    // TODO: Support for multiple breakpoints
-    const targetPC = pc[0];
-    console.log(`[mame-debug] runToPC: target=0x${targetPC.toString(16)}, all targets=[${pc.map(p => '0x' + p.toString(16)).join(', ')}]`);
-    this.debugcmd('mamedbg.runTo(' + targetPC + ')');
+    console.log(`[mame-debug] runToPC: targets=[${pc.map(p => '0x' + p.toString(16)).join(', ')}]`);
+    this.debugcmd('mamedbg.runTo(' + pc.join(',') + ')');
   }
   runToVsync() {
     this.debugcmd('mamedbg.runToVsync()');

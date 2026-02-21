@@ -4,7 +4,6 @@ mamedbg = {}
 
 local debugging = false
 local stopped = false
-local targetPC = nil
 
 function mamedbg.init()
   cpu = manager:machine().devices[":maincpu"]
@@ -22,8 +21,9 @@ function mamedbg.init()
           lastBreakCPU[k] = v.value
         end
         local pc = lastBreakCPU["PC"] or 0
-        print(string.format("[mamedbg] periodic: stopped at PC=0x%04x (target was 0x%04x)", pc, targetPC or -1))
+        print(string.format("[mamedbg] periodic: stopped at PC=0x%04x", pc))
         lastBreakState = machine:buffer_save()
+        debugger:command("bpclear")
         emu.pause()
         stopped = true
       end
@@ -34,7 +34,7 @@ end
 function mamedbg.reset()
   debugging = false
   stopped = false
-  targetPC = nil
+  debugger:command("bpclear")
 end
 
 function mamedbg.start()
@@ -50,10 +50,15 @@ function mamedbg.continue()
   debugger:command("g")
 end
 
-function mamedbg.runTo(addr)
-  targetPC = addr
-  print(string.format("[mamedbg] runTo: target PC=0x%04x", addr))
-  debugger:command(string.format("g %x", addr))
+function mamedbg.runTo(...)
+  local addrs = {...}
+  local addrStrs = {}
+  for _, addr in ipairs(addrs) do
+    table.insert(addrStrs, string.format("0x%04x", addr))
+    debugger:command(string.format("bpset %x", addr))
+  end
+  print(string.format("[mamedbg] runTo: targets=[%s]", table.concat(addrStrs, ", ")))
+  debugger:command("g")
   mamedbg.start()
 end
 
@@ -69,7 +74,6 @@ end
 
 function mamedbg.step()
   local pc = cpu.state["PC"].value
-  targetPC = nil
   print(string.format("[mamedbg] step: from PC=0x%04x", pc))
   debugger:command("step")
   mamedbg.start()

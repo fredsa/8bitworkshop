@@ -264,8 +264,16 @@ export abstract class BaseMAMEPlatform {
   poll() {
     if (this.onBreakpointHit && this.luacall("return tostring(mamedbg.is_stopped())") == 'true') {
       this._pause();
-      //this.luacall("manager:machine():buffer_load(lastBreakState)");
-      var state = this.grabState("lastBreakState");
+      // Read CPU state from saved lastBreakCPU (captured at exact breakpoint time)
+      // instead of live registers which may have drifted
+      var cpuState = JSON.parse(this.luacall("return table.tojson(lastBreakCPU)"));
+      // Convert string values to numbers
+      for (var key in cpuState) {
+        cpuState[key] = parseInt(cpuState[key]);
+      }
+      var buf = this.luacall("return string.tohex(lastBreakState)");
+      var state = { c: cpuState, buf: buf };
+      console.log(`[mame-debug] poll: breakpoint hit, PC=0x${state.c.PC.toString(16)}`);
       this.onBreakpointHit(state);
     }
   }
@@ -290,6 +298,7 @@ export abstract class BaseMAMEPlatform {
   runToPC(pc: number[]) {
     // TODO: Support for multiple breakpoints
     const targetPC = pc[0];
+    console.log(`[mame-debug] runToPC: target=0x${targetPC.toString(16)}, all targets=[${pc.map(p => '0x' + p.toString(16)).join(', ')}]`);
     this.debugcmd('mamedbg.runTo(' + targetPC + ')');
   }
   runToVsync() {
@@ -304,6 +313,7 @@ export abstract class BaseMAMEPlatform {
     this.step();
   }
   step() {
+    console.log(`[mame-debug] step`);
     this.debugcmd('mamedbg.step()');
   }
   getDebugCategories() {

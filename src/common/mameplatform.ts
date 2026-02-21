@@ -48,6 +48,7 @@ export abstract class BaseMAMEPlatform {
   }
 
   _resume() {
+    console.log(`[mame-debug] _resume: about to unpause and start timer`);
     this.luacall('emu.unpause()');
     this.running = true;
     this.timer.start();
@@ -262,7 +263,8 @@ export abstract class BaseMAMEPlatform {
   }
 
   poll() {
-    if (this.onBreakpointHit && this.luacall("return tostring(mamedbg.is_stopped())") == 'true') {
+    const isStopped = this.luacall("return tostring(mamedbg.is_stopped())");
+    if (this.onBreakpointHit && isStopped == 'true') {
       // Pause emulation now that we've confirmed the breakpoint
       this.luacall('emu.pause()');
       this._pause();
@@ -276,6 +278,8 @@ export abstract class BaseMAMEPlatform {
       var state = { c: cpuState, buf: buf };
       console.log(`[mame-debug] poll: breakpoint hit, PC=0x${state.c.PC.toString(16)}`);
       this.onBreakpointHit(state);
+    } else if (this.onBreakpointHit) {
+      console.log(`[mame-debug] poll: is_stopped=${isStopped}, waiting...`);
     }
   }
   clearDebug() {
@@ -292,9 +296,12 @@ export abstract class BaseMAMEPlatform {
     this.onBreakpointHit = callback;
   }
   debugcmd(s) {
+    console.log(`[mame-debug] debugcmd: executing lua: ${s}`);
     this.initlua()
     this.luacall(s);
+    console.log(`[mame-debug] debugcmd: lua done, calling _resume()`);
     this._resume();
+    console.log(`[mame-debug] debugcmd: _resume() done`);
   }
   runToPC(pc: number[]) {
     console.log(`[mame-debug] runToPC: targets=[${pc.map(p => '0x' + p.toString(16)).join(', ')}]`);

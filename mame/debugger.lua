@@ -4,6 +4,7 @@ mamedbg = {}
 
 local debugging = false
 local stopped = false
+local periodicCount = 0
 
 function mamedbg.init()
   cpu = manager:machine().devices[":maincpu"]
@@ -13,7 +14,9 @@ function mamedbg.init()
   mamedbg.reset()
   emu.register_periodic(function ()
     if debugging and not stopped then
+      periodicCount = periodicCount + 1
       local exec_state = debugger.execution_state
+      local pc = cpu.state["PC"].value
       if exec_state == "stop" then
         -- CPU is held at breakpoint by debugger's "stop" state - no drift
         -- Save CPU register values at the exact breakpoint PC
@@ -21,11 +24,16 @@ function mamedbg.init()
         for k, v in pairs(cpu.state) do
           lastBreakCPU[k] = v.value
         end
-        local pc = lastBreakCPU["PC"] or 0
-        print(string.format("[mamedbg] periodic: STOPPED at PC=0x%04x", pc))
+        local bpPC = lastBreakCPU["PC"] or 0
+        print(string.format("[mamedbg] periodic #%d: exec_state=%s, STOPPED at PC=0x%04x", periodicCount, exec_state, bpPC))
         -- Do NOT call emu.pause() — it would cause drift since the frame
         -- completes before pausing. The debugger holds the CPU instead.
         stopped = true
+      else
+        -- Log every periodic tick while running (first 5 only to avoid spam)
+        if periodicCount <= 5 then
+          print(string.format("[mamedbg] periodic #%d: exec_state=%s, PC=0x%04x (still running)", periodicCount, exec_state, pc))
+        end
       end
     end
   end)
@@ -38,8 +46,10 @@ function mamedbg.reset()
 end
 
 function mamedbg.start()
+  print(string.format("[mamedbg] start: debugging=%s->true, stopped=%s->false", tostring(debugging), tostring(stopped)))
   debugging = true
   stopped = false
+  periodicCount = 0
 end
 
 function mamedbg.is_stopped()
@@ -51,30 +61,53 @@ function mamedbg.continue()
 end
 
 function mamedbg.runTo(...)
+  local prePC = cpu.state["PC"].value
+  local preExecState = debugger.execution_state
+  print(string.format("[mamedbg] runTo: ENTER stopped=%s, PC=0x%04x, exec_state=%s", tostring(stopped), prePC, preExecState))
+
   -- If resuming from a breakpoint, restore CPU registers to breakpoint state
   -- (CPU drifts because emu.pause() is deferred to frame boundary)
   if stopped and lastBreakCPU then
+    local savedPC = lastBreakCPU["PC"] or 0
+    print(string.format("[mamedbg] runTo: restoring CPU from lastBreakCPU, savedPC=0x%04x", savedPC))
     for k, v in pairs(lastBreakCPU) do
       cpu.state[k].value = v
     end
-    local pc = cpu.state["PC"].value
-    print(string.format("[mamedbg] runTo: restored CPU to PC=0x%04x", pc))
+    local restoredPC = cpu.state["PC"].value
+    print(string.format("[mamedbg] runTo: restored CPU to PC=0x%04x", restoredPC))
+  else
+    print(string.format("[mamedbg] runTo: NOT restoring (stopped=%s, lastBreakCPU=%s)", tostring(stopped), tostring(lastBreakCPU ~= nil)))
   end
 
   debugger:command("bpclear")
-  local addrs = {...}
-  local addrStrs = {}
-  for _, addr in ipairs(addrs) do
-    table.insert(addrStrs, string.format("0x%04x", addr))
-    debugger:command(string.format("bpset %x", addr))
-  end
+  print(string.format("[mamedbg] runTo: after bpclear, exec_state=%s", debugger.execution_state))
 
   local pc = cpu.state["PC"].value
-  print(string.format("[mamedbg] runTo: targets=[%s], current PC=0x%04x", table.concat(addrStrs, ", "), pc))
+  local addrs = {...}
+  local addrStrs = {}
+  local skippedCurrent = false
+  for _, addr in ipairs(addrs) do
+    if addr == pc then
+      -- Skip BP at current PC to avoid MAME's non-deterministic behavior:
+      -- 'g' either re-triggers the same BP or skips it + the next one
+      print(string.format("[mamedbg] runTo: SKIPPING bp at current PC=0x%04x", pc))
+      skippedCurrent = true
+    else
+      table.insert(addrStrs, string.format("0x%04x", addr))
+      debugger:command(string.format("bpset %x", addr))
+    end
+  end
 
+  print(string.format("[mamedbg] runTo: set BPs=[%s], current PC=0x%04x, skippedCurrent=%s",
+    table.concat(addrStrs, ", "), pc, tostring(skippedCurrent)))
+
+  print(string.format("[mamedbg] runTo: about to call start(), exec_state=%s", debugger.execution_state))
   mamedbg.start()
+  print(string.format("[mamedbg] runTo: about to call emu.unpause(), exec_state=%s", debugger.execution_state))
   emu.unpause()
+  print(string.format("[mamedbg] runTo: about to call 'g', exec_state=%s, PC=0x%04x", debugger.execution_state, cpu.state["PC"].value))
   debugger:command("g")
+  print(string.format("[mamedbg] runTo: after 'g', exec_state=%s, PC=0x%04x", debugger.execution_state, cpu.state["PC"].value))
 end
 
 function mamedbg.runToVsync(addr)

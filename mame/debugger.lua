@@ -42,7 +42,7 @@ end
 function mamedbg.reset()
   debugging = false
   stopped = false
-  debugger:command("bpclear")
+  debugger:command("wpclear")
 end
 
 function mamedbg.start()
@@ -79,8 +79,8 @@ function mamedbg.runTo(...)
     print(string.format("[mamedbg] runTo: NOT restoring (stopped=%s, lastBreakCPU=%s)", tostring(stopped), tostring(lastBreakCPU ~= nil)))
   end
 
-  debugger:command("bpclear")
-  print(string.format("[mamedbg] runTo: after bpclear, exec_state=%s", debugger.execution_state))
+  debugger:command("wpclear")
+  print(string.format("[mamedbg] runTo: after wpclear, exec_state=%s", debugger.execution_state))
 
   local pc = cpu.state["PC"].value
   local addrs = {...}
@@ -94,7 +94,7 @@ function mamedbg.runTo(...)
       skippedCurrent = true
     else
       table.insert(addrStrs, string.format("0x%04x", addr))
-      debugger:command(string.format("bpset %x", addr))
+      debugger:command(string.format("wpset 0, 10000, r, PC == 0x%x", addr))
     end
   end
 

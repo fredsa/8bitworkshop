@@ -1041,6 +1041,7 @@ function _pause() {
 }
 
 function pause() {
+  console.log("**** pause ****");
   if (!checkRunReady()) return;
   clearBreakpoint();
   _pause();
@@ -1057,6 +1058,7 @@ function _resume() {
 }
 
 function resume() {
+  console.log("**** resume ****");
   if (!checkRunReady()) return;
 
   // If the active editor has breakpoints, resume with them
@@ -1084,18 +1086,21 @@ function resume() {
 }
 
 function singleStep() {
+  console.log("**** singleStep ****");
   if (!checkRunReady()) return;
   setupBreakpoint("step");
   platform.step();
 }
 
 function stepOver() {
+  console.log("**** stepOver ****");
   if (!checkRunReady()) return;
   setupBreakpoint("stepover");
   platform.stepOver();
 }
 
 function singleFrameStep() {
+  console.log("**** singleFrameStep ****");
   if (!checkRunReady()) return;
   setupBreakpoint("tovsync");
   platform.runToVsync();
@@ -1125,22 +1130,26 @@ export function runToPC(pc: number[]) {
 }
 
 function restartAtCursor() {
+  console.log("**** restartAtCursor ****");
   if (platform.restartAtPC(getEditorPC())) {
     resume();
   } else alertError(`Could not restart program at selected line.`);
 }
 
 function runToCursor() {
+  console.log("**** runToCursor ****");
   runToPC([getEditorPC()]);
 }
 
 function runUntilReturn() {
+  console.log("**** runUntilReturn ****");
   if (!checkRunReady()) return;
   setupBreakpoint("stepout");
   platform.runUntilReturn();
 }
 
 function runStepBackwards() {
+  console.log("**** runStepBackwards ****");
   if (!checkRunReady()) return;
   setupBreakpoint("stepback");
   platform.stepBack();
@@ -1159,6 +1168,7 @@ function resetPlatform() {
 }
 
 function resetAndRun() {
+  console.log("**** resetAndRun ****");
   if (!checkRunReady()) return;
   clearBreakpoint();
   resetPlatform();
@@ -1166,6 +1176,7 @@ function resetAndRun() {
 }
 
 function resetAndDebug() {
+  console.log("**** resetAndDebug ****");
   if (!checkRunReady()) return;
   var wasRecording = recorderActive;
   _disableRecording();

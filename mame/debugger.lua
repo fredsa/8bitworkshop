@@ -6,10 +6,11 @@ local debugging = false
 local stopped = false
 
 function prefix()
-  if cpu == nil or debugger == nil then
+  if cpu == nil or machine== nil or debugger == nil then
     return "--namedbg--"
   end
-  return string.format("%x (%s) {%s}", cpu.state["PC"].value, debugger.execution_state, dump_obj(machine, 1))
+  local machine_addr = tostring(machine):match("0x%x+")
+  return string.format("%s:%x (%s)", machine_addr, cpu.state["PC"].value, debugger.execution_state)
 end
 
 function mamedbg.init()
@@ -26,7 +27,7 @@ function mamedbg.init()
 
   machine = manager:machine()
   -- print("--- MACHINE DUMP ---")
-  print(dump_obj(machine, 1))
+  -- print(dump_obj(machine, 1))
   -- print(dump_obj(getmetatable(machine), 1))
 
   video = machine:video()

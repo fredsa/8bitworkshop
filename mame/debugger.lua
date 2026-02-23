@@ -44,8 +44,8 @@ function mamedbg.init()
   -- print(dump_obj(getmetatable(cpudebug), 1))
 
   debugger = machine:debugger()
-  print(prefix()..'mamedbg.init(): mamedbg.reset()')
-  mamedbg.reset()
+  print(prefix()..'mamedbg.init(): mamedbg.denote_reset()')
+  mamedbg.denote_reset()
 
   print(prefix()..'mamedbg.init(): emu.register_periodic()')
   emu.register_periodic(function ()
@@ -59,14 +59,14 @@ function mamedbg.init()
   end)
 end
 
-function mamedbg.reset()
-  print(prefix()..'mamedbg.reset()')
+function mamedbg.denote_reset()
+  print(prefix()..'mamedbg.denote_reset()')
   debugging = false
   stopped = false
 end
 
-function mamedbg.start()
-  print(prefix()..'mamedbg.start()')
+function mamedbg.denote_start()
+  print(prefix()..'mamedbg.denote_start()')
   debugging = true
   stopped = false
 end
@@ -76,6 +76,7 @@ function mamedbg.is_stopped()
 end
 
 function mamedbg.continue()
+  print(prefix()..'namedbg.continue()')
   -- print(prefix()..'namedbg.continue(): `g`')
   -- debugger:command("g")
   print(prefix() .. 'mamedbg.continue(): cpudebug:go()')
@@ -83,12 +84,8 @@ function mamedbg.continue()
 end
 
 function mamedbg.runTo(...)
+  print(prefix()..'namedbg.runTo(...)')
   local addrs = {...}
-  local addrStrs = {}
-  for _, addr in ipairs(addrs) do
-    table.insert(addrStrs, string.format("%04x", addr))
-  end
-  print(prefix()..'mamedbg.runTo('..table.concat(addrStrs, ",")..')')
 
   for _, addr in ipairs(addrs) do
     -- print(prefix() .. string.format('mamedbg.runTo: `bpset %x`', addr))
@@ -100,20 +97,20 @@ function mamedbg.runTo(...)
   -- debugger:command("g")
     print(prefix() .. 'mamedbg.runTo: cpudebug:go()')
     cpudebug:go()
-  mamedbg.start()
+  mamedbg.denote_start()
 end
 
 function mamedbg.runToVsync(addr)
   print(prefix()..'mamedbg.runToVsync: `gv`')
   debugger:command("gv")
-  mamedbg.start()
+  mamedbg.denote_start()
 end
 
 function mamedbg.runUntilReturn(addr)
   print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. ')')
   print(prefix() .. 'mamedbg.runUntilReturn: debugger:command("out")')
   debugger:command("out")
-  mamedbg.start()
+  mamedbg.denote_start()
 end
 
 function mamedbg.step()
@@ -122,7 +119,7 @@ function mamedbg.step()
   -- debugger:command("step")
   print(prefix() .. string.format('mamedbg.step: cpudebug:step()'))
   cpudebug:step()
-  mamedbg.start()
+  mamedbg.denote_start()
 end
 
 function string.fromhex(str)

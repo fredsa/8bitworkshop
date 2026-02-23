@@ -60,7 +60,7 @@ export abstract class BaseMAMEPlatform {
 
   reset() {
     if (this.loaded) {
-      this.luacall('manager:machine():soft_reset()');
+      this.luacall('mamedbg.soft_reset()');
       this.running = true;
     }
   }
@@ -273,7 +273,7 @@ export abstract class BaseMAMEPlatform {
     this.onBreakpointHit = null;
     if (this.loaded) {
       this.initlua();
-      this.luacall('mamedbg.reset()');
+      this.luacall('mamedbg.denote_reset()');
     }
   }
   getDebugCallback() {

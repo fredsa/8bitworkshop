@@ -4,6 +4,7 @@ mamedbg = {}
 
 local debugging = false
 local stopped = false
+local target_breakpoints = {}
 
 function prefix()
   if cpu == nil or machine== nil or debugger == nil then
@@ -52,11 +53,24 @@ function mamedbg.init()
     if debugging and not stopped then
       lastBreakState = machine.buffer_save()
       print(prefix()..'periodic: lastBreakState=' .. lastBreakState)
-      print(prefix()..'periodic: emu.pause()')
-      emu.pause()
-      stopped = true
+
+      -- local current_pc = cpu.state["PC"].value
+      -- if target_breakpoints[current_pc] then
+        print(prefix()..'periodic: emu.pause()')
+        emu.pause()
+        stopped = true
+      -- end
+    else
+      print(prefix()..'periodic: debugging=' .. tostring(debugging) .. ', stopped=' .. tostring(stopped))
     end
   end)
+end
+
+function mamedbg.soft_reset()
+  print(prefix()..'mamedbg.soft_reset()')
+  print(prefix()..'mamedbg.soft_reset(): machine:soft_reset()')
+  machine:soft_reset()
+  mamedbg.denote_reset()
 end
 
 function mamedbg.denote_reset()
@@ -86,8 +100,10 @@ end
 function mamedbg.runTo(...)
   print(prefix()..'namedbg.runTo(...)')
   local addrs = {...}
+  target_breakpoints = {}
 
   for _, addr in ipairs(addrs) do
+    target_breakpoints[addr] = true
     -- print(prefix() .. string.format('mamedbg.runTo: `bpset %x`', addr))
     -- debugger:command(string.format("bpset %x", addr))
     print(prefix() .. string.format('mamedbg.runTo: cpudebug:bpset(%x)', addr))

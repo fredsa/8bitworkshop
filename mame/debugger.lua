@@ -73,16 +73,21 @@ function mamedbg.is_stopped()
 end
 
 function mamedbg.continue()
-  print(prefix()..'mamedbg.continue(): `g`')
-  debugger:command("g")
+  -- print(prefix()..'namedbg.continue(): `g`')
+  -- debugger:command("g")
+  print(prefix() .. 'mamedbg.continue(): cpudebug:go()')
+  cpudebug:go()
 end
 
 function mamedbg.runTo(...)
-  print(prefix()..'mamedbg.runTo(...)')
   local addrs = {...}
   local addrStrs = {}
   for _, addr in ipairs(addrs) do
-    table.insert(addrStrs, string.format("0x%04x", addr))
+    table.insert(addrStrs, string.format("%04x", addr))
+  end
+  print(prefix()..'mamedbg.runTo('..table.concat(addrStrs, ",")..')')
+
+  for _, addr in ipairs(addrs) do
     -- print(prefix() .. string.format('mamedbg.runTo: `bpset %x`', addr))
     -- debugger:command(string.format("bpset %x", addr))
     print(prefix() .. string.format('mamedbg.runTo: cpudebug:bpset(%x)', addr))

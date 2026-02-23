@@ -1118,7 +1118,6 @@ export function runToPC(pc: number[]) {
   hideDebugInfo();
   projectWindows.refresh(false);
   setupBreakpoint("toline");
-  console.log("runToPC", pc.map(p => p.toString(16)).join(" "));
   if (platform.runToPC) {
     platform.runToPC(pc);
   } else {

@@ -71,7 +71,7 @@ export abstract class BaseMAMEPlatform {
   }
 
   bufferConsoleOutput(s) {
-    if (typeof s !== 'string') return;
+    // if (typeof s !== 'string') return;
     console.log(s);
   }
 

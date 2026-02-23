@@ -1163,6 +1163,7 @@ export function clearBreakpoint() {
 }
 
 function resetPlatform() {
+  console.error("RESET PLATFORM")
   platform.reset();
   _resetRecording();
 }

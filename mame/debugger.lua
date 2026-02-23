@@ -9,14 +9,38 @@ function prefix()
   if cpu == nil or debugger == nil then
     return "--namedbg--"
   end
-  return string.format("%x (%s) ", cpu.state["PC"].value, debugger.execution_state)
+  return string.format("%x (%s) {%s}", cpu.state["PC"].value, debugger.execution_state, dump_obj(machine, 1))
 end
 
 function mamedbg.init()
   print('mamedbg.init()')
   cpu = manager:machine().devices[":maincpu"]
+  -- print("--- CPU DUMP ---")
+  -- print(dump_obj(cpu, 1))
+  -- print(dump_obj(getmetatable(cpu), 1))
+
   mem = cpu.spaces["program"]
+  -- print("-- MEM DUMP ---")
+  -- print(dump_obj(mem, 1))
+  -- print(dump_obj(getmetatable(mem), 1))
+
   machine = manager:machine()
+  -- print("--- MACHINE DUMP ---")
+  print(dump_obj(machine, 1))
+  -- print(dump_obj(getmetatable(machine), 1))
+
+  video = machine:video()
+  -- print("--- VIDEO DUMP ---")
+  -- print(dump_obj(video, 1))
+  -- print(dump_obj(getmetatable(video), 1))
+
+
+  cpudebug = cpu:debug()
+  -- print("--------------------")
+  -- print("--- CPU DEBUG DUMP ---")
+  -- print(dump_obj(cpudebug, 1))
+  -- print(dump_obj(getmetatable(cpudebug), 1))
+
   debugger = machine:debugger()
   print(prefix()..'mamedbg.init(): mamedbg.reset()')
   mamedbg.reset()
@@ -24,7 +48,7 @@ function mamedbg.init()
   emu.register_periodic(function ()
     if debugging and not stopped then
       lastBreakState = machine.buffer_save()
-      print(prefix()..'periodic: state=', debugger.execution_state, 'lastBreakState=', lastBreakState)
+      print(prefix()..'periodic: lastBreakState=' .. lastBreakState)
       print(prefix()..'periodic: emu.pause()')
       emu.pause()
       stopped = true
@@ -49,40 +73,48 @@ function mamedbg.is_stopped()
 end
 
 function mamedbg.continue()
-  print(prefix()..'mamedbg.continue(): debugger:command `g`')
+  print(prefix()..'mamedbg.continue(): `g`')
   debugger:command("g")
 end
 
 function mamedbg.runTo(...)
-  print("runTo")
+  print(prefix()..'mamedbg.runTo(...)')
   local addrs = {...}
   local addrStrs = {}
   for _, addr in ipairs(addrs) do
-    print("addr "..addr)
     table.insert(addrStrs, string.format("0x%04x", addr))
-    print(prefix() .. string.format('mamedbg.runTo: debugger.command `bpset %x`', addr))
-    debugger:command(string.format("bpset %x", addr))
+    -- print(prefix() .. string.format('mamedbg.runTo: `bpset %x`', addr))
+    -- debugger:command(string.format("bpset %x", addr))
+    print(prefix() .. string.format('mamedbg.runTo: cpudebug:bpset(%x)', addr))
+    cpudebug:bpset(addr)
   end
-  print(prefix()..'namedbg.runTo: debugger:command `g`')
-  debugger:command("g")
+  -- print(prefix()..'namedbg.runTo: `g`')
+  -- debugger:command("g")
+    print(prefix() .. 'mamedbg.runTo: cpudebug:go()')
+    cpudebug:go()
   mamedbg.start()
 end
 
 function mamedbg.runToVsync(addr)
-  print(prefix()..'mamedbg.runToVsync: debugger:command `gv`')
+  print(prefix()..'mamedbg.runToVsync: `gv`')
   debugger:command("gv")
   mamedbg.start()
 end
 
 function mamedbg.runUntilReturn(addr)
-  print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. '): debugger:command `out`')
+  print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. '): `out`')
+  print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. '): debugger:command("out")')
   debugger:command("out")
   mamedbg.start()
 end
 
 function mamedbg.step()
-  print(prefix()..'debugger:command `step`')
-  debugger:command("mamedbg.step(): mamedbg.start()")
+  print(prefix()..'`step`')
+  -- print(prefix()..'mamedbg.step(): debugger:command("step")')
+  -- debugger:command("step")
+  print(prefix() .. string.format('mamedbg.step: cpu:step()'))
+  cpu:debug():step()
+  cpudebug:step()
   mamedbg.start()
 end
 
@@ -106,6 +138,30 @@ function table.tojson(t)
   end
   -- get simple json string
   return "{" .. table.concat(result, ",") .. "}"
+end
+
+function dump_obj(o, depth)
+  depth = depth or 0
+  if depth > 2 then return tostring(o) end
+  if type(o) == 'table' or type(o) == 'userdata' then
+    local s = ''
+    local status, err = pcall(function()
+      for k,v in pairs(o) do
+        local ks = tostring(k)
+        if type(k) ~= 'number' then ks = '"'..ks..'"' end
+        if type(v) == 'table' or type(v) == 'userdata' then
+          s = s .. string.rep("  ", depth) .. '['..ks..'] = ' .. dump_obj(v, depth + 1) .. '\n'
+        else
+          s = s .. string.rep("  ", depth) .. '['..ks..'] = ' .. tostring(v) .. '\n'
+        end
+      end
+    end)
+    if not status then return tostring(o) end
+    if s == '' then return tostring(o) end
+    return '{\n' .. s .. string.rep("  ", depth>0 and (depth-1) or 0) .. '}'
+  else
+    return tostring(o)
+  end
 end
 
 print("parsed Lua debugger script")

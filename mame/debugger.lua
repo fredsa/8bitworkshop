@@ -46,6 +46,7 @@ function mamedbg.init()
   debugger = machine:debugger()
   print(prefix()..'mamedbg.init(): mamedbg.reset()')
   mamedbg.reset()
+
   print(prefix()..'mamedbg.init(): emu.register_periodic()')
   emu.register_periodic(function ()
     if debugging and not stopped then
@@ -109,18 +110,17 @@ function mamedbg.runToVsync(addr)
 end
 
 function mamedbg.runUntilReturn(addr)
-  print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. '): `out`')
-  print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. '): debugger:command("out")')
+  print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. ')')
+  print(prefix() .. 'mamedbg.runUntilReturn: debugger:command("out")')
   debugger:command("out")
   mamedbg.start()
 end
 
 function mamedbg.step()
-  print(prefix()..'`step`')
-  -- print(prefix()..'mamedbg.step(): debugger:command("step")')
+  print(prefix()..'step()')
+  -- print(prefix()..'mamedbg.step: debugger:command("step")')
   -- debugger:command("step")
-  print(prefix() .. string.format('mamedbg.step: cpu:step()'))
-  cpu:debug():step()
+  print(prefix() .. string.format('mamedbg.step: cpudebug:step()'))
   cpudebug:step()
   mamedbg.start()
 end

@@ -8,7 +8,7 @@ local target_breakpoints = {}
 
 function prefix()
   if cpu == nil or machine== nil or debugger == nil then
-    return "--namedbg--"
+    return "--mamedbg--"
   end
   local state = tostring(debugger.execution_state)
   local state_char = (state == "run" and "🟢") or (state == "stop" and "🛑") or state
@@ -49,6 +49,36 @@ function mamedbg.init()
   print(prefix()..'mamedbg.init(): mamedbg.denote_reset()')
   mamedbg.denote_reset()
 
+  -- emu.add_machine_reset_notifier(function ()
+  --   print(prefix()..'################# WE WERE RESET #################')
+  --   mamedbg.denote_reset()
+  -- end)
+
+  -- emu.add_machine_stop_notifier(function ()
+  --   print(prefix()..'################# WE WERE STOPPED #################')
+  --   mamedbg.denote_stop()
+  -- end)
+
+  -- emu.add_machine_start_notifier(function ()
+  --   print(prefix()..'################# WE WERE STARTED #################')
+  --   mamedbg.denote_start()
+  -- end)
+
+  -- emu.add_machine_suspend_notifier(function ()
+  --   print(prefix()..'################# WE WERE SUSPENDED #################')
+  --   mamedbg.denote_suspend()
+  -- end)
+
+  -- emu.add_machine_resume_notifier(function ()
+  --   print(prefix()..'################# WE WERE RESUMED #################')
+  --   mamedbg.denote_resume()
+  -- end)
+
+  -- emu.add_machine_frame_notifier(function ()
+  --   print(prefix()..'################# WE WERE FRAMED #################')
+  --   mamedbg.denote_frame()
+  -- end)
+
   emu.register_periodic(function ()
     if debugging and not stopped then
       lastBreakState = machine.buffer_save()
@@ -68,6 +98,7 @@ end
 
 function mamedbg.soft_reset()
   print(prefix()..'mamedbg.soft_reset()')
+
   -- print(prefix()..'mamedbg.soft_reset(): machine:soft_reset()')
   -- machine:soft_reset()
   -- mamedbg.denote_reset()
@@ -78,12 +109,16 @@ function mamedbg.soft_reset()
   print(prefix()..'mamedbg.soft_reset(): PC <- 0xa000')
   cpu.state["PC"] = 0xa000
 
-    print(prefix()..'mamedbg.init(): namedbg.runTo(0xa016)')
-  namedbg.runTo(0xa016)
+
+  -- local current_pc = string.format("%x", cpu.state["PC"].value)
+  -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
+
+  print(prefix()..'mamedbg.init(): mamedbg.runTo(0xa016)')
+  mamedbg.runTo(0xa016)
 
 
-  local current_pc = string.format("%x", cpu.state["PC"].value)
-  print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
+  -- local current_pc = string.format("%x", cpu.state["PC"].value)
+  -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
 
 
 end
@@ -105,15 +140,15 @@ function mamedbg.is_stopped()
 end
 
 function mamedbg.continue()
-  print(prefix()..'namedbg.continue()')
-  -- print(prefix()..'namedbg.continue(): `g`')
+  print(prefix()..'mamedbg.continue()')
+  -- print(prefix()..'mamedbg.continue(): `g`')
   -- debugger:command("g")
   print(prefix() .. 'mamedbg.continue(): cpudebug:go()')
   cpudebug:go()
 end
 
 function mamedbg.runTo(...)
-  print(prefix()..'namedbg.runTo(...)')
+  print(prefix()..'mamedbg.runTo(...)')
   local addrs = {...}
   target_breakpoints = {}
 
@@ -124,7 +159,7 @@ function mamedbg.runTo(...)
     print(prefix() .. string.format('mamedbg.runTo: cpudebug:bpset(%x)', addr))
     cpudebug:bpset(addr)
   end
-  -- print(prefix()..'namedbg.runTo: `g`')
+  -- print(prefix()..'mamedbg.runTo: `g`')
   -- debugger:command("g")
     print(prefix() .. 'mamedbg.runTo: cpudebug:go()')
     cpudebug:go()

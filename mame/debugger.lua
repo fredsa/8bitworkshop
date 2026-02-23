@@ -5,20 +5,27 @@ mamedbg = {}
 local debugging = false
 local stopped = false
 
+function prefix()
+  if cpu == nil or debugger == nil then
+    return "--namedbg--"
+  end
+  return string.format("%x (%s) ", cpu.state["PC"].value, debugger.execution_state)
+end
+
 function mamedbg.init()
   print('mamedbg.init()')
   cpu = manager:machine().devices[":maincpu"]
   mem = cpu.spaces["program"]
   machine = manager:machine()
   debugger = machine:debugger()
-  print('mamedbg.init(): mamedbg.reset()')
+  print(prefix()..'mamedbg.init(): mamedbg.reset()')
   mamedbg.reset()
-  print('mamedbg.init(): emu.register_periodic()')
+  print(prefix()..'mamedbg.init(): emu.register_periodic()')
   emu.register_periodic(function ()
     if debugging and not stopped then
       lastBreakState = machine.buffer_save()
-      print('periodic: state=', debugger.execution_state, 'lastBreakState=', lastBreakState)
-      print('periodic: emu.pause()')
+      print(prefix()..'periodic: state=', debugger.execution_state, 'lastBreakState=', lastBreakState)
+      print(prefix()..'periodic: emu.pause()')
       emu.pause()
       stopped = true
     end
@@ -26,13 +33,13 @@ function mamedbg.init()
 end
 
 function mamedbg.reset()
-  print('mamedbg.reset()')
+  print(prefix()..'mamedbg.reset()')
   debugging = false
   stopped = false
 end
 
 function mamedbg.start()
-  print('mamedbg.start()')
+  print(prefix()..'mamedbg.start()')
   debugging = true
   stopped = false
 end
@@ -42,37 +49,39 @@ function mamedbg.is_stopped()
 end
 
 function mamedbg.continue()
-  print('mamedbg.continue(): debugger:command `g`')
+  print(prefix()..'mamedbg.continue(): debugger:command `g`')
   debugger:command("g")
 end
 
 function mamedbg.runTo(...)
+  print("runTo")
   local addrs = {...}
   local addrStrs = {}
   for _, addr in ipairs(addrs) do
+    print("addr "..addr)
     table.insert(addrStrs, string.format("0x%04x", addr))
-    print('mamedbg.runTo: debugger.command `bpset %x`' % addr)
+    print(prefix() .. string.format('mamedbg.runTo: debugger.command `bpset %x`', addr))
     debugger:command(string.format("bpset %x", addr))
   end
-  print('namedbg.runTo: debugger:command `g`')
+  print(prefix()..'namedbg.runTo: debugger:command `g`')
   debugger:command("g")
   mamedbg.start()
 end
 
 function mamedbg.runToVsync(addr)
-  print('mamedbg.runToVsync: debugger:command `gv`')
+  print(prefix()..'mamedbg.runToVsync: debugger:command `gv`')
   debugger:command("gv")
   mamedbg.start()
 end
 
 function mamedbg.runUntilReturn(addr)
-  print('mamedbg.runUntilReturn(",addr,"): debugger:command `out`')
+  print(prefix() .. 'mamedbg.runUntilReturn(' .. tostring(addr) .. '): debugger:command `out`')
   debugger:command("out")
   mamedbg.start()
 end
 
 function mamedbg.step()
-  print('debugger:command `step`')
+  print(prefix()..'debugger:command `step`')
   debugger:command("mamedbg.step(): mamedbg.start()")
   mamedbg.start()
 end

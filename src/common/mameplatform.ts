@@ -262,7 +262,8 @@ export abstract class BaseMAMEPlatform {
   }
 
   poll() {
-    if (this.onBreakpointHit && this.luacall("return tostring(mamedbg.is_stopped())") == 'true') {
+    const isStopped = this.luacall("return tostring(mamedbg.is_stopped())");
+    if (this.onBreakpointHit && isStopped == "true") {
       this._pause();
       //this.luacall("manager:machine():buffer_load(lastBreakState)");
       var state = this.grabState("lastBreakState");

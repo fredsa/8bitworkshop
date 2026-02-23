@@ -42,13 +42,14 @@ export abstract class BaseMAMEPlatform {
   }
   pause() {
     if (this.loaded && this.running) {
-      this.luacall('emu.pause()');
-      this._pause();
+      // this.luacall('emu.pause()');
+      this.luacall('mamedbg.pause()');
     }
   }
 
   _resume() {
-    this.luacall('emu.unpause()');
+    // this.luacall('emu.unpause()');
+    this.luacall('mamedbg.unpause()');
     this.running = true;
     this.timer.start();
   }
@@ -252,11 +253,13 @@ export abstract class BaseMAMEPlatform {
   }
 
   saveState() {
+    console.log("saveState(): manager:machine():buffer_save")
     return this.grabState("manager:machine():buffer_save()");
   }
 
   loadState(state) {
     this.initlua();
+    console.log("loadState(): manager:machine():buffer_load", state.buf)
     return this.luacall("manager:machine():buffer_load(string.fromhex('" + state.buf + "'))");
   }
 

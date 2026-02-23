@@ -12,14 +12,15 @@ function prefix()
   end
   local state = tostring(debugger.execution_state)
   local state_char = (state == "run" and "🟢") or (state == "stop" and "🛑") or state
-  return string.format("%x%s ", cpu.state["PC"].value, state_char)
+  local machine_addr = "xx" -- string(manager:machine()):match("0x([0-9a-f]+)")
+  return string.format("%s %x%s ", machine_addr, cpu.state["PC"].value, state_char)
 end
 
 function mamedbg.init()
   print('mamedbg.init()')
   cpu = manager:machine().devices[":maincpu"]
   -- print("--- CPU DUMP ---")
-  -- print(dump_obj(cpu, 1))
+  print(dump_obj(cpu, 1))
   -- print(dump_obj(getmetatable(cpu), 1))
 
   mem = cpu.spaces["program"]
@@ -29,7 +30,7 @@ function mamedbg.init()
 
   machine = manager:machine()
   -- print("--- MACHINE DUMP ---")
-  -- print(dump_obj(machine, 1))
+  print(dump_obj(machine, 1))
   -- print(dump_obj(getmetatable(machine), 1))
 
   video = machine:video()
@@ -127,6 +128,20 @@ function mamedbg.runUntilReturn(addr)
   print(prefix() .. 'mamedbg.runUntilReturn: debugger:command("out")')
   debugger:command("out")
   mamedbg.denote_start()
+end
+
+function mamedbg.pause()
+  print(prefix()..'mamedbg.pause()')
+  print(prefix()..'mamedbg.pause: emu.pause()')
+  emu.pause()
+  stopped = true
+end
+
+function mamedbg.unpause()
+  print(prefix()..'mamedbg.unpause()')
+  print(prefix()..'mamedbg.unpause: emu.unpause()')
+  emu.unpause()
+  stopped = false
 end
 
 function mamedbg.step()

@@ -1,7 +1,7 @@
 
 /// MAME SUPPORT
 
-import { DisasmLine, EmuState, cpuStateToLongString_6502, cpuStateToLongString_Z80 } from "./baseplatform";
+import { DebugEvalCondition, DisasmLine, EmuState, cpuStateToLongString_6502, cpuStateToLongString_Z80 } from "./baseplatform";
 import { disassemble6502 } from "./cpu/disasm6502";
 import { disassembleZ80 } from "./cpu/disasmz80";
 import { AnimationTimer, RAM, RasterVideo } from "./emu";
@@ -230,6 +230,7 @@ export abstract class BaseMAMEPlatform {
       this.luacall(this.luadebugscript);
       this.luacall('mamedbg.init()')
       this.initluavars = true;
+      this.running = true;
     }
   }
 
@@ -300,7 +301,8 @@ export abstract class BaseMAMEPlatform {
     this.debugcmd('mamedbg.runUntilReturn()');
   }
   // TODO
-  runEval() {
+  runEval(ignored: DebugEvalCondition) {
+    console.log('runEval(IGNORED:' + ignored.toString() + ')')
     this.reset();
     this.step();
   }

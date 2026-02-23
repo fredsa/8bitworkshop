@@ -1033,6 +1033,7 @@ export function setupBreakpoint(btnid?: DebugCommandType) {
 }
 
 function _pause() {
+  debugger
   if (platform && platform.isRunning()) {
     platform.pause();
     console.log("Paused");

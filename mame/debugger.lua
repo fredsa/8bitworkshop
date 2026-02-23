@@ -12,7 +12,7 @@ function prefix()
   end
   local state = tostring(debugger.execution_state)
   local state_char = (state == "run" and "🟢") or (state == "stop" and "🛑") or state
-  local machine_addr = "xx" -- string(manager:machine()):match("0x([0-9a-f]+)")
+  local machine_addr = tostring(cpu):match("0x%x+") or "xx"
   return string.format("%s %x%s ", machine_addr, cpu.state["PC"].value, state_char)
 end
 
@@ -20,7 +20,7 @@ function mamedbg.init()
   print('mamedbg.init()')
   cpu = manager:machine().devices[":maincpu"]
   -- print("--- CPU DUMP ---")
-  print(dump_obj(cpu, 1))
+  -- print(dump_obj(cpu, 1))
   -- print(dump_obj(getmetatable(cpu), 1))
 
   mem = cpu.spaces["program"]
@@ -30,7 +30,7 @@ function mamedbg.init()
 
   machine = manager:machine()
   -- print("--- MACHINE DUMP ---")
-  print(dump_obj(machine, 1))
+  -- print(dump_obj(machine, 1))
   -- print(dump_obj(getmetatable(machine), 1))
 
   video = machine:video()
@@ -49,7 +49,6 @@ function mamedbg.init()
   print(prefix()..'mamedbg.init(): mamedbg.denote_reset()')
   mamedbg.denote_reset()
 
-  print(prefix()..'mamedbg.init(): emu.register_periodic()')
   emu.register_periodic(function ()
     if debugging and not stopped then
       lastBreakState = machine.buffer_save()
@@ -69,9 +68,24 @@ end
 
 function mamedbg.soft_reset()
   print(prefix()..'mamedbg.soft_reset()')
-  print(prefix()..'mamedbg.soft_reset(): machine:soft_reset()')
-  machine:soft_reset()
-  mamedbg.denote_reset()
+  -- print(prefix()..'mamedbg.soft_reset(): machine:soft_reset()')
+  -- machine:soft_reset()
+  -- mamedbg.denote_reset()
+
+  -- local current_pc = string.format("%x", cpu.state["PC"].value)
+  -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
+
+  print(prefix()..'mamedbg.soft_reset(): PC <- 0xa000')
+  cpu.state["PC"] = 0xa000
+
+    print(prefix()..'mamedbg.init(): namedbg.runTo(0xa016)')
+  namedbg.runTo(0xa016)
+
+
+  local current_pc = string.format("%x", cpu.state["PC"].value)
+  print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
+
+
 end
 
 function mamedbg.denote_reset()

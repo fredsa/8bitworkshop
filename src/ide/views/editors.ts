@@ -524,6 +524,7 @@ export class SourceEditor implements ProjectView {
     var line = this.getCurrentLine();
     while (this.sourcefile && line >= 0) {
       var pc = this.sourcefile.line2offset[line];
+      // console.log("editorview getCursorPC", hex(pc));
       if (pc >= 0) return pc;
       line--;
     }
@@ -672,7 +673,7 @@ export class DisassemblerView implements ProjectView {
       const toks = lineText.trim().split(/\s+/);
       if (toks && toks.length >= 1) {
         const pc = parseInt(toks[0], 16);
-        console.log("getCursorPC", pc);
+        // console.log("disasmview getCursorPC", hex(pc));
         if (pc >= 0) return pc;
       }
     }

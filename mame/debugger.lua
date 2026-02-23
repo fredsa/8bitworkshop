@@ -18,6 +18,11 @@ end
 
 function mamedbg.init()
   print('mamedbg.init()')
+  machine = manager:machine()
+  -- print("--- MACHINE DUMP ---")
+  -- print(dump_obj(machine, 1))
+  -- print(dump_obj(getmetatable(machine), 1))
+
   cpu = manager:machine().devices[":maincpu"]
   -- print("--- CPU DUMP ---")
   -- print(dump_obj(cpu, 1))
@@ -28,16 +33,10 @@ function mamedbg.init()
   -- print(dump_obj(mem, 1))
   -- print(dump_obj(getmetatable(mem), 1))
 
-  machine = manager:machine()
-  -- print("--- MACHINE DUMP ---")
-  -- print(dump_obj(machine, 1))
-  -- print(dump_obj(getmetatable(machine), 1))
-
   video = machine:video()
   -- print("--- VIDEO DUMP ---")
   -- print(dump_obj(video, 1))
   -- print(dump_obj(getmetatable(video), 1))
-
 
   cpudebug = cpu:debug()
   -- print("--------------------")
@@ -79,19 +78,43 @@ function mamedbg.init()
   --   mamedbg.denote_frame()
   -- end)
 
+  hit = false;
+
   emu.register_periodic(function ()
+    if hit then
+      return
+    end
+
+    local current_pc = cpu.state["PC"].value
+    print(prefix()..'>>>>>>>>>>>> periodic')
+
+    if current_pc == 0xa01b then
+      print(prefix()..'>>>>>>>>>>>> periodic: HIT 0xa01b !!!!!!!!!!!!!!!!!!!!!!!!!!')
+      hit = true
+      emu.pause()
+
+      -- print(prefix()..'>>>>>>>>>>>> periodic: go()')
+      -- cpudebug:go()
+    else
+      -- print(prefix()..'>>>>>>>>>>>> periodic: go()')
+      -- cpudebug:go()
+        -- print(prefix()..'>>>>>>>>>>>> periodic: step()')
+        -- cpudebug:step()
+    end
+
     if debugging and not stopped then
       lastBreakState = machine.buffer_save()
-      print(prefix()..'periodic: lastBreakState=' .. lastBreakState)
+      -- print(prefix()..'periodic: lastBreakState=' .. lastBreakState)
 
       -- local current_pc = cpu.state["PC"].value
       -- if target_breakpoints[current_pc] then
-        print(prefix()..'periodic: emu.pause()')
-        emu.pause()
-        stopped = true
+        -- print(prefix()..'periodic: emu.pause()')
+        -- emu.pause()
+        -- stopped = true
+
       -- end
     else
-      print(prefix()..'periodic: debugging=' .. tostring(debugging) .. ', stopped=' .. tostring(stopped))
+      -- print(prefix()..'periodic: debugging=' .. tostring(debugging) .. ', stopped=' .. tostring(stopped))
     end
   end)
 end
@@ -113,8 +136,8 @@ function mamedbg.soft_reset()
   -- local current_pc = string.format("%x", cpu.state["PC"].value)
   -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
 
-  print(prefix()..'mamedbg.init(): mamedbg.runTo(0xa016)')
-  mamedbg.runTo(0xa016)
+  print(prefix()..'mamedbg.init(): mamedbg.runTo(0xa01b)')
+  mamedbg.runTo(0xa01b)
 
 
   -- local current_pc = string.format("%x", cpu.state["PC"].value)
@@ -157,7 +180,8 @@ function mamedbg.runTo(...)
     -- print(prefix() .. string.format('mamedbg.runTo: `bpset %x`', addr))
     -- debugger:command(string.format("bpset %x", addr))
     print(prefix() .. string.format('mamedbg.runTo: cpudebug:bpset(%x)', addr))
-    cpudebug:bpset(addr)
+    bpid = cpudebug:bpset(addr)
+    print(prefix() .. string.format('mamedbg.runTo %x, bpid=%d', addr, bpid))
   end
   -- print(prefix()..'mamedbg.runTo: `g`')
   -- debugger:command("g")

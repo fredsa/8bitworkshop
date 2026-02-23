@@ -101,7 +101,7 @@ function mamedbg.runTo(...)
 end
 
 function mamedbg.runToVsync(addr)
-  print(prefix()..'mamedbg.runToVsync: `gv`')
+  print(prefix()..'crunToVsync: `gv`')
   debugger:command("gv")
   mamedbg.denote_start()
 end
@@ -114,7 +114,7 @@ function mamedbg.runUntilReturn(addr)
 end
 
 function mamedbg.step()
-  print(prefix()..'step()')
+  print(prefix()..'mamedbg.step()')
   -- print(prefix()..'mamedbg.step: debugger:command("step")')
   -- debugger:command("step")
   print(prefix() .. string.format('mamedbg.step: cpudebug:step()'))

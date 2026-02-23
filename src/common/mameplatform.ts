@@ -62,7 +62,6 @@ export abstract class BaseMAMEPlatform {
     if (this.loaded) {
       this.luacall('manager:machine():soft_reset()');
       this.running = true;
-      this.initluavars = false;
     }
   }
 

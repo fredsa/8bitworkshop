@@ -6,15 +6,19 @@ local debugging = false
 local stopped = false
 
 function mamedbg.init()
+  print('mamedbg.init()')
   cpu = manager:machine().devices[":maincpu"]
   mem = cpu.spaces["program"]
   machine = manager:machine()
   debugger = machine:debugger()
+  print('mamedbg.init(): mamedbg.reset()')
   mamedbg.reset()
+  print('mamedbg.init(): emu.register_periodic()')
   emu.register_periodic(function ()
     if debugging and not stopped then
-      --print(debugger.execution_state)
       lastBreakState = machine.buffer_save()
+      print('periodic: state=', debugger.execution_state, 'lastBreakState=', lastBreakState)
+      print('periodic: emu.pause()')
       emu.pause()
       stopped = true
     end
@@ -22,11 +26,13 @@ function mamedbg.init()
 end
 
 function mamedbg.reset()
+  print('mamedbg.reset()')
   debugging = false
   stopped = false
 end
 
 function mamedbg.start()
+  print('mamedbg.start()')
   debugging = true
   stopped = false
 end
@@ -36,6 +42,7 @@ function mamedbg.is_stopped()
 end
 
 function mamedbg.continue()
+  print('mamedbg.continue(): debugger:command `g`')
   debugger:command("g")
 end
 
@@ -44,24 +51,29 @@ function mamedbg.runTo(...)
   local addrStrs = {}
   for _, addr in ipairs(addrs) do
     table.insert(addrStrs, string.format("0x%04x", addr))
+    print('mamedbg.runTo: debugger.command `bpset %x`' % addr)
     debugger:command(string.format("bpset %x", addr))
   end
+  print('namedbg.runTo: debugger:command `g`')
   debugger:command("g")
   mamedbg.start()
 end
 
 function mamedbg.runToVsync(addr)
+  print('mamedbg.runToVsync: debugger:command `gv`')
   debugger:command("gv")
   mamedbg.start()
 end
 
 function mamedbg.runUntilReturn(addr)
+  print('mamedbg.runUntilReturn(",addr,"): debugger:command `out`')
   debugger:command("out")
   mamedbg.start()
 end
 
 function mamedbg.step()
-  debugger:command("step")
+  print('debugger:command `step`')
+  debugger:command("mamedbg.step(): mamedbg.start()")
   mamedbg.start()
 end
 

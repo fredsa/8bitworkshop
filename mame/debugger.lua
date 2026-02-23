@@ -9,8 +9,7 @@ function prefix()
   if cpu == nil or machine== nil or debugger == nil then
     return "--namedbg--"
   end
-  local machine_addr = tostring(machine):match("0x%x+")
-  return string.format("%s:%x (%s)", machine_addr, cpu.state["PC"].value, debugger.execution_state)
+  return string.format("%x (%s)", cpu.state["PC"].value, debugger.execution_state)
 end
 
 function mamedbg.init()

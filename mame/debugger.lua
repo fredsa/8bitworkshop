@@ -9,7 +9,9 @@ function prefix()
   if cpu == nil or machine== nil or debugger == nil then
     return "--namedbg--"
   end
-  return string.format("%x (%s)", cpu.state["PC"].value, debugger.execution_state)
+  local state = tostring(debugger.execution_state)
+  local state_char = (state == "run" and "🟢") or (state == "stop" and "🛑") or state
+  return string.format("%x%s ", cpu.state["PC"].value, state_char)
 end
 
 function mamedbg.init()

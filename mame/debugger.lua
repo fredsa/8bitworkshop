@@ -6,6 +6,12 @@ local debugging = false
 local stopped = false
 local target_breakpoints = {}
 
+local breakpoints = {
+  0xa026,
+  0xa028,
+  0xa042,
+}
+
 function prefix()
   if cpu == nil or machine== nil or debugger == nil then
     return "--mamedbg--"
@@ -88,8 +94,8 @@ function mamedbg.init()
     local current_pc = cpu.state["PC"].value
     print(prefix()..'>>>>>>>>>>>> periodic')
 
-    if current_pc == 0xa01b then
-      print(prefix()..'>>>>>>>>>>>> periodic: HIT 0xa01b !!!!!!!!!!!!!!!!!!!!!!!!!!')
+    if current_pc == breakpoints[1] then
+      print(prefix()..'>>>>>>>>>>>> periodic: HIT ' .. breakpoints[1] .. ' !!!!!!!!!!!!!!!!!!!!!!!!!!')
       hit = true
       emu.pause()
 
@@ -136,8 +142,8 @@ function mamedbg.soft_reset()
   -- local current_pc = string.format("%x", cpu.state["PC"].value)
   -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
 
-  print(prefix()..'mamedbg.init(): mamedbg.runTo(0xa01b)')
-  mamedbg.runTo(0xa01b)
+  print(prefix()..'mamedbg.init(): mamedbg.runTo('.. breakpoints[1] ..')')
+  mamedbg.runTo(breakpoints[1])
 
 
   -- local current_pc = string.format("%x", cpu.state["PC"].value)
@@ -160,7 +166,8 @@ function mamedbg.denote_start()
 end
 
 function mamedbg.is_stopped()
-  return debugging and stopped
+  local state = tostring(debugger.execution_state)
+  return debugging and (stopped or state == "stop")
 end
 
 function mamedbg.continue()

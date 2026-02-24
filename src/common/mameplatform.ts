@@ -55,6 +55,7 @@ export abstract class BaseMAMEPlatform {
   }
   resume() {
     if (this.loaded && !this.running) { // TODO
+      this.luacall('mamedbg.continue()');
       this._resume();
     }
   }

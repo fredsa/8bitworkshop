@@ -1008,6 +1008,7 @@ function openRelevantListing(state: EmuState) {
 
 function uiDebugCallback(state: EmuState) {
   lastDebugState = state;
+  userPaused = true;
   showDebugInfo(state);
   openRelevantListing(state);
   projectWindows.refresh(true); // move cursor
@@ -1171,6 +1172,7 @@ function resetPlatform() {
 function resetAndRun() {
   console.log("**** resetAndRun ****");
   if (!checkRunReady()) return;
+  userPaused = true;
   clearBreakpoint();
   resetPlatform();
   _resume();
@@ -1179,17 +1181,16 @@ function resetAndRun() {
 function resetAndDebug() {
   console.log("**** resetAndDebug ****");
   if (!checkRunReady()) return;
+  userPaused = true;
   var wasRecording = recorderActive;
   _disableRecording();
   if (platform.setupDebug && platform.runEval) { // TODO??
     clearBreakpoint();
-    _resume();
     resetPlatform();
     setupBreakpoint("restart");
     platform.runEval((c) => { return true; }); // break immediately
   } else {
     resetPlatform();
-    _resume();
   }
   if (wasRecording) _enableRecording();
 }

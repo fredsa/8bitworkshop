@@ -10,6 +10,7 @@ local breakpoints = {
   0xa026,
   0xa028,
   0xa042,
+  0xa069,
 }
 
 function prefix()
@@ -85,33 +86,45 @@ function mamedbg.init()
   -- end)
 
   hit = false;
+  local last_state = nil
+  local last_pc = nil
 
   emu.register_periodic(function ()
+    local current_pc = cpu.state["PC"].value
+    local current_state = tostring(debugger.execution_state)
+
+    if last_state ~= current_state or last_pc ~= current_pc then
+       if last_state ~= nil and last_pc ~= nil then
+         print(prefix()..'>>>>>>>>>>>> periodic: CPU moved! state changed from '..tostring(last_state)..' to '..tostring(current_state)..', PC from '..string.format("%x", last_pc)..' to '..string.format("%x", current_pc))
+         -- "Stuck" check: if we are supposed to be stopped, but the PC moved, forcefully re-stop
+         if last_state == "stop" and current_state == "stop" and last_pc ~= current_pc then
+            print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved while in stop state! Forcing debugger stop and emu pause.')
+            print("MAME_STOP")
+            debugger:command("stop")
+            emu.pause()
+         end
+       end
+       last_state = current_state
+       last_pc = current_pc
+    end
+
     if hit then
       return
     end
 
-    local current_pc = cpu.state["PC"].value
-    print(prefix()..'>>>>>>>>>>>> periodic')
+    -- print(prefix()..'>>>>>>>>>>>> periodic')
 
-    if current_pc == breakpoints[1] then
-      print(prefix()..'>>>>>>>>>>>> periodic: HIT ' .. breakpoints[1] .. ' !!!!!!!!!!!!!!!!!!!!!!!!!!')
-      hit = true
-      emu.pause()
-
-      -- print(prefix()..'>>>>>>>>>>>> periodic: go()')
-      -- cpudebug:go()
-    else
-      -- print(prefix()..'>>>>>>>>>>>> periodic: go()')
-      -- cpudebug:go()
-        -- print(prefix()..'>>>>>>>>>>>> periodic: step()')
-        -- cpudebug:step()
+    for i, address in ipairs(breakpoints) do
+      if address == current_pc then
+        print(prefix()..'>>>>>>>>>>>> periodic: HIT ' .. string.format("%x", current_pc) .. ' !!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print("MAME_STOP")
+        hit = true
+        break
+      end
     end
 
     if debugging and not stopped then
-      lastBreakState = machine.buffer_save()
-      -- print(prefix()..'periodic: lastBreakState=' .. lastBreakState)
-
+      -- print(prefix()..'periodic: debugging=' .. tostring(debugging) .. ', stopped=' .. tostring(stopped))
       -- local current_pc = cpu.state["PC"].value
       -- if target_breakpoints[current_pc] then
         -- print(prefix()..'periodic: emu.pause()')
@@ -127,30 +140,24 @@ end
 
 function mamedbg.soft_reset()
   print(prefix()..'mamedbg.soft_reset()')
-
-  -- print(prefix()..'mamedbg.soft_reset(): machine:soft_reset()')
-  -- machine:soft_reset()
-  -- mamedbg.denote_reset()
-
-  -- local current_pc = string.format("%x", cpu.state["PC"].value)
-  -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
+  mamedbg.denote_reset()
 
   print(prefix()..'mamedbg.soft_reset(): PC <- 0xa000')
   cpu.state["PC"].value = 0xa000
 
-
-  -- local current_pc = string.format("%x", cpu.state["PC"].value)
-  -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
-
-  print(prefix()..'mamedbg.init(): mamedbg.runTo('.. breakpoints[1] ..')')
-  mamedbg.runTo(breakpoints[1])
-
-
-  -- local current_pc = string.format("%x", cpu.state["PC"].value)
-  -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
-
-
+  print(prefix()..'mamedbg.soft_reset(): mamedbg.runTo('.. mamedbg.hexList(breakpoints, ', ') ..')')
+  mamedbg.runTo(breakpoints)
 end
+
+-- Helper to turn a table of numbers into a pretty hex string
+function mamedbg.hexList(t)
+    local formatted = {}
+    for _, addr in ipairs(t) do
+        table.insert(formatted, string.format("%04X", addr))
+    end
+    return table.concat(formatted, ", ")
+end
+
 
 function mamedbg.denote_reset()
   print(prefix()..'mamedbg.denote_reset()')
@@ -167,28 +174,31 @@ end
 
 function mamedbg.is_stopped()
   local state = tostring(debugger.execution_state)
-  return debugging and (stopped or state == "stop")
+  return debugging and (state == "stop")
 end
 
 function mamedbg.continue()
   print(prefix()..'mamedbg.continue()')
+  hit = false
   -- print(prefix()..'mamedbg.continue(): `g`')
   -- debugger:command("g")
   print(prefix() .. 'mamedbg.continue(): cpudebug:go()')
   cpudebug:go()
+  mamedbg.unpause() -- Ensure hard pause is lifted
 end
 
-function mamedbg.runTo(...)
+function mamedbg.runTo(addrs)
   print(prefix()..'mamedbg.runTo(...)')
-  local addrs = {...}
+  hit = false
   target_breakpoints = {}
 
+  debugger:command("bpclear")
   for _, addr in ipairs(addrs) do
     target_breakpoints[addr] = true
     -- print(prefix() .. string.format('mamedbg.runTo: `bpset %x`', addr))
     -- debugger:command(string.format("bpset %x", addr))
-    print(prefix() .. string.format('mamedbg.runTo: cpudebug:bpset(%x)', addr))
-    bpid = cpudebug:bpset(addr)
+    print(prefix() .. string.format('mamedbg.runTo: cpudebug:bpset(%x, nil, "emu.pause()")', addr))
+    bpid = cpudebug:bpset(addr, nil, "emu.pause()")
     print(prefix() .. string.format('mamedbg.runTo %x, bpid=%d', addr, bpid))
   end
   -- print(prefix()..'mamedbg.runTo: `g`')
@@ -211,22 +221,30 @@ function mamedbg.runUntilReturn(addr)
   mamedbg.denote_start()
 end
 
+function mamedbg.breakNow()
+  print(prefix()..'mamedbg.breakNow()')
+  print("MAME_STOP")
+  debugger:command("stop")
+  mamedbg.denote_start()
+end
+
 function mamedbg.pause()
   print(prefix()..'mamedbg.pause()')
-  print(prefix()..'mamedbg.pause: emu.pause()')
-  emu.pause()
+  -- print(prefix()..'mamedbg.pause: emu.pause()')
+  -- emu.pause()
   stopped = true
 end
 
 function mamedbg.unpause()
   print(prefix()..'mamedbg.unpause()')
-  print(prefix()..'mamedbg.unpause: emu.unpause()')
+  -- print(prefix()..'mamedbg.unpause: emu.unpause()')
   emu.unpause()
   stopped = false
 end
 
 function mamedbg.step()
   print(prefix()..'mamedbg.step()')
+  hit = false
   -- print(prefix()..'mamedbg.step: debugger:command("step")')
   -- debugger:command("step")
   print(prefix() .. string.format('mamedbg.step: cpudebug:step()'))

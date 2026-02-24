@@ -31,25 +31,30 @@ export abstract class BaseMAMEPlatform {
   }
 
   // http://docs.mamedev.org/techspecs/luaengine.html
-  luacall(s: string): string {
-    if (!this.js_lua_string) this.js_lua_string = Module.cwrap('_Z13js_lua_stringPKc', 'string', ['string']);
-    return this.js_lua_string(s || "");
-  }
 
   _pause() {
+    console.log("mameplatform: _pause()");
     this.running = false;
     this.timer.stop();
+    if (typeof Module !== 'undefined' && Module.pauseMainLoop) {
+      try { Module.pauseMainLoop(); } catch (e) { }
+    }
   }
   pause() {
     if (this.loaded && this.running) {
       // this.luacall('emu.pause()');
       this.luacall('mamedbg.pause()');
+      this._pause();
     }
   }
 
   _resume() {
+    console.log("mameplatform: _resume()");
     // this.luacall('emu.unpause()');
     this.luacall('mamedbg.unpause()');
+    if (typeof Module !== 'undefined' && Module.resumeMainLoop) {
+      try { Module.resumeMainLoop(); } catch (e) { }
+    }
     this.running = true;
     this.timer.start();
   }
@@ -64,6 +69,7 @@ export abstract class BaseMAMEPlatform {
     if (this.loaded) {
       this.luacall('mamedbg.soft_reset()');
       this.running = true;
+      this.timer.start(); // Ensure polling starts immediately
     }
   }
 
@@ -71,8 +77,11 @@ export abstract class BaseMAMEPlatform {
     return this.running;
   }
 
-  bufferConsoleOutput(s) {
-    // if (typeof s !== 'string') return;
+  bufferConsoleOutput(s: string) {
+    if (typeof s !== 'string') return;
+    if (s.indexOf("MAME_STOP") >= 0) {
+      this._pause();
+    }
     console.log(s);
   }
 
@@ -104,7 +113,7 @@ export abstract class BaseMAMEPlatform {
     window['Module'] = {
       arguments: modargs,
       screenIsReadOnly: true,
-      print: this.bufferConsoleOutput,
+      print: this.bufferConsoleOutput.bind(this),
       canvas: video.canvas,
       doNotCaptureKeyboard: true,
       keyboardListeningElement: video.canvas,
@@ -235,6 +244,12 @@ export abstract class BaseMAMEPlatform {
     }
   }
 
+  luacall(s: string): string {
+    if (s && !s.startsWith("return ")) console.log("LUACALL: " + s);
+    if (!this.js_lua_string) this.js_lua_string = Module.cwrap('_Z13js_lua_stringPKc', 'string', ['string']);
+    return this.js_lua_string(s || "");
+  }
+
   readAddress(a: number): number {
     this.initlua();
     return parseInt(this.luacall('return mem:read_u8(' + a + ')'));
@@ -266,11 +281,13 @@ export abstract class BaseMAMEPlatform {
   }
 
   poll() {
+    if (!this.running) return;
+    // console.log("mameplatform: poll()");
     const isStopped = this.luacall("return tostring(mamedbg.is_stopped())");
     if (this.onBreakpointHit && isStopped == "true") {
+      console.log("mameplatform: poll() detected stop state");
       this._pause();
-      //this.luacall("manager:machine():buffer_load(lastBreakState)");
-      var state = this.grabState("lastBreakState");
+      var state = this.grabState("''");
       this.onBreakpointHit(state);
     }
   }
@@ -304,8 +321,9 @@ export abstract class BaseMAMEPlatform {
   // TODO
   runEval(ignored: DebugEvalCondition) {
     console.log('runEval(IGNORED:' + ignored.toString() + ')')
-    this.reset();
-    this.step();
+    this.initlua();
+    this.luacall('mamedbg.breakNow()');
+    this._pause(); // Force JS pause immediately
   }
   step() {
     this.debugcmd('mamedbg.step()');

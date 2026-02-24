@@ -130,7 +130,7 @@ function mamedbg.soft_reset()
   -- print(prefix()..'mamedbg.soft_reset(): current_pc=' .. current_pc)
 
   print(prefix()..'mamedbg.soft_reset(): PC <- 0xa000')
-  cpu.state["PC"] = 0xa000
+  cpu.state["PC"].value = 0xa000
 
 
   -- local current_pc = string.format("%x", cpu.state["PC"].value)
@@ -150,6 +150,7 @@ function mamedbg.denote_reset()
   print(prefix()..'mamedbg.denote_reset()')
   debugging = false
   stopped = false
+  hit = false
 end
 
 function mamedbg.denote_start()

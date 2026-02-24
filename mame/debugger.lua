@@ -11,13 +11,29 @@ local last_state = nil
 local last_pc = nil
 
 local breakpoints = {
-  0xa026,
-  0xa028,
-  0xa02a,
-  0xa02c,
-  0xa02e,
-  0xa042,
-  0xa069,
+  0xa026, -- LDA #42
+  0xa028, -- LDA #42
+  0xa02a, -- LDA #42
+  0xa02c, -- LDA #42
+  0xa02e, -- LDA #42
+   -- LDA #42
+   -- LDA #42
+   -- …
+   -- LDA #42
+   -- LDA #42
+  0xa042, -- LDA #42
+   -- …
+   -- …
+   -- LOOP:
+   -- NOP
+   -- …
+   -- NOP
+  0xa069, -- NOP
+   -- NOP
+   -- NOP
+   -- NOP
+   -- NOP
+   -- JMP LOOP
 }
 
 function prefix()

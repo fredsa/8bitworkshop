@@ -16,24 +16,25 @@ local breakpoints = {
   0xa02a, -- LDA #42
   0xa02c, -- LDA #42
   0xa02e, -- LDA #42
-   -- LDA #42
-   -- LDA #42
-   -- …
-   -- LDA #42
-   -- LDA #42
+   --        LDA #42
+   --        LDA #42
+   --        …
+   --        LDA #42
+   --        LDA #42
   0xa042, -- LDA #42
-   -- …
-   -- …
+
+   --        LDA #42
+   --        LDA #42
    -- LOOP:
-   -- NOP
-   -- …
-   -- NOP
+   --        NOP
+   --        NOP
   0xa069, -- NOP
-   -- NOP
-   -- NOP
-   -- NOP
-   -- NOP
-   -- JMP LOOP
+   --        NOP
+   --        NOP
+   --        NOP
+   --        NOP
+   --        NOP
+   --        JMP LOOP
 }
 
 function prefix()
@@ -42,8 +43,9 @@ function prefix()
   end
   local state = tostring(debugger.execution_state)
   local state_char = (state == "run" and "🟢") or (state == "stop" and "🛑") or state
-  local machine_addr = tostring(cpu):match("0x%x+") or "xx"
-  return string.format("%s %x%s ", machine_addr, cpu.state["PC"].value, state_char)
+  -- local machine_addr = tostring(cpu):match("0x%x+") or "xx"
+  -- return string.format("%s %x%s ", machine_addr, cpu.state["PC"].value, state_char)
+  return string.format("%x%s ", cpu.state["PC"].value, state_char)
 end
 
 function mamedbg.init()
@@ -66,7 +68,7 @@ function mamedbg.init()
        if last_state ~= nil and last_pc ~= nil then
          -- "Stuck" check
          if last_state == "stop" and current_state == "stop" and last_pc ~= current_pc then
-            print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved while in stop state! PC '..string.format("%x", last_pc)..' -> '..string.format("%x", current_pc))
+            print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved! PC '..string.format("%x", last_pc)..' -> '..string.format("%x", current_pc))
             print("MAME_STOP")
             debugger:command("stop")
             emu.pause()

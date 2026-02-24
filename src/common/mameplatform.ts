@@ -240,7 +240,7 @@ export abstract class BaseMAMEPlatform {
   // DEBUGGING SUPPORT
 
   reloadLua() {
-    this.luacall(this.luadebugscript);
+    this.luacall_do_not_log(this.luadebugscript);
     this.luacall('mamedbg.init()')
   }
 
@@ -251,6 +251,12 @@ export abstract class BaseMAMEPlatform {
       this.initluavars = true;
       this.running = true;
     }
+  }
+
+  luacall_do_not_log(s: string): string {
+    if (typeof Module === 'undefined') return "";
+    if (!this.js_lua_string) this.js_lua_string = Module.cwrap('_Z13js_lua_stringPKc', 'string', ['string']);
+    return this.js_lua_string(s || "");
   }
 
   luacall(s: string): string {

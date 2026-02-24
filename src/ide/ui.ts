@@ -1043,7 +1043,7 @@ function _pause() {
 }
 
 function pause() {
-  console.log("**** pause ****");
+  console.log("\n\n**** pause ****");
   if (!checkRunReady()) return;
   clearBreakpoint();
   _pause();
@@ -1060,7 +1060,7 @@ function _resume() {
 }
 
 function resume() {
-  console.log("**** resume ****");
+  console.log("\n\n**** resume ****");
   if (!checkRunReady()) return;
 
   // If the active editor has breakpoints, resume with them
@@ -1088,21 +1088,21 @@ function resume() {
 }
 
 function singleStep() {
-  console.log("**** singleStep ****");
+  console.log("\n\n**** singleStep ****");
   if (!checkRunReady()) return;
   setupBreakpoint("step");
   platform.step();
 }
 
 function stepOver() {
-  console.log("**** stepOver ****");
+  console.log("\n\n**** stepOver ****");
   if (!checkRunReady()) return;
   setupBreakpoint("stepover");
   platform.stepOver();
 }
 
 function singleFrameStep() {
-  console.log("**** singleFrameStep ****");
+  console.log("\n\n**** singleFrameStep ****");
   if (!checkRunReady()) return;
   setupBreakpoint("tovsync");
   platform.runToVsync();
@@ -1131,32 +1131,33 @@ export function runToPC(pc: number[]) {
 }
 
 function restartAtCursor() {
-  console.log("**** restartAtCursor ****");
+  console.log("\n\n**** restartAtCursor ****");
   if (platform.restartAtPC(getEditorPC())) {
     resume();
   } else alertError(`Could not restart program at selected line.`);
 }
 
 function runToCursor() {
-  console.log("**** runToCursor ****");
+  console.log("\n\n**** runToCursor ****");
   runToPC([getEditorPC()]);
 }
 
 function runUntilReturn() {
-  console.log("**** runUntilReturn ****");
+  console.log("\n\n**** runUntilReturn ****");
   if (!checkRunReady()) return;
   setupBreakpoint("stepout");
   platform.runUntilReturn();
 }
 
 function runStepBackwards() {
-  console.log("**** runStepBackwards ****");
+  console.log("\n\n**** runStepBackwards ****");
   if (!checkRunReady()) return;
   setupBreakpoint("stepback");
   platform.stepBack();
 }
 
 export function clearBreakpoint() {
+  console.log("**** clearBreakpoint ****")
   lastDebugState = null;
   if (platform.clearDebug) platform.clearDebug();
   setupDebugCallback(); // in case of BRK/trap
@@ -1164,13 +1165,13 @@ export function clearBreakpoint() {
 }
 
 function resetPlatform() {
-  console.error("RESET PLATFORM")
+  console.log("**** resetPlatform ****")
   platform.reset();
   _resetRecording();
 }
 
 function resetAndRun() {
-  console.log("**** resetAndRun ****");
+  console.log("\n\n**** resetAndRun ****");
   if (!checkRunReady()) return;
   userPaused = true;
   clearBreakpoint();
@@ -1179,7 +1180,7 @@ function resetAndRun() {
 }
 
 function resetAndDebug() {
-  console.log("**** resetAndDebug ****");
+  console.log("\n\n**** resetAndDebug ****");
   if (!checkRunReady()) return;
   userPaused = true;
   var wasRecording = recorderActive;

@@ -67,6 +67,7 @@ export abstract class BaseMAMEPlatform {
 
   reset() {
     if (this.loaded) {
+      this.reloadLua();
       this.luacall('mamedbg.soft_reset()');
       this.running = true;
       this.timer.start(); // Ensure polling starts immediately
@@ -80,7 +81,10 @@ export abstract class BaseMAMEPlatform {
   bufferConsoleOutput(s: string) {
     if (typeof s !== 'string') return;
     if (s.indexOf("MAME_STOP") >= 0) {
-      this._pause();
+      if (this.running) {
+        console.log("mameplatform: Instant Pause signal detected!");
+        this._pause();
+      }
     }
     console.log(s);
   }
@@ -179,9 +183,9 @@ export abstract class BaseMAMEPlatform {
       fetch_bios.resolve();
     }
     // load debugger Lua script
-    fetch_lua = $.get('mame/debugger.lua', (data) => {
+    fetch_lua = $.get('mame/debugger.lua?v=' + Date.now(), (data) => {
       this.luadebugscript = data;
-      console.log("loaded debugger.lua");
+      console.log("loaded debugger.lua (" + data.length + " bytes)");
     }, 'text');
     // load WASM
     {
@@ -235,16 +239,22 @@ export abstract class BaseMAMEPlatform {
 
   // DEBUGGING SUPPORT
 
+  reloadLua() {
+    this.luacall(this.luadebugscript);
+    this.luacall('mamedbg.init()')
+  }
+
   initlua() {
+    if (!this.loaded) return;
     if (!this.initluavars) {
-      this.luacall(this.luadebugscript);
-      this.luacall('mamedbg.init()')
+      this.reloadLua();
       this.initluavars = true;
       this.running = true;
     }
   }
 
   luacall(s: string): string {
+    if (typeof Module === 'undefined') return "";
     if (s && !s.startsWith("return ")) console.log("LUACALL: " + s);
     if (!this.js_lua_string) this.js_lua_string = Module.cwrap('_Z13js_lua_stringPKc', 'string', ['string']);
     return this.js_lua_string(s || "");
@@ -302,21 +312,24 @@ export abstract class BaseMAMEPlatform {
     return this.onBreakpointHit;// TODO?
   }
   setupDebug(callback) {
+    this.initlua();
     this.onBreakpointHit = callback;
   }
   debugcmd(s) {
     this.initlua()
     this.luacall(s);
-    this._resume();
+    // this._resume(); -- STOP calling _resume() here, it causes drift!
   }
   runToPC(pc: number[]) {
     this.debugcmd('mamedbg.runTo(' + pc.join(',') + ')');
+    this._resume();
   }
   runToVsync() {
     this.debugcmd('mamedbg.runToVsync()');
   }
   runUntilReturn() {
     this.debugcmd('mamedbg.runUntilReturn()');
+    this._resume();
   }
   // TODO
   runEval(ignored: DebugEvalCondition) {
@@ -326,7 +339,9 @@ export abstract class BaseMAMEPlatform {
     this._pause(); // Force JS pause immediately
   }
   step() {
-    this.debugcmd('mamedbg.step()');
+    this.initlua();
+    this.luacall('mamedbg.step()');
+    this._resume();
   }
   getDebugCategories() {
     return ['CPU'];

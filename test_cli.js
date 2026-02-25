@@ -2,8 +2,7 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 
 console.log("Compiling breakpoints.dasm...");
-execSync('node gen/worker/tools/dasm.js presets/atari8-800/breakpoints.dasm -f3 -lpresets/atari8-800/breakpoints.lst -opresets/atari8-800/breakpoints.bin -spresets/atari8-800/breakpoints.sym', { stdio: 'inherit' });
-
+execSync('npx ts-node compile_breakpoints.ts', { stdio: 'inherit' });
 
 global.fetch = async function (url) {
     const path = url.toString().replace('file://', '');
@@ -134,28 +133,42 @@ const Module = {
             const luaScript = fs.readFileSync('mame/debugger.lua', 'utf8');
             const js_lua_string = Module.cwrap('_Z13js_lua_stringPKc', 'string', ['string']);
 
-            console.log("Waiting 2000ms for MAME to boot...");
+            console.log("Waiting for MAME to boot...");
             setTimeout(() => {
                 console.log("Evaluating debugger.lua...");
                 js_lua_string(luaScript);
 
+                console.log("\n\n\n\n\n");
                 console.log("Calling mamedbg.init()...");
                 js_lua_string("mamedbg.init()");
 
-                console.log("Waiting 1000ms before stepping...");
+                console.log("Calling mamedbg.soft_reset()...");
+                js_lua_string("mamedbg.soft_reset()");
+
+                console.log("Waiting before stepping...");
                 setTimeout(() => {
-                    console.log("==== SINGLE STEP 1 ====");
-                    js_lua_string("mamedbg.step()");
-                    setTimeout(() => {
-                        console.log("==== SINGLE STEP 2 ====");
-                        js_lua_string("mamedbg.step()");
-                        setTimeout(() => {
-                            console.log("Done.");
-                            process.exit(0);
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
-            }, 2000);
+                    console.log("==== single stepping...");
+                    let count = 0;
+                    setInterval(() => {
+                        count++;
+                        if (count % 100 == 0) {
+                            js_lua_string("mamedbg.step()");
+                        }
+                    }, 1);
+
+
+                    // console.log("==== SINGLE STEP 1 ====");
+                    // js_lua_string("mamedbg.step()");
+                    // setTimeout(() => {
+                    //     console.log("==== SINGLE STEP 2 ====");
+                    //     js_lua_string("mamedbg.step()");
+                    //     setTimeout(() => {
+                    //         console.log("Done.");
+                    //         process.exit(0);
+                    //     }, 10);
+                    // }, 10);
+                }, 10);
+            }, 10);
 
         } catch (e) {
             console.error(e);

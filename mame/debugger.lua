@@ -11,30 +11,30 @@ local last_state = nil
 local last_pc = nil
 
 local breakpoints = {
-  0xa026, -- LDA #42
-  0xa028, -- LDA #42
-  0xa02a, -- LDA #42
-  0xa02c, -- LDA #42
-  0xa02e, -- LDA #42
-   --        LDA #42
-   --        LDA #42
-   --        …
-   --        LDA #42
-   --        LDA #42
-  0xa042, -- LDA #42
+  -- 0xa026, -- LDA #42
+  -- 0xa028, -- LDA #42
+  -- 0xa02a, -- LDA #42
+  -- 0xa02c, -- LDA #42
+  -- 0xa02e, -- LDA #42
+  --  --        LDA #42
+  --  --        LDA #42
+  --  --        …
+  --  --        LDA #42
+  --  --        LDA #42
+  -- 0xa042, -- LDA #42
 
-   --        LDA #42
-   --        LDA #42
-   -- LOOP:
-   --        NOP
-   --        NOP
-  0xa069, -- NOP
-   --        NOP
-   --        NOP
-   --        NOP
-   --        NOP
-   --        NOP
-   --        JMP LOOP
+  --  --        LDA #42
+  --  --        LDA #42
+  --  -- LOOP:
+  --  --        NOP
+  --  --        NOP
+  -- 0xa069, -- NOP
+  --  --        NOP
+  --  --        NOP
+  --  --        NOP
+  --  --        NOP
+  --  --        NOP
+  --  --        JMP LOOP
 }
 
 function prefix()
@@ -96,7 +96,7 @@ end
 function mamedbg.soft_reset()
   print(prefix()..'mamedbg.soft_reset()')
   mamedbg.denote_reset()
-  cpu.state["PC"].value = 0xa000
+  -- cpu.state["PC"].value = 0xa000
   print(prefix()..'mamedbg.soft_reset(): NEW PC = ' .. string.format("%x", cpu.state["PC"].value))
   mamedbg.runTo(breakpoints)
 end

@@ -53,7 +53,7 @@ function prefix()
   local state_char = (state == "run" and "🟢") or (state == "stop" and "🛑") or state
   -- local machine_addr = tostring(cpu):match("0x%x+") or "xx"
   -- return string.format("%s %x%s ", machine_addr, cpu.state["PC"].value, state_char)
-  return string.format("%x%s ", cpu.state["PC"].value, state_char)
+  return string.format("%04x%s ", cpu.state["PC"].value, state_char)
 end
 
 function mamedbg.init()

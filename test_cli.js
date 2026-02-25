@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-console.log("Compiling breakpoints.dasm...");
+log("Compiling breakpoints.dasm...");
 execSync('npx ts-node compile_breakpoints.ts', { stdio: 'inherit' });
 
 global.fetch = async function (url) {
@@ -60,13 +60,29 @@ global.document = {
     baseURI: 'file://' + __dirname + '/',
     createElement: () => dummyCanvas,
     getElementsByTagName: () => ([{ appendChild: () => { } }]),
-    getElementById: (id) => { console.log('getElementById', id); return dummyCanvas; },
-    querySelector: (sel) => { console.log('querySelector', sel); return dummyCanvas; },
+    getElementById: (id) => { log('getElementById', id); return dummyCanvas; },
+    querySelector: (sel) => { log('querySelector', sel); return dummyCanvas; },
     addEventListener: () => { },
     removeEventListener: () => { }
 };
 global.navigator = { navigator: 'node' };
 global.location = { href: 'file://' + __dirname + '/' };
+
+function getTimePrefix() {
+    const t = process.uptime();
+    const m = Math.floor(t / 60).toString().padStart(2, '0');
+    const s = Math.floor(t % 60).toString().padStart(2, '0');
+    const ms = Math.floor((t * 1000) % 1000).toString().padStart(3, '0');
+    return `${m}:${s}.${ms}`;
+}
+
+function log(...args) {
+    console.log(getTimePrefix(), ...args);
+}
+
+function logerror(...args) {
+    console.error(getTimePrefix(), ...args);
+}
 
 const Module = {
     canvas: dummyCanvas,
@@ -87,10 +103,14 @@ const Module = {
         '-debugger', 'none',
         '-verbose'
     ],
-    print: (text) => console.log('[MAME]', text),
-    printErr: (text) => console.error('[MAME ERR]', text),
+    print: (text) => {
+        log(text);
+    },
+    printErr: (text) => {
+        logerror(`ERROR `, text);
+    },
     preInit: () => {
-        console.log("preInit called - setting up FS");
+        log("preInit called - setting up FS");
         const FS = global.FS;
         global.ENV.SDL_EMSCRIPTEN_KEYBOARD_ELEMENT = 'canvas';
         FS.mkdir('/cfg');
@@ -98,7 +118,7 @@ const Module = {
             const cfg = fs.readFileSync('mame/cfg/a800xl.cfg', 'utf8');
             FS.writeFile('/cfg/a800xl.cfg', cfg, { encoding: 'utf8' });
         } catch (e) {
-            console.log("No a800xl.cfg found locally");
+            log("No a800xl.cfg found locally");
         }
 
         FS.mkdir('/roms');
@@ -106,9 +126,9 @@ const Module = {
         try {
             const bios = fs.readFileSync('mame/roms/a800xl.zip');
             FS.writeFile('/roms/a800xl.zip', bios, { encoding: 'binary' });
-            console.log("BIOS loaded /roms/a800xl.zip");
+            log("BIOS loaded /roms/a800xl.zip");
         } catch (e) {
-            console.log("Missing a800xl.zip BIOS:", e.message);
+            log("Missing a800xl.zip BIOS:", e.message);
         }
 
         FS.mkdir('/emulator');
@@ -118,37 +138,37 @@ const Module = {
             let cartData = new Uint8Array(8192);
             if (fs.existsSync('presets/atari8-800/breakpoints.bin')) {
                 cartData = fs.readFileSync('presets/atari8-800/breakpoints.bin');
-                console.log("Loaded existing breakpoints.bin.");
+                log("Loaded existing breakpoints.bin.");
             } else {
-                console.log("No breakpoints.bin found, using empty 8KB cart.");
+                log("No breakpoints.bin found, using empty 8KB cart.");
             }
             FS.writeFile('/emulator/cart.rom', cartData, { encoding: 'binary' });
         } catch (e) {
-            console.log("Missing cart data:", e.message);
+            log("Missing cart data:", e.message);
         }
     },
     onRuntimeInitialized: () => {
-        console.log("Runtime initialized. Loading debugger.lua...");
+        log("Runtime initialized. Loading debugger.lua...");
         try {
             const luaScript = fs.readFileSync('mame/debugger.lua', 'utf8');
             const js_lua_string = Module.cwrap('_Z13js_lua_stringPKc', 'string', ['string']);
 
-            console.log("Waiting for MAME to boot...");
+            log("Waiting for MAME to boot...");
             setTimeout(() => {
-                console.log("Evaluating debugger.lua...");
+                log("Evaluating debugger.lua...");
                 js_lua_string(luaScript);
 
-                console.log("\n\n\n\n\n");
-                console.log("Calling mamedbg.init()...");
+                log("\n\n\n\n\n");
+                log("Calling mamedbg.init()...");
                 js_lua_string("mamedbg.init()");
 
-                console.log("Calling mamedbg.soft_reset()...");
+                log("Calling mamedbg.soft_reset()...");
                 js_lua_string("mamedbg.soft_reset()");
 
-                // console.log("Waiting before stepping...");
+                // log("Waiting before stepping...");
                 setTimeout(() => {
 
-                    console.log("==== single stepping...");
+                    log("==== single stepping...");
                     let count = 0;
                     let steps = 0;
                     setInterval(() => {
@@ -160,13 +180,13 @@ const Module = {
                     }, 1);
 
 
-                    // console.log("==== SINGLE STEP 1 ====");
+                    // log("==== SINGLE STEP 1 ====");
                     // js_lua_string("mamedbg.step()");
                     // setTimeout(() => {
-                    //     console.log("==== SINGLE STEP 2 ====");
+                    //     log("==== SINGLE STEP 2 ====");
                     //     js_lua_string("mamedbg.step()");
                     //     setTimeout(() => {
-                    //         console.log("Done.");
+                    //         log("Done.");
                     //         process.exit(0);
                     //     }, 10);
                     // }, 10);
@@ -184,7 +204,7 @@ global.__dirname = __dirname;
 global.__filename = __filename;
 global.require = require;
 
-console.log("Loading mame8bitws.js...");
+log("Loading mame8bitws.js...");
 const code = fs.readFileSync('./mame/mame8bitws.js', 'utf8');
 const vm = require('vm');
 vm.runInThisContext(code);

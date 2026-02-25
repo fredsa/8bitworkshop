@@ -100,9 +100,9 @@ function mamedbg.init()
          -- "Stuck" check
          if last_state == "stop" and current_state == "stop" and last_pc ~= current_pc then
             print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved! PC '..string.format("%x", last_pc)..' -> '..string.format("%x", current_pc))
-            print("MAME_STOP")
-            debugger:command("stop")
-            emu.pause()
+            -- print("debugger:command(`stop`)")
+            -- debugger:command("stop")
+            -- emu.pause()
          end
        end
        last_state = current_state

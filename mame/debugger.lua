@@ -11,30 +11,38 @@ local last_state = nil
 local last_pc = nil
 
 local breakpoints = {
-  -- 0xa026, -- LDA #42
-  -- 0xa028, -- LDA #42
-  -- 0xa02a, -- LDA #42
-  -- 0xa02c, -- LDA #42
-  -- 0xa02e, -- LDA #42
-  --  --        LDA #42
-  --  --        LDA #42
-  --  --        …
-  --  --        LDA #42
-  --  --        LDA #42
-  -- 0xa042, -- LDA #42
+  0x0000, -- Start of RAM
 
-  --  --        LDA #42
-  --  --        LDA #42
-  --  -- LOOP:
-  --  --        NOP
-  --  --        NOP
-  -- 0xa069, -- NOP
-  --  --        NOP
-  --  --        NOP
-  --  --        NOP
-  --  --        NOP
-  --  --        NOP
-  --  --        JMP LOOP
+  0xfffa, -- NMI
+  0xfffc, -- RESET
+  0xfffe, -- IRQ
+
+  0xa000, -- Start of ROM
+
+  0xa026, -- LDA #42
+  0xa028, -- LDA #42
+  0xa02a, -- LDA #42
+  0xa02c, -- LDA #42
+  0xa02e, -- LDA #42
+   --        LDA #42
+   --        LDA #42
+   --        …
+   --        LDA #42
+   --        LDA #42
+  0xa042, -- LDA #42
+
+   --        LDA #42
+   --        LDA #42
+   -- LOOP:
+   --        NOP
+   --        NOP
+  0xa069, -- NOP
+   --        NOP
+   --        NOP
+   --        NOP
+   --        NOP
+   --        NOP
+   --        JMP LOOP
 }
 
 function prefix()
@@ -56,6 +64,29 @@ function mamedbg.init()
   video = machine:video()
   cpudebug = cpu:debug()
   debugger = machine:debugger()
+
+
+  -- print("--- CPU DUMP ---")
+  -- print(dump_obj(cpu, 1))
+  -- print(dump_obj(getmetatable(cpu), 1))
+
+  -- print("-- MEM DUMP ---")
+  -- print(dump_obj(mem, 1))
+  -- print(dump_obj(getmetatable(mem), 1))
+
+  -- print("--- MACHINE DUMP ---")
+  -- print(dump_obj(machine, 1))
+  -- print(dump_obj(getmetatable(machine), 1))
+
+  -- print("--- VIDEO DUMP ---")
+  -- print(dump_obj(video, 1))
+  -- print(dump_obj(getmetatable(video), 1))
+
+  -- print("--------------------")
+  -- print("--- CPU DEBUG DUMP ---")
+  -- print(dump_obj(cpudebug, 1))
+  -- print(dump_obj(getmetatable(cpudebug), 1))
+
 
   print(prefix()..'mamedbg.init(): mamedbg.denote_reset()')
   mamedbg.denote_reset()
@@ -95,8 +126,11 @@ end
 
 function mamedbg.soft_reset()
   print(prefix()..'mamedbg.soft_reset()')
+  print(prefix()..'mamedbg.soft_reset: machine:soft_reset()')
+  machine:soft_reset()
   mamedbg.denote_reset()
   -- cpu.state["PC"].value = 0xa000
+  cpu.state["PC"].value = 0xfffc
   print(prefix()..'mamedbg.soft_reset(): NEW PC = ' .. string.format("%x", cpu.state["PC"].value))
   mamedbg.runTo(breakpoints)
 end
@@ -127,7 +161,7 @@ function mamedbg.continue()
   print(prefix()..'mamedbg.continue()')
   hit = false
   cpudebug:go()
-  mamedbg.unpause()
+  -- mamedbg.unpause()
 end
 
 function mamedbg.on_hit(addr)
@@ -149,7 +183,7 @@ function mamedbg.runTo(addrs)
     cpudebug:bpset(addr, nil, action)
   end
   cpudebug:go()
-  mamedbg.unpause()
+  -- mamedbg.unpause()
   mamedbg.denote_start()
 end
 
@@ -163,6 +197,30 @@ end
 function mamedbg.unpause()
   print(prefix()..'mamedbg.unpause()')
   emu.unpause()
+end
+
+function dump_obj(o, depth)
+  depth = depth or 0
+  if depth > 2 then return tostring(o) end
+  if type(o) == 'table' or type(o) == 'userdata' then
+    local s = ''
+    local status, err = pcall(function()
+      for k,v in pairs(o) do
+        local ks = tostring(k)
+        if type(k) ~= 'number' then ks = '"'..ks..'"' end
+        if type(v) == 'table' or type(v) == 'userdata' then
+          s = s .. string.rep("  ", depth) .. '['..ks..'] = ' .. dump_obj(v, depth + 1) .. '\n'
+        else
+          s = s .. string.rep("  ", depth) .. '['..ks..'] = ' .. tostring(v) .. '\n'
+        end
+      end
+    end)
+    if not status then return tostring(o) end
+    if s == '' then return tostring(o) end
+    return '{\n' .. s .. string.rep("  ", depth>0 and (depth-1) or 0) .. '}'
+  else
+    return tostring(o)
+  end
 end
 
 print("parsed Lua debugger script version " .. mamedbg.version)

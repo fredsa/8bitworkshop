@@ -145,29 +145,32 @@ const Module = {
                 console.log("Calling mamedbg.soft_reset()...");
                 js_lua_string("mamedbg.soft_reset()");
 
-                console.log("Waiting before stepping...");
-                setTimeout(() => {
-                    console.log("==== single stepping...");
-                    let count = 0;
-                    setInterval(() => {
-                        count++;
-                        if (count % 100 == 0) {
-                            js_lua_string("mamedbg.step()");
-                        }
-                    }, 1);
+                // console.log("Waiting before stepping...");
+                // setTimeout(() => {
+                console.log("==== single stepping...");
+                let count = 0;
+                setInterval(() => {
+                    count++;
+                    if (count % 100 == 0) {
+                        js_lua_string("mamedbg.step()");
+                    }
+                    if (count > 1000) {
+                        process.exit(0);
+                    }
+                }, 1);
 
 
-                    // console.log("==== SINGLE STEP 1 ====");
-                    // js_lua_string("mamedbg.step()");
-                    // setTimeout(() => {
-                    //     console.log("==== SINGLE STEP 2 ====");
-                    //     js_lua_string("mamedbg.step()");
-                    //     setTimeout(() => {
-                    //         console.log("Done.");
-                    //         process.exit(0);
-                    //     }, 10);
-                    // }, 10);
-                }, 10);
+                // console.log("==== SINGLE STEP 1 ====");
+                // js_lua_string("mamedbg.step()");
+                // setTimeout(() => {
+                //     console.log("==== SINGLE STEP 2 ====");
+                //     js_lua_string("mamedbg.step()");
+                //     setTimeout(() => {
+                //         console.log("Done.");
+                //         process.exit(0);
+                //     }, 10);
+                // }, 10);
+                // }, 10);
             }, 10);
 
         } catch (e) {

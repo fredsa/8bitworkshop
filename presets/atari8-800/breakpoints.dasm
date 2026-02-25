@@ -43,6 +43,7 @@ begin
         lda #42
         lda #42
         lda #42
+LOOPDLOOP
         lda #42
         lda #42
         lda #42
@@ -97,6 +98,7 @@ loopy2
         lda #42
         lda #42
         lda #42
+        jmp LOOPDLOOP
 ; end
 ;         jmp end
 

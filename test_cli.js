@@ -150,12 +150,11 @@ const Module = {
 
                     console.log("==== single stepping...");
                     let count = 0;
+                    let steps = 0;
                     setInterval(() => {
-                        count++;
-                        if (count % 10 == 0) {
-                            js_lua_string("mamedbg.step()");
-                        }
-                        if (count > 1000) {
+                        js_lua_string("mamedbg.step()");
+                        steps++;
+                        if (steps > 10) {
                             process.exit(0);
                         }
                     }, 1);

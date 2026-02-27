@@ -177,6 +177,9 @@ const Module = {
                 log("Calling mamedbg.init()...");
                 js_lua_string("mamedbg.init()");
 
+                // dump memory fffc - ffff
+                js_lua_string("mamedbg.dumpmem(0xfffc, 0xffff)");
+
                 log("Calling mamedbg.soft_reset()...");
                 js_lua_string("mamedbg.soft_reset()");
 

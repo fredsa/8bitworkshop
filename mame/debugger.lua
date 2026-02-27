@@ -59,8 +59,9 @@ end
 function mamedbg.init()
   print('mamedbg.init() version ' .. mamedbg.version .. ' (MAME ' .. emu.app_version() .. ')')
   machine = manager:machine()
+  memory = machine:memory(false)
   cpu = machine.devices[":maincpu"]
-  mem = cpu.spaces["program"]
+  program = cpu.spaces["program"]
   video = machine:video()
   cpudebug = cpu:debug()
   debugger = machine:debugger()
@@ -70,9 +71,9 @@ function mamedbg.init()
   -- print(dump_obj(cpu, 1))
   -- print(dump_obj(getmetatable(cpu), 1))
 
-  -- print("-- MEM DUMP ---")
-  -- print(dump_obj(mem, 1))
-  -- print(dump_obj(getmetatable(mem), 1))
+  -- print("-- MEM PROGRAM DUMP ---")
+  -- print(dump_obj(program, 1))
+  -- print(dump_obj(getmetatable(program), 1))
 
   -- print("--- MACHINE DUMP ---")
   -- print(dump_obj(machine, 1))
@@ -87,6 +88,9 @@ function mamedbg.init()
   -- print(dump_obj(cpudebug, 1))
   -- print(dump_obj(getmetatable(cpudebug), 1))
 
+  -- print("--- MEMORY DUMP ---")
+  -- print(dump_obj(memory, 1))
+  -- print(dump_obj(getmetatable(memory), 1))
 
   print(prefix()..'mamedbg.init(): mamedbg.denote_reset()')
   mamedbg.denote_reset()
@@ -96,11 +100,11 @@ function mamedbg.init()
     local current_state = tostring(debugger.execution_state)
 
     if last_state ~= current_state or last_pc ~= current_pc then
-      print(prefix()..'>>>>>>>>>>>> periodic: '..tostring(last_state)..' -> '..tostring(current_state) .. '   '..(last_pc and string.format("%x", last_pc) or "nil")..' -> '..(current_pc and string.format("%x", current_pc) or "nil"))
+      print(prefix()..'>>>>>>>>>>>> periodic: '..string.format("%-4s", last_state)..' -> '..string.format("%-4s", current_state) .. '   '..(last_pc and string.format("%4x", last_pc) or "nil")..' -> '..(current_pc and string.format("%4x", current_pc) or "nil"))
        if last_state ~= nil and last_pc ~= nil then
          -- "Stuck" check
          if last_state == "stop" and current_state == "stop" and last_pc ~= current_pc then
-            print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved! PC '..string.format("%x", last_pc)..' -> '..string.format("%x", current_pc))
+            print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved! PC '..string.format("%4x", last_pc)..' -> '..string.format("%4x", current_pc))
             -- print("debugger:command(`stop`)")
             -- debugger:command("stop")
             -- emu.pause()
@@ -110,6 +114,16 @@ function mamedbg.init()
        last_pc = current_pc
     end
   end)
+end
+
+function mamedbg.dumpmem(start_str, end_str)
+  print(prefix()..'mamedbg.dumpmem('..string.format("%x", start_str)..','..string.format("%x", end_str)..')')
+  io.write(prefix()..string.format("%4x ", start_str))
+  for addr = start_str, end_str do
+    io.write(string.format(" %2x", program:read_u8(addr)))
+  end
+  io.write("\n")
+  io.flush()
 end
 
 function mamedbg.step()
@@ -130,8 +144,11 @@ function mamedbg.soft_reset()
   print(prefix()..'mamedbg.soft_reset: machine:soft_reset()')
   machine:soft_reset()
   mamedbg.denote_reset()
-  -- cpu.state["PC"].value = 0xa000
-  cpu.state["PC"].value = 0xfffc
+
+  -- mame/roms/a800xl.zip > co61598b.rom
+  -- $ xxd -o 0xb000 co61598b.rom | tail -1
+  -- 0000eff0: 1302 4358 0000 0000 0000 81c1 b9ee 95c1
+  cpu.state["PC"].value = 0xfffc -- ptr to 0xeeb9
   print(prefix()..'mamedbg.soft_reset(): NEW PC = ' .. string.format("%x", cpu.state["PC"].value))
   mamedbg.runTo(breakpoints)
 end

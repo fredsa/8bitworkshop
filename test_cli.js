@@ -1,8 +1,23 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-log("Compiling breakpoints.dasm...");
-execSync('npx ts-node compile_breakpoints.ts', { stdio: 'inherit' });
+let needsCompile = true;
+try {
+    const srcTimestamp = fs.statSync('presets/atari8-800/breakpoints.dasm').mtimeMs;
+    const binTimestamp = fs.statSync('presets/atari8-800/breakpoints.bin').mtimeMs;
+    if (srcTimestamp < binTimestamp) {
+        needsCompile = false;
+    }
+} catch (e) {
+    // If output file doesn't exist yet, we'll try to compile.
+}
+
+if (needsCompile) {
+    log("Compiling breakpoints.dasm...");
+    execSync('npx ts-node compile_breakpoints.ts', { stdio: 'inherit' });
+} else {
+    // log("Breakpoints up to date, skipping compile.");
+}
 
 global.fetch = async function (url) {
     const path = url.toString().replace('file://', '');
@@ -177,7 +192,7 @@ const Module = {
                         if (steps > 10) {
                             process.exit(0);
                         }
-                    }, 1);
+                    }, 0);
 
 
                     // log("==== SINGLE STEP 1 ====");

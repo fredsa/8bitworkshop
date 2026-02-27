@@ -96,6 +96,7 @@ function mamedbg.init()
     local current_state = tostring(debugger.execution_state)
 
     if last_state ~= current_state or last_pc ~= current_pc then
+      print(prefix()..'>>>>>>>>>>>> periodic: '..tostring(last_state)..' -> '..tostring(current_state) .. '   '..(last_pc and string.format("%x", last_pc) or "nil")..' -> '..(current_pc and string.format("%x", current_pc) or "nil"))
        if last_state ~= nil and last_pc ~= nil then
          -- "Stuck" check
          if last_state == "stop" and current_state == "stop" and last_pc ~= current_pc then

@@ -101,19 +101,21 @@ function mamedbg.init()
 
     if last_state ~= current_state or last_pc ~= current_pc then
       print(prefix()..'>>>>>>>>>>>> periodic: '..string.format("%-4s", last_state)..' -> '..string.format("%-4s", current_state) .. '   '..(last_pc and string.format("%4x", last_pc) or "nil")..' -> '..(current_pc and string.format("%4x", current_pc) or "nil"))
-       if last_state ~= nil and last_pc ~= nil then
-         -- "Stuck" check
-         if last_state == "stop" and current_state == "stop" and last_pc ~= current_pc then
-            print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved! PC '..string.format("%4x", last_pc)..' -> '..string.format("%4x", current_pc))
-            -- print("debugger:command(`stop`)")
-            -- debugger:command("stop")
-            -- emu.pause()
-         end
-       end
+    --    if last_state ~= nil and last_pc ~= nil then
+    --      -- "Stuck" check
+    --      if last_state == "stop" and current_state == "stop" and last_pc ~= current_pc then
+    --         print(prefix()..'>>>>>>>>>>>> periodic: WARNING: CPU moved! PC '..string.format("%4x", last_pc)..' -> '..string.format("%4x", current_pc))
+    --         -- print("debugger:command(`stop`)")
+    --         -- debugger:command("stop")
+    --         -- emu.pause()
+    --      end
+    --    end
        last_state = current_state
        last_pc = current_pc
     end
   end)
+
+  -- cpudebug:go()
 end
 
 function mamedbg.dumpmem(start_str, end_str)
@@ -186,8 +188,9 @@ function mamedbg.on_hit(addr)
   print(prefix()..'>>>>>>>>>>>> on_hit: HIT ' .. string.format("%x", addr))
   print("MAME_STOP")
   hit = true
-  debugger:command("stop")
-  emu.pause()
+  -- debugger:command("stop")
+  -- emu.pause()
+  return 1
 end
 
 function mamedbg.runTo(addrs)
@@ -198,7 +201,11 @@ function mamedbg.runTo(addrs)
   for _, addr in ipairs(addrs) do
     target_breakpoints[addr] = true
     local action = string.format('lua mamedbg.on_hit(0x%x)', addr)
-    cpudebug:bpset(addr, nil, action)
+    -- local action = string.format('lua print("0x%x")', addr)
+    bpid = cpudebug:bpset(addr, nil, action)
+    print(prefix()..'mamedbg.runTo: breakpoint '..string.format("%x", addr)..' set '..tostring(bpid))
+    bp = cpudebug:bplist()[bpid]
+    print(dump_obj(bp, 1))
   end
   cpudebug:go()
   -- mamedbg.unpause()

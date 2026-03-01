@@ -116,6 +116,13 @@ function mamedbg.init()
   end)
 
   -- cpudebug:go()
+
+  -- Note, MAME's `src/osd/modules/debugger/none.cpp` effectively calls `cpudebug:go()`.
+  -- https://github.com/sehugg/mame/blob/5c618134c07d922861e756e27aab151f7c024ab1/src/osd/modules/debugger/none.cpp#L46
+  -- void debug_none::wait_for_debugger(device_t &device, bool firststop)
+  -- {
+  -- 	m_machine->debugger().console().get_visible_cpu()->debug()->go();
+  -- }
 end
 
 function mamedbg.dumpmem(start_str, end_str)

@@ -1,3 +1,5 @@
+// To debug the debugger.lua script, run `node test_cli.js`.
+
 const fs = require('fs');
 const { execSync } = require('child_process');
 

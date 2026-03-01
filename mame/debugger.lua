@@ -209,6 +209,10 @@ function mamedbg.runTo(addrs)
     target_breakpoints[addr] = true
     local action = string.format('lua mamedbg.on_hit(0x%x)', addr)
     -- local action = string.format('lua print("0x%x")', addr)
+
+    -- This breakpoint is set, but the CPU immediately resumes execution.
+    -- The `action` is never executed (due to the `none` debugger).
+    -- TODO: Fix this.
     bpid = cpudebug:bpset(addr, nil, action)
     print(prefix()..'mamedbg.runTo: breakpoint '..string.format("%x", addr)..' set '..tostring(bpid))
     bp = cpudebug:bplist()[bpid]

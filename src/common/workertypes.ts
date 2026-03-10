@@ -33,7 +33,7 @@ export class SourceFile {
   text: string;
   offset2loc: Map<number,SourceLine>; //{[offset:number]:number};
   line2offset: Map<number,number>; //{[line:number]:number};
-  
+
   constructor(lines:SourceLine[], text:string) {
     lines = lines || [];
     this.lines = lines;

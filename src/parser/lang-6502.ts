@@ -7,8 +7,16 @@ export const Lezer6502: LRLanguage = LRLanguage.define({
         props: [
             indentNodeProp.add({
                 Program: cx => {
-                    let line = cx.state.doc.lineAt(cx.pos)
-                    return cx.countColumn(line.text, line.text.search(/\S|$/))
+                    let lineNode = cx.node.resolveInner(cx.pos, 1);
+                    while (lineNode && lineNode.name !== 'Line' && lineNode.name !== 'Program') {
+                        lineNode = lineNode.parent;
+                    }
+                    if (lineNode?.name === 'Line') {
+                        if (lineNode.getChild('Label')) return cx.simulatedBreak != null ? cx.unit : 0;
+                        if (lineNode.getChild('Statement')) return cx.unit;
+                    }
+                    let line = cx.state.doc.lineAt(cx.pos);
+                    return cx.countColumn(line.text, line.text.search(/\S|$/));
                 }
             }),
             styleTags({

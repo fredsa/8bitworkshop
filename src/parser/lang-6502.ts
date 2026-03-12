@@ -1,4 +1,4 @@
-import { LRLanguage, LanguageSupport, delimitedIndent, foldInside, foldNodeProp, indentNodeProp } from "@codemirror/language"
+import { LRLanguage, LanguageSupport, indentNodeProp } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight"
 import { parser } from "../../gen/parser/lang-6502.grammar.js"
 
@@ -6,10 +6,10 @@ export const Lezer6502: LRLanguage = LRLanguage.define({
     parser: parser.configure({
         props: [
             indentNodeProp.add({
-                Application: delimitedIndent({ closing: ")", align: false })
-            }),
-            foldNodeProp.add({
-                Application: foldInside
+                Program: cx => {
+                    let line = cx.state.doc.lineAt(cx.pos)
+                    return cx.countColumn(line.text, line.text.search(/\S|$/))
+                }
             }),
             styleTags({
                 Identifier: t.variableName,

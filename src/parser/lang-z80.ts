@@ -1,10 +1,16 @@
-import { LRLanguage, LanguageSupport } from "@codemirror/language"
+import { LRLanguage, LanguageSupport, indentNodeProp } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight"
 import { parser } from "../../gen/parser/lang-z80.grammar.js"
 
 export const LezerZ80: LRLanguage = LRLanguage.define({
     parser: parser.configure({
         props: [
+            indentNodeProp.add({
+                Program: cx => {
+                    let line = cx.state.doc.lineAt(cx.pos)
+                    return cx.countColumn(line.text, line.text.search(/\S|$/))
+                }
+            }),
             styleTags({
                 Identifier: t.variableName,
                 PseudoOp: t.definition(t.variableName),

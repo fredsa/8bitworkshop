@@ -33,7 +33,7 @@ const controlOps = new Set([
     "if", "else", "endif", "ifconst", "ifnconst",
 ])
 
-const opcodes = new Set([
+export const opcodes = new Set([
     "adc", "and", "asl", "bcc", "bcs", "beq", "bit", "bmi",
     "bne", "bpl", "brk", "bvc", "bvs", "clc", "cld", "cli",
     "clv", "cmp", "cpx", "cpy", "dec", "dex", "dey", "eor",

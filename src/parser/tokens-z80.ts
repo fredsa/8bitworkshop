@@ -32,7 +32,7 @@ const controlOps = new Set([
     "ifeq", "ifne", "iflt", "ifgt",
 ])
 
-const opcodes = new Set([
+export const opcodes = new Set([
     // Z80 instructions
     "ld", "push", "pop", "inc", "dec", "add", "adc", "sub", "sbc", "and", "or", "xor",
     "cp", "ret", "jp", "jr", "call", "rst", "nop", "halt", "di", "ei",

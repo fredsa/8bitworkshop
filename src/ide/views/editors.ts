@@ -1,4 +1,5 @@
 import { defaultKeymap, history, historyKeymap, indentSelection, isolateHistory, redo, undo } from "@codemirror/commands";
+import { formatAsm } from "../../parser/format-asm";
 import { cpp } from "@codemirror/lang-cpp";
 import { markdown } from "@codemirror/lang-markdown";
 import { bracketMatching, foldGutter, indentOnInput } from "@codemirror/language";
@@ -142,6 +143,17 @@ export class SourceEditor implements ProjectView {
       parent: parent,
       doc: text,
       extensions: [
+
+        // Use domEventHandler instead of keymap.of with "Shift-Alt-f"
+        // to prevent macOS intercepting and inserting `Ï`.
+        isAsm ? EditorView.domEventHandlers({
+          keydown(event, view) {
+            if (event.shiftKey && event.altKey && event.code === 'KeyF') {
+              event.preventDefault()
+              return formatAsm(view)
+            }
+          }
+        }) : [],
 
         isAsm ? keymap.of([{
           key: "Enter",

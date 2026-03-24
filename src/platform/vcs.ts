@@ -60,7 +60,7 @@ const VCS_PRESETS : Preset[] = [
 
 function getToolForFilename_vcs(fn: string) {
   if (fn.endsWith(".cc2600")) return "cc2600";
-  if (fn.endsWith("-llvm.c")) return "remote:llvm-mos";
+  if (fn.endsWith("-llvm.c")) return "remote_llvm-mos";
   if (fn.endsWith(".wiz")) return "wiz";
   if (fn.endsWith(".bb") || fn.endsWith(".bas")) return "bataribasic";
   if (fn.endsWith(".ca65")) return "ca65";
@@ -486,7 +486,7 @@ class VCSMAMEPlatform extends BaseMAME6502Platform implements Platform {
   getOriginPC = function() {
     return (this.readAddress(0xfffc) | (this.readAddress(0xfffd) << 8)) & 0xffff;
   }
-  
+
 }
 
 ////////////////

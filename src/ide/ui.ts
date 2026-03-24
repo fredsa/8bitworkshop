@@ -138,7 +138,7 @@ const TOOL_TO_SOURCE_STYLE = {
   'vasmarm': 'vasm',
   'armips': 'vasm',
   'ecs': 'ecs',
-  'remote:llvm-mos': 'text/x-csrc',
+  'remote_llvm-mos': 'text/x-csrc',
   'cc2600': 'text/x-csrc',
   'cc7800': 'text/x-csrc',
   'armtcc': 'text/x-csrc',
@@ -158,7 +158,7 @@ const TOOL_TO_HELPURL = {
   'silice': "https://github.com/sylefeb/Silice",
   'zmac': "https://raw.githubusercontent.com/sehugg/zmac/master/doc.txt",
   'cmoc': "http://perso.b2b2c.ca/~sarrazip/dev/cmoc.html",
-  'remote:llvm-mos': 'https://llvm-mos.org/wiki/Welcome',
+  'remote_llvm-mos': 'https://llvm-mos.org/wiki/Welcome',
   'acme': 'https://raw.githubusercontent.com/sehugg/acme/main/docs/QuickRef.txt',
 }
 

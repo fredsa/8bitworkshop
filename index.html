@@ -562,7 +562,10 @@ body {
 <script>
 // submenus open on click + hover
 $( ".dropdown-submenu" ).click(function(event) {
-    event.stopPropagation();
+    // only stop propagation for the submenu toggle, not leaf items
+    if (!$(event.target).hasClass('dropdown-item')) {
+        event.stopPropagation();
+    }
     $(this).parent().siblings().removeClass('open');
     $(this).parent().toggleClass('open');
 });

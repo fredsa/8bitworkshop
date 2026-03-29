@@ -1,7 +1,7 @@
 import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
 import { indentLess, insertTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
-import { Compartment, EditorState, Extension } from "@codemirror/state";
+import { Compartment, EditorState, Extension, Facet } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
@@ -17,9 +17,13 @@ export const highlightTrailingWhitespaceCompartment = new Compartment();
 export const closeBracketsCompartment = new Compartment();
 export const debugHighlightTagsCompartment = new Compartment();
 
+
+const MAX_COLS = 300;
 const MIN_TAB_SIZE = 1;
 const MAX_TAB_SIZE = 40;
 const DEFAULT_TAB_SIZE = 8;
+const DEFAULT_TAB_STOPS = "10 15 35";
+
 const editors: Set<EditorView> = new Set();
 
 export function registerEditor(editor: EditorView) {
@@ -30,9 +34,24 @@ export function unregisterEditor(editor: EditorView) {
   editors.delete(editor);
 }
 
+export function parseTabStops(input: string): number[] {
+  return input.split(/\D+/).map(s => parseInt(s)).filter(n => n > 0);
+}
+
+function uniformTabStops(interval: number): number[] {
+  const stops: number[] = [];
+  for (let col = interval; col <= MAX_COLS; col += interval) stops.push(col);
+  return stops;
+}
+
+export const tabStopsFacet = Facet.define<number[], number[]>({
+  combine: values => values[0],
+});
+
 export interface EditorSettings {
   tabSize: number;
   tabsToSpaces: boolean;
+  tabStops: string;
   showLineNumbers: boolean;
   highlightSpecialChars: boolean;
   highlightWhitespace: boolean;
@@ -46,6 +65,7 @@ const SETTINGS_KEY = "8bitworkshop/editorSettings";
 const defaultSettings: EditorSettings = {
   tabSize: DEFAULT_TAB_SIZE,
   tabsToSpaces: true,
+  tabStops: DEFAULT_TAB_STOPS,
   showLineNumbers: !isMobileDevice,
   highlightSpecialChars: true,
   highlightWhitespace: false,
@@ -76,6 +96,7 @@ const compartmentValues: [Compartment, (s: EditorSettings) => Extension][] = [
       { key: "Tab", run: insertTab /* insertTab uses indentMore when something is selected */ },
       { key: "Shift-Tab", run: indentLess }
     ]),
+    tabStopsFacet.of(s.tabsToSpaces ? parseTabStops(s.tabStops) : uniformTabStops(s.tabSize)),
   ]],
   [showLineNumbersCompartment, s => s.showLineNumbers ? lineNumbers() : []],
   [highlightSpecialCharsCompartment, s => s.highlightSpecialChars ? highlightSpecialChars() : []],
@@ -103,8 +124,10 @@ export function openSettings() {
     title: "Settings",
     message: `<form id="settingsForm" onsubmit="return false">
        <h5>Editor preferences</h5>
-       <div class="form-group"><label>Tab size: <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em"></label></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_tabsToSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Insert spaces when pressing TAB</label></div>
+       <div class="checkbox"><label>Tab size: <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em"></label></div>
+       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsTabs" ${!settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts tabs</label></div>
+       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts spaces<span id="setting_tabStopsGroup" style="${!settings.tabsToSpaces ? 'opacity:0.5' : ''}">,
+        use tab stops <input type="text" id="setting_tabStops" value="${settings.tabStops}" style="width:16em" placeholder="${DEFAULT_TAB_STOPS}" ${!settings.tabsToSpaces ? 'disabled' : ''}></span></label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers" ${settings.showLineNumbers ? 'checked' : ''}> Show line numbers</label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Highlight special characters</label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_highlightWhitespace" ${settings.highlightWhitespace ? 'checked' : ''}> Highlight all whitespace</label></div>
@@ -125,6 +148,7 @@ export function openSettings() {
         callback: () => {
           settings.tabSize = Math.min(MAX_TAB_SIZE, Math.max(MIN_TAB_SIZE, parseInt($('#setting_tabSize').val() as string) || MIN_TAB_SIZE));
           settings.tabsToSpaces = $('#setting_tabInsertsSpaces').is(':checked');
+          settings.tabStops = ($('#setting_tabStops').val() as string).trim();
           settings.showLineNumbers = $('#setting_showLineNumbers').is(':checked');
           settings.highlightSpecialChars = $('#setting_highlightSpecialChars').is(':checked');
           settings.highlightWhitespace = $('#setting_highlightWhitespace').is(':checked');
@@ -139,6 +163,11 @@ export function openSettings() {
   });
   dialog.on('shown.bs.modal', () => {
     $('#setting_tabSize').focus().select();
+    $('input[name="tabMode"]').on('change', () => {
+      var spacesSelected = $('#setting_tabInsertsSpaces').is(':checked');
+      $('#setting_tabStops').prop('disabled', !spacesSelected);
+      $('#setting_tabStopsGroup').css('opacity', spacesSelected ? '' : '0.5');
+    });
   });
   dialog.on('keydown', (e) => {
     if (e.key === 'Enter') {

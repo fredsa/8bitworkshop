@@ -20,6 +20,15 @@ export const debugHighlightTagsCompartment = new Compartment();
 const MIN_TAB_SIZE = 1;
 const MAX_TAB_SIZE = 40;
 const DEFAULT_TAB_SIZE = 8;
+const editors: Set<EditorView> = new Set();
+
+export function registerEditor(editor: EditorView) {
+  editors.add(editor);
+}
+
+export function unregisterEditor(editor: EditorView) {
+  editors.delete(editor);
+}
 
 export interface EditorSettings {
   tabSize: number;
@@ -52,7 +61,7 @@ export function loadSettings(): EditorSettings {
       return { ...defaultSettings, ...JSON.parse(stored) };
     }
   } catch (e) { }
-  return { ...defaultSettings };
+  return defaultSettings;
 }
 
 export function saveSettings(settings: EditorSettings) {
@@ -80,20 +89,9 @@ export function settingsExtensions(settings: EditorSettings): Extension[] {
   return compartmentValues.map(([c, fn]) => c.of(fn(settings)));
 }
 
-// Track all active editor views so we can reconfigure them
-const activeEditors: Set<EditorView> = new Set();
-
-export function registerEditor(editor: EditorView) {
-  activeEditors.add(editor);
-}
-
-export function unregisterEditor(editor: EditorView) {
-  activeEditors.delete(editor);
-}
-
-export function applySettingsToAll(settings: EditorSettings) {
+export function applySettings(settings: EditorSettings) {
   var effects = compartmentValues.map(([c, fn]) => c.reconfigure(fn(settings)));
-  for (var editor of activeEditors) {
+  for (var editor of editors) {
     editor.dispatch({ effects });
   }
 }
@@ -134,7 +132,7 @@ export function openSettings() {
           settings.closeBrackets = $('#setting_closeBrackets').is(':checked');
           settings.debugHighlightTags = $('#setting_debugHighlightTags').is(':checked');
           saveSettings(settings);
-          applySettingsToAll(settings);
+          applySettings(settings);
         }
       }
     }

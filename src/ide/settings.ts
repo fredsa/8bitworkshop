@@ -1,22 +1,25 @@
 import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
+import { indentLess, insertTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { Compartment, EditorState, Extension } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
-import { insertTabKeymap, smartIndentKeymap } from "./views/tabs";
 
 declare var bootbox;
 declare var $: JQueryStatic;
 
-export const tabSizeCompartment = new Compartment();
-export const tabsToSpacesCompartment = new Compartment();
+export const tabCompartment = new Compartment();
 export const showLineNumbersCompartment = new Compartment();
 export const highlightSpecialCharsCompartment = new Compartment();
 export const highlightWhitespaceCompartment = new Compartment();
 export const highlightTrailingWhitespaceCompartment = new Compartment();
 export const closeBracketsCompartment = new Compartment();
 export const debugHighlightTagsCompartment = new Compartment();
+
+const MIN_TAB_SIZE = 1;
+const MAX_TAB_SIZE = 40;
+const DEFAULT_TAB_SIZE = 8;
 
 export interface EditorSettings {
   tabSize: number;
@@ -32,7 +35,7 @@ export interface EditorSettings {
 const SETTINGS_KEY = "8bitworkshop/editorSettings";
 
 const defaultSettings: EditorSettings = {
-  tabSize: 8,
+  tabSize: DEFAULT_TAB_SIZE,
   tabsToSpaces: true,
   showLineNumbers: !isMobileDevice,
   highlightSpecialChars: true,
@@ -57,8 +60,14 @@ export function saveSettings(settings: EditorSettings) {
 }
 
 const compartmentValues: [Compartment, (s: EditorSettings) => Extension][] = [
-  [tabSizeCompartment, s => [EditorState.tabSize.of(s.tabSize), indentUnit.of(s.tabsToSpaces ? " ".repeat(s.tabSize) : "\t")]],
-  [tabsToSpacesCompartment, s => keymap.of(s.tabsToSpaces ? smartIndentKeymap : insertTabKeymap)],
+  [tabCompartment, s => [
+    EditorState.tabSize.of(s.tabSize),
+    indentUnit.of(s.tabsToSpaces ? " ".repeat(s.tabSize) : "\t"),
+    keymap.of([
+      { key: "Tab", run: insertTab /* insertTab uses indentMore when something is selected */ },
+      { key: "Shift-Tab", run: indentLess }
+    ]),
+  ]],
   [showLineNumbersCompartment, s => s.showLineNumbers ? lineNumbers() : []],
   [highlightSpecialCharsCompartment, s => s.highlightSpecialChars ? highlightSpecialChars() : []],
   [highlightWhitespaceCompartment, s => s.highlightWhitespace ? highlightWhitespace() : []],
@@ -96,7 +105,7 @@ export function openSettings() {
     title: "Settings",
     message: `<form id="settingsForm" onsubmit="return false">
        <h5>Editor preferences</h5>
-       <div class="form-group"><label>Tab size: <input type="number" id="setting_tabSize" min="1" max="40" value="${settings.tabSize}" style="width:4em"></label></div>
+       <div class="form-group"><label>Tab size: <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em"></label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_tabsToSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Insert spaces when pressing TAB</label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers" ${settings.showLineNumbers ? 'checked' : ''}> Show line numbers</label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Highlight special characters</label></div>
@@ -116,8 +125,8 @@ export function openSettings() {
         label: "SAVE",
         className: "btn-primary",
         callback: () => {
-          settings.tabSize = parseInt($('#setting_tabSize').val() as string) || 8;
-          settings.tabsToSpaces = $('#setting_tabsToSpaces').is(':checked');
+          settings.tabSize = Math.min(MAX_TAB_SIZE, Math.max(MIN_TAB_SIZE, parseInt($('#setting_tabSize').val() as string) || MIN_TAB_SIZE));
+          settings.tabsToSpaces = $('#setting_tabInsertsSpaces').is(':checked');
           settings.showLineNumbers = $('#setting_showLineNumbers').is(':checked');
           settings.highlightSpecialChars = $('#setting_highlightSpecialChars').is(':checked');
           settings.highlightWhitespace = $('#setting_highlightWhitespace').is(':checked');

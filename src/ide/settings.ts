@@ -1,24 +1,27 @@
 import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
 import { indentUnit } from "@codemirror/language";
 import { Compartment, EditorState, Extension } from "@codemirror/state";
-import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap } from "@codemirror/view";
+import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
+import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
 import { insertTabKeymap, smartIndentKeymap } from "./views/tabs";
 
 declare var bootbox;
 declare var $: JQueryStatic;
 
+export const tabSizeCompartment = new Compartment();
+export const tabsToSpacesCompartment = new Compartment();
+export const showLineNumbersCompartment = new Compartment();
 export const highlightSpecialCharsCompartment = new Compartment();
 export const highlightWhitespaceCompartment = new Compartment();
 export const highlightTrailingWhitespaceCompartment = new Compartment();
-export const tabSizeCompartment = new Compartment();
 export const closeBracketsCompartment = new Compartment();
-export const tabsToSpacesCompartment = new Compartment();
 export const debugHighlightTagsCompartment = new Compartment();
 
 export interface EditorSettings {
   tabSize: number;
   tabsToSpaces: boolean;
+  showLineNumbers: boolean;
   highlightSpecialChars: boolean;
   highlightWhitespace: boolean;
   highlightTrailingWhitespace: boolean;
@@ -31,7 +34,8 @@ const SETTINGS_KEY = "8bitworkshop/editorSettings";
 const defaultSettings: EditorSettings = {
   tabSize: 8,
   tabsToSpaces: true,
-  highlightSpecialChars: false,
+  showLineNumbers: !isMobileDevice,
+  highlightSpecialChars: true,
   highlightWhitespace: false,
   highlightTrailingWhitespace: false,
   closeBrackets: false,
@@ -55,6 +59,7 @@ export function saveSettings(settings: EditorSettings) {
 const compartmentValues: [Compartment, (s: EditorSettings) => Extension][] = [
   [tabSizeCompartment, s => [EditorState.tabSize.of(s.tabSize), indentUnit.of(s.tabsToSpaces ? " ".repeat(s.tabSize) : "\t")]],
   [tabsToSpacesCompartment, s => keymap.of(s.tabsToSpaces ? smartIndentKeymap : insertTabKeymap)],
+  [showLineNumbersCompartment, s => s.showLineNumbers ? lineNumbers() : []],
   [highlightSpecialCharsCompartment, s => s.highlightSpecialChars ? highlightSpecialChars() : []],
   [highlightWhitespaceCompartment, s => s.highlightWhitespace ? highlightWhitespace() : []],
   [highlightTrailingWhitespaceCompartment, s => s.highlightTrailingWhitespace ? highlightTrailingWhitespace() : []],
@@ -86,20 +91,21 @@ export function applySettingsToAll(settings: EditorSettings) {
 
 export function openSettings() {
   var settings = loadSettings();
-  bootbox.dialog({
+  var dialog = bootbox.dialog({
     onEscape: true,
     title: "Settings",
     message: `<form id="settingsForm" onsubmit="return false">
        <h5>Editor preferences</h5>
        <div class="form-group"><label>Tab size: <input type="number" id="setting_tabSize" min="1" max="40" value="${settings.tabSize}" style="width:4em"></label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_tabsToSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Insert spaces when pressing TAB</label></div>
+       <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers" ${settings.showLineNumbers ? 'checked' : ''}> Show line numbers</label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Highlight special characters</label></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_highlightWhitespace" ${settings.highlightWhitespace ? 'checked' : ''}> Highlight whitespace</label></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_highlightTrailingWhitespace" ${settings.highlightTrailingWhitespace ? 'checked' : ''}> Highlight unwanted trailing whitespace</label></div>
+       <div class="checkbox"><label><input type="checkbox" id="setting_highlightWhitespace" ${settings.highlightWhitespace ? 'checked' : ''}> Highlight all whitespace</label></div>
+       <div class="checkbox"><label><input type="checkbox" id="setting_highlightTrailingWhitespace" ${settings.highlightTrailingWhitespace ? 'checked' : ''}> Highlight trailing whitespace</label></div>
        <div class="checkbox"><label><input type="checkbox" id="setting_closeBrackets" ${settings.closeBrackets ? 'checked' : ''}> Automatically add and remove closing brackets</label></div>
        <hr>
        <h5>8bitworkshop IDE internal settings</h5>
-       <div class="checkbox"><label><input type="checkbox" id="setting_debugHighlightTags" ${settings.debugHighlightTags ? 'checked' : ''}> Debug editor syntax highlighting tags</label></div>
+       <div class="checkbox"><label><input type="checkbox" id="setting_debugHighlightTags" ${settings.debugHighlightTags ? 'checked' : ''}> Debug parser and syntax highlighting</label></div>
       </form>`,
     buttons: {
       cancel: {
@@ -112,6 +118,7 @@ export function openSettings() {
         callback: () => {
           settings.tabSize = parseInt($('#setting_tabSize').val() as string) || 8;
           settings.tabsToSpaces = $('#setting_tabsToSpaces').is(':checked');
+          settings.showLineNumbers = $('#setting_showLineNumbers').is(':checked');
           settings.highlightSpecialChars = $('#setting_highlightSpecialChars').is(':checked');
           settings.highlightWhitespace = $('#setting_highlightWhitespace').is(':checked');
           settings.highlightTrailingWhitespace = $('#setting_highlightTrailingWhitespace').is(':checked');
@@ -121,6 +128,15 @@ export function openSettings() {
           applySettingsToAll(settings);
         }
       }
+    }
+  });
+  dialog.on('shown.bs.modal', () => {
+    $('#setting_tabSize').focus().select();
+  });
+  dialog.on('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      dialog.find('.btn-primary').trigger('click');
     }
   });
 }

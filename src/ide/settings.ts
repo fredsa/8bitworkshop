@@ -117,26 +117,27 @@ export function openSettings() {
   var settings = loadSettings();
   var dialog = bootbox.dialog({
     onEscape: true,
-    title: "Settings",
+    // title: "Settings",
     message: `<form id="settingsForm" onsubmit="return false">
-       <h5>Editor preferences</h5>
-       <div class="checkbox"><label>Tab size: <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em"></label></div>
-       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsTabs" ${!settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts tabs</label></div>
-       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts spaces</label></div>
-       <div id="setting_tabStopsRow" style="margin-left:20px;${!settings.tabsToSpaces ? 'visibility:hidden' : ''}">
+      <h5>Editor settings</h5>
+      <div class="checkbox"><label>Tab size: <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em"></label></div>
+      <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsTabs" ${!settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts tabs</label></div>
+      <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts spaces</label></div>
+      <div id="setting_tabStopsRow" style="margin-left:20px;${!settings.tabsToSpaces ? 'visibility:hidden' : ''}">
         Tab stops <input type="text" id="setting_tabStops" value="${settings.tabStops}" style="width:12em" ${!settings.tabsToSpaces ? 'disabled' : ''}>
-        <button type="button" class="btn btn-default btn-sm" id="setting_noneTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>None</button>
         <button type="button" class="btn btn-default btn-sm" id="setting_standardTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Standard</button>
-        <button type="button" class="btn btn-default btn-sm" id="setting_detectTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Detect from file</button></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers" ${settings.showLineNumbers ? 'checked' : ''}> Show line numbers</label></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Highlight special characters</label></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_highlightWhitespace" ${settings.highlightWhitespace ? 'checked' : ''}> Highlight all whitespace</label></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_highlightTrailingWhitespace" ${settings.highlightTrailingWhitespace ? 'checked' : ''}> Highlight trailing whitespace</label></div>
-       <div class="checkbox"><label><input type="checkbox" id="setting_closeBrackets" ${settings.closeBrackets ? 'checked' : ''}> Automatically add and remove closing brackets</label></div>
-       <hr>
-       <h5>8bitworkshop IDE internal settings</h5>
-       <div class="checkbox"><label><input type="checkbox" id="setting_debugHighlightTags" ${settings.debugHighlightTags ? 'checked' : ''}> Debug parser and syntax highlighting</label></div>
-      </form>`,
+        <button type="button" class="btn btn-default btn-sm" id="setting_noneTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>None</button>
+        <button type="button" class="btn btn-primary btn-sm" id="setting_detectTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Analyze <span style="font-family:monospace">${getCurrentEditorFilename()}</span></button>
+      </div>
+      <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers" ${settings.showLineNumbers ? 'checked' : ''}> Show line numbers</label></div>
+      <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Highlight special characters</label></div>
+      <div class="checkbox"><label><input type="checkbox" id="setting_highlightWhitespace" ${settings.highlightWhitespace ? 'checked' : ''}> Highlight all whitespace</label></div>
+      <div class="checkbox"><label><input type="checkbox" id="setting_highlightTrailingWhitespace" ${settings.highlightTrailingWhitespace ? 'checked' : ''}> Highlight trailing whitespace</label></div>
+      <div class="checkbox"><label><input type="checkbox" id="setting_closeBrackets" ${settings.closeBrackets ? 'checked' : ''}> Automatically add and remove closing brackets</label></div>
+
+      <h5>8bitworkshop IDE internal settings</h5>
+      <div class="checkbox"><label><input type="checkbox" id="setting_debugHighlightTags" ${settings.debugHighlightTags ? 'checked' : ''}> Debug parser and syntax highlighting</label></div>
+    </form>`,
     buttons: {
       cancel: {
         label: "Cancel",

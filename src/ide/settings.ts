@@ -88,8 +88,12 @@ export function loadSettings(): EditorSettings {
   return defaultSettings;
 }
 
-export function saveSettings(settings: EditorSettings) {
+export function saveAndApplySettings(settings: EditorSettings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  var effects = compartmentValues.map(([c, fn]) => c.reconfigure(fn(settings)));
+  for (var editor of editors) {
+    editor.dispatch({ effects });
+  }
 }
 
 const compartmentValues: [Compartment, (s: EditorSettings) => Extension][] = [
@@ -106,12 +110,6 @@ export function settingsExtensions(settings: EditorSettings): Extension[] {
   return compartmentValues.map(([c, fn]) => c.of(fn(settings)));
 }
 
-export function applySettings(settings: EditorSettings) {
-  var effects = compartmentValues.map(([c, fn]) => c.reconfigure(fn(settings)));
-  for (var editor of editors) {
-    editor.dispatch({ effects });
-  }
-}
 
 function getAsmDialect(tool: string): AsmDialect | undefined {
   if (['dasm', 'ca65', 'acme'].includes(tool)) return '6502';
@@ -125,8 +123,7 @@ export function autoDetectTabStops(filename: string, text: string) {
   var settings = loadSettings();
   var stops = dialect ? detectTabStopsFromAsm(text, dialect, settings.tabSize) : [];
   settings.tabStops = stops.join(' ');
-  saveSettings(settings);
-  applySettings(settings);
+  saveAndApplySettings(settings);
 }
 
 export function openSettings() {
@@ -172,8 +169,7 @@ export function openSettings() {
           settings.highlightTrailingWhitespace = $('#setting_highlightTrailingWhitespace').is(':checked');
           settings.closeBrackets = $('#setting_closeBrackets').is(':checked');
           settings.debugHighlightTags = $('#setting_debugHighlightTags').is(':checked');
-          saveSettings(settings);
-          applySettings(settings);
+          saveAndApplySettings(settings);
         }
       }
     }

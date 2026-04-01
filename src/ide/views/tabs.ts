@@ -3,11 +3,12 @@ import { indentUnit } from "@codemirror/language";
 import { EditorSelection, EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { opcodes as opcodes6502 } from "../../parser/tokens-6502";
+import { opcodes as opcodes6809 } from "../../parser/tokens-6809";
 import { opcodes as opcodesZ80 } from "../../parser/tokens-z80";
 import { findCommentIndex } from "../../parser/format-asm";
 import { tabStopsFacet } from "../settings";
 
-export type AsmDialect = '6502' | 'z80';
+export type Dialect = '6502' | 'z80' | '6809' | 'c' | 'basic' | 'unknown';
 
 export function columnAt(text: string, offset: number, tabSize: number): number {
   let col = 0;
@@ -52,6 +53,7 @@ export interface TabSettings {
 }
 
 const MNEMONICS_6502 = new Set([...opcodes6502].map(s => s.toLowerCase()));
+const MNEMONICS_6809 = new Set([...opcodes6809].map(s => s.toLowerCase()));
 const MNEMONICS_Z80 = new Set([...opcodesZ80].map(s => s.toLowerCase()));
 
 function mostCommon(counts: Map<number, number>): number | undefined {
@@ -67,8 +69,8 @@ function tally(map: Map<number, number>, key: number) {
   map.set(key, (map.get(key) || 0) + 1);
 }
 
-export function detectTabStopsFromAsm(text: string, dialect: AsmDialect, tabSize: number): number[] {
-  const mnemonics = dialect === '6502' ? MNEMONICS_6502 : MNEMONICS_Z80;
+export function detectTabStopsFromAsm(text: string, dialect: Dialect, tabSize: number): number[] {
+  const mnemonics = dialect === '6502' ? MNEMONICS_6502 : dialect === '6809' ? MNEMONICS_6809 : MNEMONICS_Z80;
   const lines = text.split('\n');
 
   // Pass 1: find most common opcode column
@@ -113,6 +115,32 @@ export function detectTabStopsFromAsm(text: string, dialect: AsmDialect, tabSize
   if (commentCol !== undefined) stops.push(commentCol);
 
   return stops;
+}
+
+export function detectTabSizeFromSource(text: string): number {
+  const cols = new Map<number, number>();
+  for (const line of text.split('\n')) {
+    const match = line.match(/^(\s+)\S/);
+    if (!match) continue;
+    const col = columnAt(line, match[1].length, 8);
+    tally(cols, col);
+  }
+  // In our examples, this almost always returns the first tab stop,
+  // though sometimes the second tab stop competes for the top count.
+  let tabSize = mostCommon(cols);
+  // Could tabSize be the second tab stop?
+  if (tabSize >= 4) {
+    // Check candidate tab stop at the half-way point.
+    const halfTabSize = tabSize / 2;
+    const countTabSize = cols.get(tabSize);
+    const countHalfTabSize = cols.get(halfTabSize);
+    // Does the canidate have at least half as many tallies?
+    if (countHalfTabSize >= countTabSize / 2) {
+      tabSize = halfTabSize;
+    }
+  }
+  // console.log('detectTabSizeFromSource tabSize:', tabSize, 'tallies:', Object.fromEntries(cols));
+  return tabSize;
 }
 
 export function tabExtension(s: TabSettings, stops: number[]): Extension {

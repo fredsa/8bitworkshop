@@ -4,7 +4,7 @@ import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlig
 import { getCurrentEditorFilename, platform } from "./ui";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
-import { AsmDialect, detectTabStopsFromAsm, tabExtension } from "./views/tabs";
+import { Dialect, detectTabSizeFromSource, detectTabStopsFromAsm, tabExtension } from "./views/tabs";
 
 declare var bootbox;
 declare var $: JQueryStatic;
@@ -110,19 +110,55 @@ export function settingsExtensions(settings: EditorSettings): Extension[] {
   return compartmentValues.map(([c, fn]) => c.of(fn(settings)));
 }
 
-
-function getAsmDialect(tool: string): AsmDialect | undefined {
-  if (['dasm', 'ca65', 'acme'].includes(tool)) return '6502';
-  if (['zmac', 'sdasz80', 'sdasgb', 'naken'].includes(tool)) return 'z80';
-  return undefined;
+function getDialect(tool: string): Dialect {
+  switch (tool) {
+    case 'dasm':
+    case 'ca65':
+    case 'acme':
+      return '6502';
+    case 'zmac':
+    case 'sdasz80':
+    case 'sdasgb':
+    case 'naken':
+      return 'z80';
+    case 'xasm6809':
+    case 'lwasm':
+      return '6809';
+    case 'cc65':
+    case 'sdcc':
+    case 'cmoc':
+    case 'oscar64':
+    case 'sccz80':
+      return 'c';
+    default:
+      return 'unknown';
+  }
 }
 
 export function autoDetectTabStops(filename: string, text: string) {
   var tool = platform.getToolForFilename(filename);
-  var dialect = getAsmDialect(tool);
+  var dialect = getDialect(tool);
   var settings = loadSettings();
-  var stops = dialect ? detectTabStopsFromAsm(text, dialect, settings.tabSize) : [];
-  settings.tabStops = stops.join(' ');
+  switch (dialect) {
+    case '6502':
+    case 'z80':
+    case '6809':
+      settings.tabSize = DEFAULT_TAB_SIZE;
+      settings.tabStops = detectTabStopsFromAsm(text, dialect, DEFAULT_TAB_SIZE).join(' ');
+      break;
+    case 'c':
+      settings.tabSize = detectTabSizeFromSource(text) || DEFAULT_TAB_SIZE;
+      settings.tabStops = "";
+      break;
+    case 'basic':
+      settings.tabSize = DEFAULT_TAB_SIZE;
+      settings.tabStops = "";
+      break;
+    case 'unknown':
+      settings.tabSize = DEFAULT_TAB_SIZE;
+      settings.tabStops = "";
+      break;
+  }
   saveAndApplySettings(settings);
 }
 
@@ -192,7 +228,7 @@ export function openSettings() {
       if (!editor) return;
       var text = editor.state.doc.toString();
       var tool = platform.getToolForFilename(getCurrentEditorFilename());
-      var dialect = getAsmDialect(tool);
+      var dialect = getDialect(tool);
       if (dialect) {
         var tabSize = editor.state.facet(EditorState.tabSize);
         var stops = detectTabStopsFromAsm(text, dialect, tabSize);

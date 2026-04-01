@@ -1,12 +1,21 @@
+import { EditorState } from "@codemirror/state";
 import { EditorView, Panel, showPanel } from "@codemirror/view";
-import { loadSettings, openSettings, tabStopsFacet } from "../settings";
+import { openSettings, tabStopsFacet } from "../settings";
 
 const MAX_COLS = 300;
 
-function buildContent(stops: number[], showDots: boolean): string {
-  const chars = new Array(MAX_COLS).fill(showDots ? '<span class="cm-highlightSpace"> </span>' : " ");
-  for (const s of stops) {
-    if (s > 0 && s < MAX_COLS) chars[s] = "▾";
+function buildContent(stops: number[], tabSize: number): string {
+  const chars = new Array(MAX_COLS);
+  if (stops.length > 0) {
+    chars.fill(" ");
+    for (const s of stops) {
+      if (s > 0 && s < MAX_COLS) chars[s] = "▾";
+    }
+  } else {
+    chars.fill("<span class='cm-highlightSpace'> </span>");
+    for (let col = tabSize; col < MAX_COLS; col += tabSize) {
+      chars[col] = "▾";
+    }
   }
   return chars.join("");
 }
@@ -16,15 +25,15 @@ function rulerPanel(view: EditorView): Panel {
   dom.className = "tab-stop-ruler";
   dom.setAttribute("aria-hidden", "true");
   let currentStops: number[] = [];
-  let currentShowDots = false;
+  let currentTabSize = 0;
 
   function rebuild() {
     const stops = view.state.facet(tabStopsFacet);
-    const showDots = loadSettings().highlightWhitespace;
-    if (stops === currentStops && showDots === currentShowDots) return;
+    const tabSize = view.state.facet(EditorState.tabSize);
+    if (stops === currentStops && tabSize === currentTabSize) return;
     currentStops = stops;
-    currentShowDots = showDots;
-    dom.innerHTML = buildContent(stops, showDots);
+    currentTabSize = tabSize;
+    dom.innerHTML = buildContent(stops, tabSize);
   }
 
   function sync() {

@@ -113,6 +113,22 @@ export function applySettings(settings: EditorSettings) {
   }
 }
 
+function getAsmDialect(tool: string): AsmDialect | undefined {
+  if (['dasm', 'ca65', 'acme'].includes(tool)) return '6502';
+  if (['zmac', 'sdasz80', 'sdasgb', 'naken'].includes(tool)) return 'z80';
+  return undefined;
+}
+
+export function autoDetectTabStops(filename: string, text: string) {
+  var tool = platform.getToolForFilename(filename);
+  var dialect = getAsmDialect(tool);
+  var settings = loadSettings();
+  var stops = dialect ? detectTabStopsFromAsm(text, dialect, settings.tabSize) : [];
+  settings.tabStops = stops.join(' ');
+  saveSettings(settings);
+  applySettings(settings);
+}
+
 export function openSettings() {
   var settings = loadSettings();
   var dialog = bootbox.dialog({
@@ -124,7 +140,7 @@ export function openSettings() {
       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsTabs" ${!settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts tabs</label></div>
       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts spaces</label></div>
       <div id="setting_tabStopsRow" style="margin-left:20px;${!settings.tabsToSpaces ? 'visibility:hidden' : ''}">
-        Tab stops <input type="text" id="setting_tabStops" value="${settings.tabStops}" style="width:12em" ${!settings.tabsToSpaces ? 'disabled' : ''}>
+        Tab stops <input type="text" id="setting_tabStops" value="${settings.tabStops}" style="width:8em" ${!settings.tabsToSpaces ? 'disabled' : ''}>
         <button type="button" class="btn btn-default btn-sm" id="setting_standardTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Standard</button>
         <button type="button" class="btn btn-default btn-sm" id="setting_noneTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>None</button>
         <button type="button" class="btn btn-primary btn-sm" id="setting_detectTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Analyze <span style="font-family:monospace">${getCurrentEditorFilename()}</span></button>
@@ -180,9 +196,7 @@ export function openSettings() {
       if (!editor) return;
       var text = editor.state.doc.toString();
       var tool = platform.getToolForFilename(getCurrentEditorFilename());
-      var dialect: AsmDialect | undefined;
-      if (['dasm', 'ca65', 'acme'].includes(tool)) dialect = '6502';
-      else if (['zmac', 'sdasz80', 'sdasgb', 'naken'].includes(tool)) dialect = 'z80';
+      var dialect = getAsmDialect(tool);
       if (dialect) {
         var tabSize = editor.state.facet(EditorState.tabSize);
         var stops = detectTabStopsFromAsm(text, dialect, tabSize);

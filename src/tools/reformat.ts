@@ -13,14 +13,31 @@ import { getBasePlatform, isProbablyBinary } from '../common/util';
 
 const DEFAULT_TAB_SIZE = 8;
 const PRESETS_DIR = path.resolve(__dirname, '../../presets');
+const mode = process.argv[2]; // 'detab' or undefined
 
 // Source file extensions that can be main files (not pure includes)
 const MAIN_EXTENSIONS = new Set([
-  '.a', '.asm', '.dasm', '.ca65', '.acme', '.s', '.z', '.zmac', '.sgb', '.ns', '.scc',
-  '.xasm', '.lwasm',
-  '.c', '.cpp', '.cc', '.o64',
-  '.wiz', '.ecs', '.bas', '.bataribasic', '.cc2600', '.inf',
+  // Preset main files:
+  //   git grep name -- src/platform \
+  //     | tr -d ' ' \
+  //     | grep -E '^.*:[^/]*{.*id.*:.*.*,.*name.*:.*}.*' \
+  //     | sed -e "s/:{id:'\([^']*\)'.*/\1/"
+  //     | sed -e 's/.*\.//' \
+  //     | sort -u
+  'a', 'acme', 'asm', 'bas', 'c', 'c78', 'cc2600', 'dasm',
+  'ice', 'inf', 'md', 'sgb', 'v', 'wiz', 'xasm',
+
+  // Skeleton files:
+  //   git ls-files presets \
+  //     | grep '/skeleton\.' \
+  //     | sed -e 's/.*\.//' \
+  //     | sort -u
+  '.acme', '.armtcc', '.basic', '.bataribasic', '.ca65', '.cc2600', '.cc65',
+  '.cc7800', '.cmoc', '.dasm', '.fastbasic', '.inform6', '.markdown',
+  '.nesasm', '.remote:llvm-mos', '.sdcc', '.silice', '.verilator',
+  '.xasm6809', '.yasm', '.zmac',
 ]);
+
 
 function getToolForFilename(fn: string, arch: string): string {
   switch (arch) {
@@ -163,7 +180,74 @@ function collectFiles(dir: string): string[] {
   return files;
 }
 
-function main() {
+// Text file extensions eligible for detab
+const TEXT_EXTENSIONS = new Set([
+  ...MAIN_EXTENSIONS,
+  '.h', '.inc',
+]);
+
+function expandTabs(text: string, tabSize: number): string {
+  return text.split('\n').map(line => {
+    let result = '';
+    let col = 0;
+    for (const ch of line) {
+      if (ch === '\t') {
+        const spaces = tabSize - (col % tabSize);
+        result += ' '.repeat(spaces);
+        col += spaces;
+      } else {
+        result += ch;
+        col++;
+      }
+    }
+    return result;
+  }).join('\n');
+}
+
+function detab() {
+  const platformDirs = fs.readdirSync(PRESETS_DIR, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
+
+  let totalConverted = 0;
+  let totalSkipped = 0;
+
+  for (const platformId of platformDirs) {
+    const platformDir = path.join(PRESETS_DIR, platformId);
+    const allFiles = collectFiles(platformDir);
+    const textFiles = allFiles.filter(f => {
+      const ext = path.extname(f).toLowerCase();
+      return TEXT_EXTENSIONS.has(ext) && !isProbablyBinary(f);
+    });
+
+    let platformPrinted = false;
+
+    for (const filePath of textFiles) {
+      const text = fs.readFileSync(filePath, 'utf-8');
+      if (!text.includes('\t')) {
+        totalSkipped++;
+        continue;
+      }
+      const converted = expandTabs(text, DEFAULT_TAB_SIZE);
+      if (converted !== text) {
+        if (!platformPrinted) {
+          console.log(`\n${platformId}:`);
+          platformPrinted = true;
+        }
+        fs.writeFileSync(filePath, converted, 'utf-8');
+        const relPath = path.relative(platformDir, filePath);
+        console.log(`  ✓ ${relPath}`);
+        totalConverted++;
+      } else {
+        totalSkipped++;
+      }
+    }
+  }
+
+  console.log(`\nDone: ${totalConverted} detabbed, ${totalSkipped} skipped`);
+}
+
+function reformat() {
   const platformDirs = fs.readdirSync(PRESETS_DIR, { withFileTypes: true })
     .filter(d => d.isDirectory())
     .map(d => d.name);
@@ -207,4 +291,8 @@ function main() {
   console.log(`\nDone: ${totalFormatted} formatted, ${totalSkipped} skipped, ${totalMain} total main files`);
 }
 
-main();
+if (mode === 'detab') {
+  detab();
+} else {
+  reformat();
+}

@@ -1,5 +1,6 @@
 
-import { Platform, Base6502Platform, getOpcodeMetadata_6502, getToolForFilename_6502, Preset } from "../common/baseplatform";
+import { Platform, Base6502Platform, getOpcodeMetadata_6502, Preset } from "../common/baseplatform";
+import { getToolForFilename_6502 } from "../common/toolutil";
 import { PLATFORMS, setKeyboardFromMap, AnimationTimer, RasterVideo, Keys, makeKeycodeMap, KeyFlags, EmuHalt, ControllerPoller } from "../common/emu";
 import { hex, byteArrayToString, replaceAll } from "../common/util";
 import { CodeAnalyzer_nes } from "../common/analysis";

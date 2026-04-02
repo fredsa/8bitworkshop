@@ -1,5 +1,6 @@
 
-import { Platform, Preset, getOpcodeMetadata_6502, getToolForFilename_6502 } from "../common/baseplatform";
+import { Platform, Preset, getOpcodeMetadata_6502 } from "../common/baseplatform";
+import { getToolForFilename_6502 } from "../common/toolutil";
 import { PLATFORMS } from "../common/emu";
 import { AppleII } from "../machine/apple2";
 import { Base6502MachinePlatform } from "../common/baseplatform";

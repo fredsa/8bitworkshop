@@ -1,6 +1,7 @@
 
 import { VIC20_WASMMachine } from "../machine/vic20";
-import { Platform, Base6502MachinePlatform, getToolForFilename_6502, getOpcodeMetadata_6502 } from "../common/baseplatform";
+import { Platform, Base6502MachinePlatform, getOpcodeMetadata_6502 } from "../common/baseplatform";
+import { getToolForFilename_6502 } from "../common/toolutil";
 import { PLATFORMS } from "../common/emu";
 import { BaseMAME6502Platform } from "../common/mameplatform";
 

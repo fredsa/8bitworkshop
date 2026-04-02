@@ -1,6 +1,7 @@
 
 import { ColecoVision } from "../machine/coleco";
-import { Platform, BaseZ80MachinePlatform, getToolForFilename_z80 } from "../common/baseplatform";
+import { Platform, BaseZ80MachinePlatform } from "../common/baseplatform";
+import { getToolForFilename_z80 } from "../common/toolutil";
 import { PLATFORMS } from "../common/emu";
 import { BaseMAMEZ80Platform } from "../common/mameplatform";
 

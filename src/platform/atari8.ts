@@ -1,5 +1,6 @@
 
-import { Platform, getOpcodeMetadata_6502, getToolForFilename_6502, Base6502MachinePlatform, Preset } from "../common/baseplatform";
+import { Platform, getOpcodeMetadata_6502, Base6502MachinePlatform, Preset } from "../common/baseplatform";
+import { getToolForFilename_6502 } from "../common/toolutil";
 import { PLATFORMS } from "../common/emu";
 import { BaseMAME6502Platform } from "../common/mameplatform";
 import { Atari5200, Atari800 } from "../machine/atari8";

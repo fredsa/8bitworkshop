@@ -1,5 +1,6 @@
 
-import { Platform, getOpcodeMetadata_6502, getToolForFilename_6502 } from "../common/baseplatform";
+import { Platform, getOpcodeMetadata_6502 } from "../common/baseplatform";
+import { getToolForFilename_6502 } from "../common/toolutil";
 import { PLATFORMS } from "../common/emu";
 import { KIM1 } from "../machine/kim1";
 import { Base6502MachinePlatform } from "../common/baseplatform";

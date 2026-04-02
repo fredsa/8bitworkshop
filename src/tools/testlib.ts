@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { WorkerResult, WorkerMessage, WorkerErrorResult, WorkerOutputResult, Dependency } from "../common/workertypes";
 import { getFolderForPath, isProbablyBinary, getBasePlatform } from "../common/util";
-import { getToolForFilename_z80, getToolForFilename_6502, getToolForFilename_6809 } from "../common/baseplatform";
+import { getToolForFilename_z80, getToolForFilename_6502, getToolForFilename_6809 } from "../common/toolutil";
 import { setupNodeEnvironment, handleMessage, store, TOOL_PRELOADFS } from "../worker/workerlib";
 import { PLATFORM_PARAMS } from "../worker/platforms";
 import { TOOLS } from "../worker/workertools";

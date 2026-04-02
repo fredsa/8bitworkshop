@@ -4,6 +4,7 @@ import { disassemble6502 } from "./cpu/disasm6502";
 import { disassembleZ80 } from "./cpu/disasmz80";
 import { Z80 } from "./cpu/ZilogZ80";
 import { AnimationTimer, ControllerPoller, RasterVideo, drawCrosshair, dumpRAM } from "./emu";
+import { getToolForFilename_6502, getToolForFilename_z80, getToolForFilename_6809 } from "./toolutil";
 import { byteToASCII, hex, invertMap, printFlags } from "./util";
 import { FileData, Segment } from "./workertypes";
 
@@ -433,22 +434,6 @@ export function inspectSymbol(platform: Platform, sym: string): string {
 
 ////// 6502
 
-export function getToolForFilename_6502(fn: string): string {
-  if (fn.endsWith("-llvm.c")) return "remote:llvm-mos";
-  if (fn.endsWith(".c")) return "cc65";
-  if (fn.endsWith(".h")) return "cc65";
-  if (fn.endsWith(".s")) return "ca65";
-  if (fn.endsWith(".ca65")) return "ca65";
-  if (fn.endsWith(".dasm")) return "dasm";
-  if (fn.endsWith(".acme")) return "acme";
-  if (fn.endsWith(".wiz")) return "wiz";
-  if (fn.endsWith(".ecs")) return "ecs";
-  if (fn.endsWith(".cpp")) return "oscar64";
-  if (fn.endsWith(".cc")) return "oscar64";
-  if (fn.endsWith(".o64")) return "oscar64";
-  return "dasm"; // .a
-}
-
 // TODO: can merge w/ Z80?
 export abstract class Base6502Platform extends BaseDebugPlatform {
 
@@ -625,18 +610,6 @@ export abstract class BaseZ80Platform extends BaseDebugPlatform {
   }
 }
 
-export function getToolForFilename_z80(fn: string): string {
-  if (fn.endsWith(".c")) return "sdcc";
-  if (fn.endsWith(".h")) return "sdcc";
-  if (fn.endsWith(".s")) return "sdasz80";
-  if (fn.endsWith(".sgb")) return "sdasgb";
-  if (fn.endsWith(".ns")) return "naken";
-  if (fn.endsWith(".scc")) return "sccz80";
-  if (fn.endsWith(".z")) return "zmac";
-  if (fn.endsWith(".wiz")) return "wiz";
-  return "zmac";
-}
-
 ////// 6809
 
 export function cpuStateToLongString_6809(c) {
@@ -654,13 +627,6 @@ export function cpuStateToLongString_6809(c) {
     ;
 }
 
-export function getToolForFilename_6809(fn: string): string {
-  if (fn.endsWith(".c")) return "cmoc";
-  if (fn.endsWith(".h")) return "cmoc";
-  if (fn.endsWith(".xasm")) return "xasm6809";
-  if (fn.endsWith(".lwasm")) return "lwasm";
-  return "cmoc";
-}
 
 export abstract class Base6809Platform extends BaseZ80Platform {
 

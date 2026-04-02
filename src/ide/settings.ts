@@ -1,10 +1,12 @@
 import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
 import { Compartment, EditorState, Extension, Facet } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
+import { detectTabSizeFromSource, detectTabStopsFromAsm } from "../common/tabdetect";
+import { getDialect } from "../common/toolutil";
 import { getCurrentEditorFilename, platform } from "./ui";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
-import { Dialect, detectTabSizeFromSource, detectTabStopsFromAsm, tabExtension } from "./views/tabs";
+import { tabExtension } from "./views/tabs";
 
 declare var bootbox;
 declare var $: JQueryStatic;
@@ -110,30 +112,6 @@ export function settingsExtensions(settings: EditorSettings): Extension[] {
   return compartmentValues.map(([c, fn]) => c.of(fn(settings)));
 }
 
-function getDialect(tool: string): Dialect {
-  switch (tool) {
-    case 'dasm':
-    case 'ca65':
-    case 'acme':
-      return '6502';
-    case 'zmac':
-    case 'sdasz80':
-    case 'sdasgb':
-    case 'naken':
-      return 'z80';
-    case 'xasm6809':
-    case 'lwasm':
-      return '6809';
-    case 'cc65':
-    case 'sdcc':
-    case 'cmoc':
-    case 'oscar64':
-    case 'sccz80':
-      return 'c';
-    default:
-      return 'unknown';
-  }
-}
 
 export function autoDetectTabStops(filename: string, text: string) {
   var tool = platform.getToolForFilename(filename);

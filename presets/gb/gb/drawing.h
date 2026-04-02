@@ -34,23 +34,23 @@
 #include <stdint.h>
 
 /** Size of the screen in pixels */
-#define GRAPHICS_WIDTH	160
+#define GRAPHICS_WIDTH  160
 #define GRAPHICS_HEIGHT 144
 
-#define	SOLID   0x00	    /* Overwrites the existing pixels */
-#define	OR	    0x01        /* Performs a logical OR */
-#define	XOR	    0x02		/* Performs a logical XOR */
-#define	AND	    0x03		/* Performs a logical AND */
+#define SOLID   0x00        /* Overwrites the existing pixels */
+#define OR      0x01        /* Performs a logical OR */
+#define XOR     0x02        /* Performs a logical XOR */
+#define AND     0x03        /* Performs a logical AND */
 
 /** Possible drawing colours */
-#define	WHITE	0
-#define	LTGREY	1
-#define	DKGREY	2
-#define	BLACK	3
+#define WHITE   0
+#define LTGREY  1
+#define DKGREY  2
+#define BLACK   3
 
 /** Possible fill styles for box() and circle() */
-#define	M_NOFILL	0
-#define	M_FILL		1
+#define M_NOFILL        0
+#define M_FILL          1
 
 /** Possible values for signed_value in gprintln() and gprintn() */
 #define SIGNED   1

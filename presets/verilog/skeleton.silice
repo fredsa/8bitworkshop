@@ -57,21 +57,21 @@ algorithm main(
 
   ntsc ntsc_driver (
     ntsc_hs :> video_hs,
-	  ntsc_vs :> video_vs,
-	  active :> active,
-	  vblank :> vblank,
-	  ntsc_x  :> pix_x,
-	  ntsc_y  :> pix_y
+    ntsc_vs :> video_vs,
+    active :> active,
+    vblank :> vblank,
+    ntsc_x  :> pix_x,
+    ntsc_y  :> pix_y
   );
 
   frame_display display (
-	  pix_x      <: pix_x,
-	  pix_y      <: pix_y,
-	  pix_active <: active,
-	  pix_vblank <: vblank,
-	  pix_r      :> video_r,
-	  pix_g      :> video_g,
-	  pix_b      :> video_b
+    pix_x      <: pix_x,
+    pix_y      <: pix_y,
+    pix_active <: active,
+    pix_vblank <: vblank,
+    pix_r      :> video_r,
+    pix_g      :> video_g,
+    pix_b      :> video_b
   );
 
   // forever

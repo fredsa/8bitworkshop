@@ -1,6 +1,6 @@
 /** @file gb/bgb_emu.h
 
-	Shim for legacy use of @ref bgb_emu.h which has been
+    Shim for legacy use of @ref bgb_emu.h which has been
     migrated to @ref emu_debug.h
 
     See the `emu_debug` example project included with gbdk.

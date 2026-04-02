@@ -146,14 +146,16 @@ export class SourceEditor implements ProjectView {
 
         // Use domEventHandler instead of keymap.of with "Shift-Alt-f"
         // to prevent macOS intercepting and inserting `Ï`.
-        isAsm ? EditorView.domEventHandlers({
+        EditorView.domEventHandlers({
           keydown(event, view) {
             if (event.shiftKey && event.altKey && event.code === 'KeyF') {
-              event.preventDefault()
-              return formatAsm(view)
+              event.preventDefault();
+              if (isAsm) {
+                return formatAsm(view);
+              }
             }
           }
-        }) : [],
+        }),
 
         isAsm ? keymap.of([{
           key: "Enter",

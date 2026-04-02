@@ -204,7 +204,7 @@ function expandTabs(text: string, tabSize: number): string {
   }).join('\n');
 }
 
-function detab() {
+function transformTextFiles(label: string, transform: (text: string) => string) {
   const platformDirs = fs.readdirSync(PRESETS_DIR, { withFileTypes: true })
     .filter(d => d.isDirectory())
     .map(d => d.name);
@@ -224,11 +224,7 @@ function detab() {
 
     for (const filePath of textFiles) {
       const text = fs.readFileSync(filePath, 'utf-8');
-      if (!text.includes('\t')) {
-        totalSkipped++;
-        continue;
-      }
-      const converted = expandTabs(text, DEFAULT_TAB_SIZE);
+      const converted = transform(text);
       if (converted !== text) {
         if (!platformPrinted) {
           console.log(`\n${platformId}:`);
@@ -244,7 +240,11 @@ function detab() {
     }
   }
 
-  console.log(`\nDone: ${totalConverted} detabbed, ${totalSkipped} skipped`);
+  console.log(`\nDone: ${totalConverted} ${label}, ${totalSkipped} skipped`);
+}
+
+function stripTrailingWhitespace(text: string): string {
+  return text.split('\n').map(line => line.replace(/[\t ]+$/, '')).join('\n');
 }
 
 function reformat() {
@@ -292,7 +292,9 @@ function reformat() {
 }
 
 if (mode === 'detab') {
-  detab();
+  transformTextFiles('detabbed', text => expandTabs(text, DEFAULT_TAB_SIZE));
+} else if (mode === 'strip-trailing-ws') {
+  transformTextFiles('stripped', stripTrailingWhitespace);
 } else {
   reformat();
 }

@@ -398,15 +398,15 @@ COUNTER   SET  COUNTER + 1
 ; -------------------------------------------------------------------
 ; Pseudo-ops: compound assignment operators
 ; -------------------------------------------------------------------
-COUNTER	+= 5
-COUNTER	-= 2
-COUNTER	*= 3
+COUNTER += 5
+COUNTER -= 2
+COUNTER *= 3
 
 ; -------------------------------------------------------------------
 ; Pseudo-ops: increment/decrement
 ; -------------------------------------------------------------------
-COUNTER	++
-COUNTER	--
+COUNTER ++
+COUNTER --
 
 ; -------------------------------------------------------------------
 ; Data: DEFB / DB / BYTE / ASCII / TEXT / DEFM / DM

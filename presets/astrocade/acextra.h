@@ -5,7 +5,7 @@
 #include "aclib.h"
 
 // special case for draw_sprite()
-#define M_ERASE		0x04
+#define M_ERASE     0x04
 
 // font constants
 #define LOCHAR 32

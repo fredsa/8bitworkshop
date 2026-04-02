@@ -4,10 +4,10 @@
 ; ROM routine for character output
 CHPUT:  equ $00A2
 
-	org 0x4000
+    org 0x4000
 
 ; MSX cartridge header @ 0x4000 - 0x400f
-	dw 0x4241
+    dw 0x4241
         dw Init
         dw Init
         dw 0
@@ -20,7 +20,7 @@ CHPUT:  equ $00A2
 Init:
     ld hl, msg
     call puts
-    jp Init	; loop forever
+    jp Init ; loop forever
 puts:               ; print 0-terminated string in HL
     ld a,(hl)
     or a

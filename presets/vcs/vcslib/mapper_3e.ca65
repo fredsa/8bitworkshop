@@ -53,7 +53,7 @@ _ramselect:
 ; select the RAM bank
   lda tmp4
   sta $3E
-  lda #0	; needed for Stella signature?
+  lda #0    ; needed for Stella signature?
   tya
   jmp call_wrapped_and_exit
 
@@ -85,8 +85,8 @@ _xramread:
 _xramset:
   sta ptr4+0
   sta ptr3+0
-  stx ptr4+1	; read
+  stx ptr4+1    ; read
   txa
   ora #%00000100
-  sta ptr3+1	; write
+  sta ptr3+1    ; write
   rts

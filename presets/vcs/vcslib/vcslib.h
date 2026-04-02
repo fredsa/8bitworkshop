@@ -35,10 +35,10 @@ extern void copyxdata(void);
 
 // Atari 2600 kernel helpers, called in a sequence every frame
 
-extern void kernel_1(void);	// before preframe
-extern void kernel_2(void);	// before kernel
-extern void kernel_3(void);	// after kernel
-extern void kernel_4(void);	// after postframe
+extern void kernel_1(void); // before preframe
+extern void kernel_2(void); // before kernel
+extern void kernel_3(void); // after kernel
+extern void kernel_4(void); // after postframe
 
 // Function to set horizontal position of a game object.
 // The position and object index are packed into a single int.
@@ -52,7 +52,7 @@ extern void fastcall set_horiz_pos(int hi_obj__lo_xpos);
 
 // Applies horizontal motion to sprite(s) after set_horiz_pos()
 #define apply_hmove() \
-	asm("sta $42 ; WSYNC"); \
+    asm("sta $42 ; WSYNC"); \
         asm("sta $6a ; HMOVE");
 
 
@@ -93,10 +93,10 @@ extern const byte* music_ptr; // Pointer to current music data
 // Macro to set music data pointer and begin playback
 #define music_play(ptr) music_ptr = (ptr);
 
-extern byte sndchan_timer[2];	// sound channel timers, 0 = free channel
+extern byte sndchan_timer[2];   // sound channel timers, 0 = free channel
 #pragma zpsym("sndchan_timer");
 
-extern byte sndchan_sfx[2];	// sound channel sound index
+extern byte sndchan_sfx[2]; // sound channel sound index
 #pragma zpsym("sndchan_sfx");
 
 
@@ -131,23 +131,23 @@ extern void tinyfont48_build(byte* dest, const char str[12]);
 
 /////
 
-#define P0	0
-#define P1	1
-#define M0	2
-#define M1	3
-#define BALL	4
+#define P0  0
+#define P1  1
+#define M0  2
+#define M1  3
+#define BALL    4
 
-#define OBJ_PLAYER_0	0x000
-#define OBJ_PLAYER_1	0x100
-#define OBJ_MISSILE_0	0x200
-#define OBJ_MISSILE_1	0x300
-#define OBJ_BALL	0x400
+#define OBJ_PLAYER_0    0x000
+#define OBJ_PLAYER_1    0x100
+#define OBJ_MISSILE_0   0x200
+#define OBJ_MISSILE_1   0x300
+#define OBJ_BALL    0x400
 
-#define SW_RESET()	((RIOT.swchb & RESET_MASK) == 0)
-#define SW_SELECT()	((RIOT.swchb & SELECT_MASK) == 0)
-#define SW_COLOR()	((RIOT.swchb & BW_MASK) != 0)
-#define SW_P0_PRO()	((RIOT.swchb & P0_DIFF_MASK) != 0)
-#define SW_P1_PRO()	((RIOT.swchb & P1_DIFF_MASK) != 0)
+#define SW_RESET()  ((RIOT.swchb & RESET_MASK) == 0)
+#define SW_SELECT() ((RIOT.swchb & SELECT_MASK) == 0)
+#define SW_COLOR()  ((RIOT.swchb & BW_MASK) != 0)
+#define SW_P0_PRO() ((RIOT.swchb & P0_DIFF_MASK) != 0)
+#define SW_P1_PRO() ((RIOT.swchb & P1_DIFF_MASK) != 0)
 
 #define COLOR_CONV(color) (SW_COLOR() ? color : color & 0x0f)
 

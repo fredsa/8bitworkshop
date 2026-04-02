@@ -19,27 +19,27 @@
     uint8_t keys;
     keys = joypad();
     if (keys & J_B) {
-    	...
+        ...
     }
 
     @see joypad
  */
-#define	J_UP         0x04U
-#define	J_DOWN       0x08U
-#define	J_LEFT       0x02U
-#define	J_RIGHT      0x01U
-#define	J_A          0x10U
-#define	J_B          0x20U
-#define	J_SELECT     0x40U
-#define	J_START      0x80U
+#define J_UP         0x04U
+#define J_DOWN       0x08U
+#define J_LEFT       0x02U
+#define J_RIGHT      0x01U
+#define J_A          0x10U
+#define J_B          0x20U
+#define J_SELECT     0x40U
+#define J_START      0x80U
 
 /** Screen modes.
     Normally used by internal functions only.
     @see mode()
  */
-#define	M_DRAWING    0x01U
-#define	M_TEXT_OUT   0x02U
-#define	M_TEXT_INOUT 0x03U
+#define M_DRAWING    0x01U
+#define M_TEXT_OUT   0x02U
+#define M_TEXT_INOUT 0x03U
 /** Set this in addition to the others to disable scrolling
 
     If scrolling is disabled, the cursor returns to (0,0)
@@ -399,13 +399,13 @@ extern volatile uint8_t _io_out;
 
 /* Status codes */
 /** Serial Link IO is completed */
-#define IO_IDLE		0x00U
+#define IO_IDLE     0x00U
 /** Serial Link Sending data */
-#define IO_SENDING	0x01U
+#define IO_SENDING  0x01U
 /** Serial Link Receiving data */
-#define IO_RECEIVING	0x02U
+#define IO_RECEIVING    0x02U
 /** Serial Link Error */
-#define IO_ERROR	0x04U
+#define IO_ERROR    0x04U
 
 
 
@@ -613,8 +613,8 @@ typedef struct {
 
 /** Initializes joypads_t structure for polling multiple joypads
     (for the GB and ones connected via SGB)
-    @param npads	number of joypads requested (1, 2 or 4)
-    @param joypads	pointer to joypads_t structure to be initialized
+    @param npads    number of joypads requested (1, 2 or 4)
+    @param joypads  pointer to joypads_t structure to be initialized
 
     Only required for @ref joypad_ex, not required for calls to regular @ref joypad()
     @returns number of joypads avaliable
@@ -623,8 +623,8 @@ typedef struct {
 uint8_t joypad_init(uint8_t npads, joypads_t * joypads) OLDCALL;
 
 /** Polls all avaliable joypads (for the GB and ones connected via SGB)
-    @param joypads	pointer to joypads_t structure to be filled with joypad statuses,
-    	   must be previously initialized with joypad_init()
+    @param joypads  pointer to joypads_t structure to be filled with joypad statuses,
+           must be previously initialized with joypad_init()
 
     @see joypad_init(), joypads_t
 */
@@ -662,7 +662,7 @@ inline void disable_interrupts() PRESERVES_REGS(a, b, c, d, e, h, l) {
 
 /** Clears any pending interrupts and sets the interrupt mask
     register IO to flags.
-    @param flags	A logical OR of *_IFLAGS
+    @param flags    A logical OR of *_IFLAGS
 
     @note: This disables and then re-enables interrupts so it
            must be used outside of a critical section.
@@ -702,9 +702,9 @@ void refresh_OAM() PRESERVES_REGS(b, c, d, e, h, l);
 
 
 /** Copies data from somewhere in the lower address space to part of hi-ram.
-    @param dst		Offset in high ram (0xFF00 and above) to copy to.
-    @param src		Area to copy from
-    @param n		Number of bytes to copy.
+    @param dst      Offset in high ram (0xFF00 and above) to copy to.
+    @param src      Area to copy from
+    @param n        Number of bytes to copy.
 */
 void hiramcpy(uint8_t dst, const void *src, uint8_t n) OLDCALL PRESERVES_REGS(b, c);
 
@@ -1619,7 +1619,7 @@ void set_tiles(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *vram_addr, c
     @param first_tile  Index of the first tile to write
     @param nb_tiles    Number of tiles to write
     @param data        Pointer to (2 bpp) source Tile Pattern data.
-	@param base        MSB of the destination address in VRAM (usually 0x80 or 0x90 which gives 0x8000 or 0x9000)
+    @param base        MSB of the destination address in VRAM (usually 0x80 or 0x90 which gives 0x8000 or 0x9000)
 
     @see set_bkg_data, set_win_data, set_data
 */

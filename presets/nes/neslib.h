@@ -36,10 +36,10 @@
 
 
 // define basic types for convenience
-typedef unsigned char byte;	// 8-bit unsigned
-typedef signed char sbyte;	// 8-bit signed
-typedef unsigned short word;	// 16-bit signed
-typedef enum { false, true } bool;	// boolean
+typedef unsigned char byte; // 8-bit unsigned
+typedef signed char sbyte;  // 8-bit signed
+typedef unsigned short word;    // 16-bit signed
+typedef enum { false, true } bool;  // boolean
 
 
 // set bg and spr palettes, data is 32 bytes array
@@ -109,8 +109,8 @@ void __fastcall__ oam_size(unsigned char size);
 // set sprite in OAM buffer, chrnum is tile, attr is attribute, sprid is offset in OAM in bytes
 // returns sprid+4, which is offset for a next sprite
 unsigned char __fastcall__ oam_spr(unsigned char x, unsigned char y,
-					unsigned char chrnum, unsigned char attr,
-					unsigned char sprid);
+                    unsigned char chrnum, unsigned char attr,
+                    unsigned char sprid);
 
 // set metasprite in OAM buffer
 // meta sprite is a const unsigned char array, it contains four bytes per sprite
@@ -118,7 +118,7 @@ unsigned char __fastcall__ oam_spr(unsigned char x, unsigned char y,
 // x=128 is end of a meta sprite
 // returns sprid+4, which is offset for a next sprite
 unsigned char __fastcall__ oam_meta_spr(unsigned char x, unsigned char y,
-					unsigned char sprid, const unsigned char *data);
+                    unsigned char sprid, const unsigned char *data);
 
 // hide all remaining sprites from given offset
 void __fastcall__ oam_hide_rest(unsigned char sprid);
@@ -242,12 +242,12 @@ void __fastcall__ vram_unrle(const unsigned char *data);
 
 // unpack LZ4 data to this address
 void __fastcall__ vram_unlz4(const unsigned char *in, unsigned char *out,
-				const unsigned uncompressed_size);
+                const unsigned uncompressed_size);
 /*
-	Rough speeds for a full 1024 nametable:
-	- rle takes 0.5 frames
-	- uncompressed takes 1.3 frames
-	- lz4 takes 2.8 frames
+    Rough speeds for a full 1024 nametable:
+    - rle takes 0.5 frames
+    - uncompressed takes 1.3 frames
+    - lz4 takes 2.8 frames
 */
 
 
@@ -267,66 +267,66 @@ void __fastcall__ nmi_set_callback(void (*callback)(void));
 
 
 
-#define PAD_A			0x01
-#define PAD_B			0x02
-#define PAD_SELECT		0x04
-#define PAD_START		0x08
-#define PAD_UP			0x10
-#define PAD_DOWN		0x20
-#define PAD_LEFT		0x40
-#define PAD_RIGHT		0x80
+#define PAD_A           0x01
+#define PAD_B           0x02
+#define PAD_SELECT      0x04
+#define PAD_START       0x08
+#define PAD_UP          0x10
+#define PAD_DOWN        0x20
+#define PAD_LEFT        0x40
+#define PAD_RIGHT       0x80
 
-#define OAM_FLIP_V		0x80
-#define OAM_FLIP_H		0x40
-#define OAM_BEHIND		0x20
+#define OAM_FLIP_V      0x80
+#define OAM_FLIP_H      0x40
+#define OAM_BEHIND      0x20
 
-#define MAX(x1,x2)		((x1)<(x2)?(x2):(x1))
-#define MIN(x1,x2)		((x1)<(x2)?(x1):(x2))
+#define MAX(x1,x2)      ((x1)<(x2)?(x2):(x1))
+#define MIN(x1,x2)      ((x1)<(x2)?(x1):(x2))
 
-#define MASK_SPR		0x10
-#define MASK_BG			0x08
-#define MASK_EDGE_SPR		0x04
-#define MASK_EDGE_BG		0x02
-#define MASK_TINT_RED		0x20
-#define MASK_TINT_BLUE		0x40
-#define MASK_TINT_GREEN		0x80
-#define MASK_MONO		0x01
+#define MASK_SPR        0x10
+#define MASK_BG         0x08
+#define MASK_EDGE_SPR       0x04
+#define MASK_EDGE_BG        0x02
+#define MASK_TINT_RED       0x20
+#define MASK_TINT_BLUE      0x40
+#define MASK_TINT_GREEN     0x80
+#define MASK_MONO       0x01
 
-#define NAMETABLE_A		0x2000
-#define NAMETABLE_B		0x2400
-#define NAMETABLE_C		0x2800
-#define NAMETABLE_D		0x2c00
+#define NAMETABLE_A     0x2000
+#define NAMETABLE_B     0x2400
+#define NAMETABLE_C     0x2800
+#define NAMETABLE_D     0x2c00
 
-#define NULL			0
-#define TRUE			1
-#define FALSE			0
+#define NULL            0
+#define TRUE            1
+#define FALSE           0
 
-#define NT_UPD_HORZ		0x40
-#define NT_UPD_VERT		0x80
-#define NT_UPD_EOF		0xff
+#define NT_UPD_HORZ     0x40
+#define NT_UPD_VERT     0x80
+#define NT_UPD_EOF      0xff
 
 // macro to calculate nametable address from X,Y in compile time
 
-#define NTADR_A(x,y)	 	(NAMETABLE_A|(((y)<<5)|(x)))
-#define NTADR_B(x,y) 		(NAMETABLE_B|(((y)<<5)|(x)))
-#define NTADR_C(x,y) 		(NAMETABLE_C|(((y)<<5)|(x)))
-#define NTADR_D(x,y) 		(NAMETABLE_D|(((y)<<5)|(x)))
+#define NTADR_A(x,y)        (NAMETABLE_A|(((y)<<5)|(x)))
+#define NTADR_B(x,y)        (NAMETABLE_B|(((y)<<5)|(x)))
+#define NTADR_C(x,y)        (NAMETABLE_C|(((y)<<5)|(x)))
+#define NTADR_D(x,y)        (NAMETABLE_D|(((y)<<5)|(x)))
 
 // macro to get MSB and LSB
 
-#define MSB(x)			(((x)>>8))
-#define LSB(x)			(((x)&0xff))
+#define MSB(x)          (((x)>>8))
+#define LSB(x)          (((x)&0xff))
 
 // OAM buffer @ $200-$2FF
 
 typedef struct OAMSprite {
-  byte y;	// Y coordinate
-  byte name;	// tile index in name table
-  byte attr;	// attribute flags
-  byte x;	// X coordinate
+  byte y;   // Y coordinate
+  byte name;    // tile index in name table
+  byte attr;    // attribute flags
+  byte x;   // X coordinate
 } OAMSprite;
 
-#define OAMBUF			((OAMSprite*) 0x200)
+#define OAMBUF          ((OAMSprite*) 0x200)
 
 // OAM offset for spr_pal and spr_clip
 

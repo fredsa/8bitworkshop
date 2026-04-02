@@ -7,11 +7,11 @@
 
         processor 6502
 
-	include "atari5200.inc"
+    include "atari5200.inc"
 
 ;*************** Variable ***********************
-line	equ 	$20                  ;Current DLI line
-pm0pos	equ	$21                  ;Current pos of P0
+line    equ     $20                  ;Current DLI line
+pm0pos  equ $21                  ;Current pos of P0
 
 ;*************** Start of Code *******************
 

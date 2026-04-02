@@ -72,7 +72,7 @@ loop:
   lda _k_asyncpf,y
   sta _k_pftmp,x
   DO_PFWRITE
-  stx COLUPF	; fun vfx rainbow
+  stx COLUPF    ; fun vfx rainbow
   dex
   bmi loop2
   dey

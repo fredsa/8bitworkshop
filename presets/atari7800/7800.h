@@ -11,34 +11,34 @@
 ;
 ;       MEMORY MAP USAGE OF THE 7800
 ;
-;	  00 -   1F	TIA REGISTERS
-;	  20 -   3F	MARIA REGISTERS
-;	  40 -   FF	RAM block 0 (zero page)
-;	 100 -  11F	TIA   (mirror of 0000-001f)
-;	 120 -  13F	MARIA (mirror of 0020-003f)
-;	 140 -  1FF	RAM block 1 (stack)
-;	 200 -  21F	TIA   (mirror of 0000-001f)
-;	 220 -  23F	MARIA (mirror of 0020-003f)
-;	 240 -  27F	???
-;	 280 -  2FF	RIOT I/O ports and timers
-;	 300 -  31F	TIA   (mirror of 0000-001f)
-;	 320 -  33F	MARIA (mirror of 0020-003f)
-;	 340 -  3FF	???
-;	 400 -  47F	unused address space
-;	 480 -  4FF	RIOT RAM
-;	 500 -  57F	unused address space
-;	 580 -  5FF	RIOT RAM (mirror of 0480-04ff)
-;	 600 - 17FF	unused address space
-;	1800 - 203F	RAM
-;	2040 - 20FF	RAM block 0 (mirror of 0000-001f)
-;	2100 - 213F	RAM
-;	2140 - 21FF	RAM block 1 (mirror of 0140-01ff)
-;	2200 - 27FF	RAM
-;	2800 - 2FFF	mirror of 1800-27ff
-;	3000 - 3FFF	unused address space
-;	4000 - FF7F	potential cartridge address space
-;	FF80 - FFF9	RESERVED FOR ENCRYPTION
-;	FFFA - FFFF 	6502 VECTORS
+;     00 -   1F TIA REGISTERS
+;     20 -   3F MARIA REGISTERS
+;     40 -   FF RAM block 0 (zero page)
+;    100 -  11F TIA   (mirror of 0000-001f)
+;    120 -  13F MARIA (mirror of 0020-003f)
+;    140 -  1FF RAM block 1 (stack)
+;    200 -  21F TIA   (mirror of 0000-001f)
+;    220 -  23F MARIA (mirror of 0020-003f)
+;    240 -  27F ???
+;    280 -  2FF RIOT I/O ports and timers
+;    300 -  31F TIA   (mirror of 0000-001f)
+;    320 -  33F MARIA (mirror of 0020-003f)
+;    340 -  3FF ???
+;    400 -  47F unused address space
+;    480 -  4FF RIOT RAM
+;    500 -  57F unused address space
+;    580 -  5FF RIOT RAM (mirror of 0480-04ff)
+;    600 - 17FF unused address space
+;   1800 - 203F RAM
+;   2040 - 20FF RAM block 0 (mirror of 0000-001f)
+;   2100 - 213F RAM
+;   2140 - 21FF RAM block 1 (mirror of 0140-01ff)
+;   2200 - 27FF RAM
+;   2800 - 2FFF mirror of 1800-27ff
+;   3000 - 3FFF unused address space
+;   4000 - FF7F potential cartridge address space
+;   FF80 - FFF9 RESERVED FOR ENCRYPTION
+;   FFFA - FFFF     6502 VECTORS
 
 
 ;****** 00-1F ********* TIA REGISTERS ******************

@@ -20,9 +20,9 @@ sounddata = ptr3
 
 .segment "ROM3"
 
-; 00-1F:	set frequency
-; 81-9F odd:	set volume
-; 80-9E even:	set control register
+; 00-1F:    set frequency
+; 81-9F odd:    set volume
+; 80-9E even:   set control register
 
 .proc _sound_update
   ldx #0
@@ -45,7 +45,7 @@ sounddata = ptr3
   sta sounddata+1
 ; get next sound data byte
   ldy _sndchan_timer,x
-  lda (sounddata),y	; get sound data
+  lda (sounddata),y ; get sound data
   bpl @setfreq          ; hi bit clear = just freq
   lsr                   ; right shift (/ 2)
   bcs @setvol           ; lo bit set = volume

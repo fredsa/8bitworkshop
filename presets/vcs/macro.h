@@ -30,7 +30,7 @@ VERSION_MACRO         = 106
 ;                         (standardised macro for vertical synch code)
 ; 1.01  22/MAR/2003     - SLEEP macro added. 
 ;                       - NO_ILLEGAL_OPCODES switch implemented
-; 1.0	22/MAR/2003		Initial release
+; 1.0   22/MAR/2003     Initial release
 
 ; Note: These macros use illegal opcodes.  To disable illegal opcode usage, 
 ;   define the symbol NO_ILLEGAL_OPCODES (-DNO_ILLEGAL_OPCODES=1 on command-line).
@@ -165,12 +165,12 @@ VERSION_MACRO         = 106
 ; Skip a given # of scanlines.
 ; Sets the X register to zero.
 
-	MAC SKIP_SCANLINES
+    MAC SKIP_SCANLINES
 .LINES  SET {1}
-	ldx #.LINES
-.vblank	sta WSYNC
-	dex
-	bne .vblank
-	ENDM
+    ldx #.LINES
+.vblank sta WSYNC
+    dex
+    bne .vblank
+    ENDM
 
 ; EOF

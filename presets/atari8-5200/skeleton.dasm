@@ -6,7 +6,7 @@
 
         processor 6502
 
-	include "atari5200.inc"
+    include "atari5200.inc"
 
         org     $4000           ;Start of cartridge area
         sei                     ;Disable interrupts
@@ -60,23 +60,23 @@ dlloop                          ;Create Display List
         sta     CHACTL          ;Set Character Control
         lda     #$84            ;Set color PF2
         sta     COLOR0+2
-        sta     COLOR0+4	; bakground
+        sta     COLOR0+4    ; bakground
         lda     #$0F            ;Set color PF1
         sta     COLOR0+1
-        lda	#$3f
+        lda #$3f
         sta     COLOR0+0
-        lda	#$58
+        lda #$58
         sta     COLOR0+3
         lda     #$00            ;Set Display list pointer
-        sta     SDLSTL		;Shadow DLISTL
+        sta     SDLSTL      ;Shadow DLISTL
         sta     DLISTL
         lda     #$10
-        sta     SDLSTH		;Shadow DLISTH
+        sta     SDLSTH      ;Shadow DLISTH
         sta     DLISTH
         lda     #$f8            ;Set Charcter Set Base
         sta     CHBASE
         lda     #$22            ;Enable DMA
-        sta     SDMCTL		;Shadow DMACTL
+        sta     SDMCTL      ;Shadow DMACTL
         lda     #$40            ;Enable NMI
         sta     NMIEN
 
@@ -85,9 +85,9 @@ print
         cld
 prloop
         lda     text1,y         ;Get character
-        beq	wait
-        cmp	#$60
-        bcs	lower
+        beq wait
+        cmp #$60
+        bcs lower
         sec
         sbc     #$20            ;Convert to ATASCII
 lower
@@ -95,19 +95,19 @@ lower
         iny                     ;Next character
         bne     prloop
 wait
-	nop
+    nop
         jmp     wait
 
         ;Display list data (starts at $1000)
-dlist   .byte	$70,$70,$70        ;24 blank scanlines
-	.byte	$46,$00,$18,$02    ;mode 6 @ $1800
-        .byte   $41,$00,$10	   ;JMP -> $1000
+dlist   .byte   $70,$70,$70        ;24 blank scanlines
+    .byte   $46,$00,$18,$02    ;mode 6 @ $1800
+        .byte   $41,$00,$10    ;JMP -> $1000
 
         ;Text data
          org    $b100
 text1   .byte   "Hello World! "
-	.byte	$a1,$a2,$a3
-	.byte	0
+    .byte   $a1,$a2,$a3
+    .byte   0
 
         org     $bffd
         .byte   $FF         ;Don't display Atari logo

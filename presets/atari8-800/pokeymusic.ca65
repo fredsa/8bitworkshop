@@ -1,23 +1,23 @@
 
-AUDF0 =	$d200
+AUDF0 = $d200
 AUDC0 = $d201
 AUDCTL = $d208
 
 .data
 
-Chan0dur:	.res 4	; current note duration channel 0
-Chan0note:	.res 4	; current note pitch channel 0
-Chan0duty:	.res 4	; current duty bits channel 0
-DurationTimer:	.res 1	; duration until next cmd
-CurChannel:	.res 1	; next channel to add note
-Volume:		.res 1  ; initial volume of note (0-31)
+Chan0dur:   .res 4  ; current note duration channel 0
+Chan0note:  .res 4  ; current note pitch channel 0
+Chan0duty:  .res 4  ; current duty bits channel 0
+DurationTimer:  .res 1  ; duration until next cmd
+CurChannel: .res 1  ; next channel to add note
+Volume:     .res 1  ; initial volume of note (0-31)
 
 ; set_irq() saves/restores entire zeropage segment
 ; which we don't want!
 ; so we have to set this with an equate
 SongPtr = $fe
 ;.segment "EXTZP"
-;SongPtr:	.res 2	; ptr to next song byte
+;SongPtr:   .res 2  ; ptr to next song byte
 
 .code
 
@@ -25,104 +25,104 @@ SongPtr = $fe
 ; 8-bit rotation of duty cycle bits
 .export _music_duty
 _music_duty:
-	ldx	#3
-        ldy	#0
+    ldx #3
+        ldy #0
 @loop:
-	lda	Chan0dur,x
-        beq	:++
-	lda	Chan0duty,x
+    lda Chan0dur,x
+        beq :++
+    lda Chan0duty,x
         asl
-        bcc	:+
-        ora	#1
-:	sta	Chan0duty,x
-	lda	Chan0note,x
-        beq	:+
+        bcc :+
+        ora #1
+:   sta Chan0duty,x
+    lda Chan0note,x
+        beq :+
 ; If next bit is set, add 1 to AUDF0
-        adc	#0
-        sta	AUDF0,y
+        adc #0
+        sta AUDF0,y
 :
         iny
         iny
-	dex
-        bpl	@loop
-	rts
+    dex
+        bpl @loop
+    rts
 
 ; Decrement the volumes for each channel
 .export _music_tick
 _music_tick:
-	ldx	#3
-        ldy	#0
+    ldx #3
+        ldy #0
 @loop1:
-	lda	Chan0dur,x
-        beq	:+
+    lda Chan0dur,x
+        beq :+
         lsr
-        ora	#$a0
-        sta	AUDC0,y
-        dec	Chan0dur,x
+        ora #$a0
+        sta AUDC0,y
+        dec Chan0dur,x
 :
-	iny
+    iny
         iny
-	dex
-        bpl	@loop1
+    dex
+        bpl @loop1
 
 ; Also decrement next-note timer, fetch next note
-        lda	DurationTimer
-        bmi	@Done
-        beq	@NextData
-        dec	DurationTimer
+        lda DurationTimer
+        bmi @Done
+        beq @NextData
+        dec DurationTimer
         rts
 
 ; Timer ran out, so fetch next note
 @NextData:
-	ldx	#0
-        lda	(SongPtr,x)
-        bmi	@LoadDuration
+    ldx #0
+        lda (SongPtr,x)
+        bmi @LoadDuration
 ; < $80, play next note
-        ldx	CurChannel	; next channel
+        ldx CurChannel  ; next channel
         tay
-        jsr	music_do_note
+        jsr music_do_note
         inx
         txa
-        and	#3
-        sta	CurChannel	; inc next channel
-        jsr	@IncDataPtr
-        jmp	@NextData
+        and #3
+        sta CurChannel  ; inc next channel
+        jsr @IncDataPtr
+        jmp @NextData
 ; >= $80, load next duration
 @LoadDuration:
-	cmp	#$ff		; $ff = end of song
-        bne	@NoResetTrack
+    cmp #$ff        ; $ff = end of song
+        bne @NoResetTrack
         sta     DurationTimer
-        jmp	music_done
+        jmp music_done
 @NoResetTrack:
-        and	#$7f
+        and #$7f
 ;        asl
-        sta	DurationTimer	; store duration * 2
+        sta DurationTimer   ; store duration * 2
 @IncDataPtr:
 ; increment song pointer
-	inc	SongPtr
-        bne	@Done
-	inc	SongPtr+1
+    inc SongPtr
+        bne @Done
+    inc SongPtr+1
 @Done:
-	rts
+    rts
 
 music_do_note:
 ; Play a note
 ; X = channel (0,1)
 ; Y = note index (0-63)
-	lda	FREQZ,y
-        sta	Chan0note,x
-	lda	DUTYZ,y
-        sta	Chan0duty,x
-        lda	Volume
-        sta	Chan0dur,x
+    lda FREQZ,y
+        sta Chan0note,x
+    lda DUTYZ,y
+        sta Chan0duty,x
+        lda Volume
+        sta Chan0dur,x
         rts
 
 music_done:
-	rts
+    rts
 
 .export _music_start
 _music_start:
-	sta SongPtr
+    sta SongPtr
         stx SongPtr+1
         lda #24
         sta Volume
@@ -133,26 +133,26 @@ _music_start:
 :       sta Chan0dur,x
         dex
         bpl :-
-	lda #$01
+    lda #$01
         sta AUDCTL
         rts
 
 .export _music_get_ptr
 _music_get_ptr:
-	lda SongPtr
+    lda SongPtr
         ldx SongPtr+1
-	rts
+    rts
 
 .export _music_is_done
 _music_is_done:
-	ldx #0
+    ldx #0
         lda (SongPtr,x)
         cmp #$ff
         php
         pla
         lsr
         and #1
-	rts
+    rts
 
 ; Table of AUDF base values for each note
 FREQZ:

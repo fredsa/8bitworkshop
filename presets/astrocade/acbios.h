@@ -36,7 +36,7 @@ typedef struct {
   word address;
 } DOITEntry;
 
-#define DOIT_END	0xff
+#define DOIT_END    0xff
 
 // PATTERNS
 
@@ -53,17 +53,17 @@ typedef struct {
 
 // FUNCTIONS
 
-#define OPT_1x1		0x00
-#define OPT_2x2		0x40
-#define OPT_4x4		0x80
-#define OPT_8x8		0xc0
-#define OPT_XOR		0x20
-#define OPT_OR		0x10
-#define OPT_ON(n)	((n)<<2)
-#define OPT_OFF(n)	((n))
+#define OPT_1x1     0x00
+#define OPT_2x2     0x40
+#define OPT_4x4     0x80
+#define OPT_8x8     0xc0
+#define OPT_XOR     0x20
+#define OPT_OR      0x10
+#define OPT_ON(n)   ((n)<<2)
+#define OPT_OFF(n)  ((n))
 
-#define DISBCD_SML	0x40
-#define DISBCD_NOZERO	0x80
+#define DISBCD_SML  0x40
+#define DISBCD_NOZERO   0x80
 
 void activate_interrupts(void);
 void sleep(byte frames) __z88dk_fastcall;
@@ -92,37 +92,37 @@ void end_music(void);
 // QUICK MACROS
 
 #define SYS_ACTINT()\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x0f");\
 
 #define SYS_PAWS(frames)\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x51");\
         __asm__(".db "#frames);\
 
 #define SYS_SETOUT(verbl,horcb,inmod)\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x17");\
         __asm__(".db "#verbl);\
         __asm__(".db "#horcb);\
         __asm__(".db "#inmod);\
 
 #define SYS_FILL(dest,count,val)\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x1b");\
         __asm__(".dw "#dest);\
         __asm__(".dw "#count);\
         __asm__(".db "#val);\
 
 #define SYS_MOVE(dest,src,count)\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x5f");\
         __asm__(".dw "#dest);\
         __asm__(".dw "#count);\
         __asm__(".dw "#src);\
 
 #define SYS_RECTAN(x,y,width,height,color)\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x1d");\
         __asm__(".db "#x);\
         __asm__(".db "#y);\
@@ -131,18 +131,18 @@ void end_music(void);
         __asm__(".db "#color);\
 
 #define SYS_BMUSIC(stack,voices,musicdata)\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x13");\
         __asm__(".dw "#stack);\
         __asm__(".db "#voices);\
         __asm__(".dw "#musicdata);\
 
 #define SYS_EMUSIC()\
-	__asm__("rst 0x38");\
+    __asm__("rst 0x38");\
         __asm__(".db 0x15");\
 
 #define RESET_TIMEOUT() \
-	__asm__("ld a,#0xff");\
+    __asm__("ld a,#0xff");\
         __asm__("ld (0x4FEC),a");
 
 #endif

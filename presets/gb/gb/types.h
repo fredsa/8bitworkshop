@@ -117,9 +117,9 @@ typedef INT32   LWORD;
 /** Unsigned 32 bit */
 typedef UINT32  ULWORD;
 /** Signed 32 bit */
-typedef INT32	  DWORD;
+typedef INT32     DWORD;
 /** Unsigned 32 bit */
-typedef UINT32	UDWORD;
+typedef UINT32  UDWORD;
 
 /** Useful definition for working with 8 bit + 8 bit fixed point values
 

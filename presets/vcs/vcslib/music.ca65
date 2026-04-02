@@ -20,10 +20,10 @@ musicdata = ptr3
 
 .segment "ROM3"
 
-; 00-3f:	play note
-; 40-7f:	play sound effect
-; 80-fe:	set duration until next note
-; ff:		stop music
+; 00-3f:    play note
+; 40-7f:    play sound effect
+; 80-fe:    set duration until next note
+; ff:       stop music
 
 .proc _music_update
 ; is music timer up?
@@ -58,15 +58,15 @@ musicdata = ptr3
   sta AUDC0,x
 ; set the sound channel
   lda #0
-  sta _sndchan_sfx,x	; sound 0 = envelope
+  sta _sndchan_sfx,x    ; sound 0 = envelope
   lda _sound_duration+0
-  sta _sndchan_timer,x	; set channel timer
+  sta _sndchan_timer,x  ; set channel timer
   jmp @IncMusic
 @LoadDuration:
   cmp #$ff
-  beq @Done		; end of sound
+  beq @Done     ; end of sound
   and #$7f
-  sta _music_timer	; set music timer
+  sta _music_timer  ; set music timer
 @IncMusic:
   inc _music_ptr
   bne @Done

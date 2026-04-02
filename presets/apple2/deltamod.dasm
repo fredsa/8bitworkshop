@@ -1,5 +1,5 @@
 
-	processor 6502
+    processor 6502
 
 ;;;
 ;;; Apple ][ Delta Modulation Sample Playback
@@ -27,11 +27,11 @@
 ;;;
 
 ; uninitialized zero-page variables
-	seg.u ZEROPAGE
-	org $0
-PWMBUF	.ds 2
+    seg.u ZEROPAGE
+    org $0
+PWMBUF  .ds 2
 PWMLEN  .ds 1
-TRASH	.ds 1
+TRASH   .ds 1
 
 ; speaker toggle
 SPKR    equ $c030
@@ -76,9 +76,9 @@ PULWID = 6
 ; we also interleave a speaker pulse in this routine
 ; using macros (these are the IF/ENDIF blocks)
  MAC NEXTPULSE
- lsr		; next bit -> carry flag
- dex		; bit count == 0?
- bne .noinc	; skip inc/reload cycle
+ lsr        ; next bit -> carry flag
+ dex        ; bit count == 0?
+ bne .noinc ; skip inc/reload cycle
                 ; total pulse = 15 + PULWID*2 cycles
    IF {2} > 0
      sta SPKR
@@ -90,18 +90,18 @@ PULWID = 6
    ENDIF
 
 ; increment pointer lo byte
- iny		; 2-1 = 1
+ iny        ; 2-1 = 1
 
    IF {2} == 2
      sta SPKR
    ENDIF
 
- bne .noinchi	; 4
+ bne .noinchi   ; 4
 ; increment pointer hi byte
  inc PWMBUF+1
  dec PWMLEN
  bne .noinchi
- rts		; end of sound data
+ rts        ; end of sound data
 .noinchi
 
    IF {2} == 3
@@ -109,7 +109,7 @@ PULWID = 6
    ENDIF
 
 ; reset X counter
- ldx #8		; 6
+ ldx #8     ; 6
 
    IF {2} == 4 || {2} == 5
      sta SPKR
@@ -137,13 +137,13 @@ PULWID = 6
  ENDM
 
 ;;; start of code
-	seg CODE
-	org $803	; starting address, do not change
+    seg CODE
+    org $803    ; starting address, do not change
 
 Start
         lda #>(SAMPLE_END-SAMPLES)+1
         sta PWMLEN
-	lda #<SAMPLES
+    lda #<SAMPLES
         sta PWMBUF
         lda #>SAMPLES
         sta PWMBUF+1
@@ -151,7 +151,7 @@ Start
         jmp Start
 ; handy RTS for wasting 6+6 cycles
 HandyRTS
-	rts
+    rts
 
 ; each pulse takes PULWID*2+18(-1) cycles
 ; every 8 bits, the last pulse is repeated
@@ -159,58 +159,58 @@ HandyRTS
 ; Y = PWMBUF lo address
 ; PWMBUF+0 = 0
 Play
-	ldy PWMBUF
+    ldy PWMBUF
         lda #0
         sta PWMBUF
-	ldx #8
+    ldx #8
         lda (PWMBUF),y
 ; each label emits a pulse at a duty cycle
 ; from 0 (silent) to 7
 ; if bit is 1, falls through to next highest level
 ; otherwise, jumps back to previous level
 LVLS0
-	SLEEP2 PULWID*2+8 ; sleep, don't click
+    SLEEP2 PULWID*2+8 ; sleep, don't click
         NEXTPULSE 0,0
 LVLS1
-	PULSE 0
+    PULSE 0
         NEXTPULSE 0,1
 LVLS2
-	PULSE 1
+    PULSE 1
         NEXTPULSE 1,2
 LVLS3
-	PULSE 2
+    PULSE 2
         NEXTPULSE 2,3
 LVLS4
-	PULSE 3
+    PULSE 3
         NEXTPULSE 3,4
 LVLS5
-	PULSE 4
+    PULSE 4
         NEXTPULSE 4,5
 LVLS6
 LVLS6INV equ *+3 ; skip STA SPKR to invert signal
-	PULSE 5
+    PULSE 5
         NEXTPULSE 5,6
         bcs LVLS7INV ; 1 = invert signal
 LVLS7
 LVLS7INV equ *+3 ; skip STA SPKR to invert signal
-	PULSE 4
+    PULSE 4
         NEXTPULSE 6INV,5 ; 0 = invert signal
 LVLS8
-	PULSE 3
+    PULSE 3
         NEXTPULSE 7,4
 LVLS9
-	PULSE 2
+    PULSE 2
         NEXTPULSE 8,3
 LVLS10
-	PULSE 1
+    PULSE 1
         NEXTPULSE 9,2
 LVLS11
-	PULSE 0
+    PULSE 0
         NEXTPULSE 10,1
 LVLS12
-	SLEEP2 PULWID*2+8 ; sleep, don't click
+    SLEEP2 PULWID*2+8 ; sleep, don't click
         NEXTPULSE 11,0
-        bcs LVLS12	; if 1, stay at highest level
+        bcs LVLS12  ; if 1, stay at highest level
 
 ; delta-encoded samples
 SAMPLES

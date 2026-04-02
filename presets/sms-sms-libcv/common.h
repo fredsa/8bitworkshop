@@ -8,9 +8,9 @@
    0x3c00 - 0x3fff sprite attribute table
 */
 
-#define PATTERN		((const cv_vmemp)0x0000)
-#define IMAGE		((const cv_vmemp)0x3000)
-#define SPRITES		((const cv_vmemp)0x3c00)
+#define PATTERN     ((const cv_vmemp)0x0000)
+#define IMAGE       ((const cv_vmemp)0x3000)
+#define SPRITES     ((const cv_vmemp)0x3c00)
 
 #define COLS 32
 #define ROWS 28

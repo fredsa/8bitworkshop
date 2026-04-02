@@ -8,11 +8,11 @@
 // of APU sound generation
 
 // enable
-#define ENABLE_PULSE0	0x1
-#define ENABLE_PULSE1	0x2
-#define ENABLE_TRIANGLE	0x4
-#define ENABLE_NOISE	0x8
-#define ENABLE_DMC	0x10
+#define ENABLE_PULSE0   0x1
+#define ENABLE_PULSE1   0x2
+#define ENABLE_TRIANGLE 0x4
+#define ENABLE_NOISE    0x8
+#define ENABLE_DMC  0x10
 
 #define APU_ENABLE(enable)\
   APU.status = (enable);
@@ -23,12 +23,12 @@
 #define DUTY_25 0x40
 #define DUTY_12 0x00
 
-#define PULSE_ENVLOOP	0x20
-#define PULSE_CONSTVOL	0x10
+#define PULSE_ENVLOOP   0x20
+#define PULSE_CONSTVOL  0x10
 #define PULSE_VOLENVMASK 0xf
 
-#define PULSE_CH0	0
-#define PULSE_CH1	1
+#define PULSE_CH0   0
+#define PULSE_CH1   1
 
 #define APU_PULSE_DECAY(channel,period,duty,decay,len)\
   APU.pulse[channel].period_low = (period)&0xff;\
@@ -53,8 +53,8 @@
   APU.pulse[channel].ramp = 0;
 
 // triangle channel
-#define TRIANGLE_LC_HALT	0x80
-#define TRIANGLE_LC_MASK	0x7f
+#define TRIANGLE_LC_HALT    0x80
+#define TRIANGLE_LC_MASK    0x7f
 
 #define APU_TRIANGLE_LENGTH(period,len)\
   APU.triangle.counter = 0x7f;\
@@ -67,11 +67,11 @@
   APU.triangle.len_period_high = (((period)>>8)&7);
 
 // noise channel
-#define NOISE_ENVLOOP	0x20
-#define NOISE_CONSTVOL	0x10
+#define NOISE_ENVLOOP   0x20
+#define NOISE_CONSTVOL  0x10
 #define NOISE_VOLENVMASK 0xf
 
-#define NOISE_PERIOD_BUZZ	0x80
+#define NOISE_PERIOD_BUZZ   0x80
 
 #define APU_NOISE_SUSTAIN(_period,vol)\
     APU.noise.control = (vol) | (NOISE_ENVLOOP|NOISE_CONSTVOL);\

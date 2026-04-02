@@ -68,7 +68,7 @@
 ; 9-10 cycles
 .macro DO_VERSATILE_PF_2
   lda (_k_playfield),y
-  sta $40,x		; use TIA mirror
+  sta $40,x     ; use TIA mirror
 .endmacro
 
 ; 13 cycles

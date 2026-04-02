@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define MSXUSR(pc)		__asm__("call "#pc);
+#define MSXUSR(pc)      __asm__("call "#pc);
 
 /// VARIABLES
 

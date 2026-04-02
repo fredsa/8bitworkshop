@@ -3,12 +3,12 @@
 
 #include "atari7800.h"
 
-#define DLL_FLAGS DLL_H16	// 4k DMA holes
-#define SLOTHEIGHT 16		// lines per display list
-#define SLOTSIZE 32		// bytes per display list
-#define SLOTSPERPAGE 16		// display lists per page
-#define DOUBLEBUFFER		// double buffer (2 pages)
-#define DLSAVE			// enable save buffer
+#define DLL_FLAGS DLL_H16   // 4k DMA holes
+#define SLOTHEIGHT 16       // lines per display list
+#define SLOTSIZE 32     // bytes per display list
+#define SLOTSPERPAGE 16     // display lists per page
+#define DOUBLEBUFFER        // double buffer (2 pages)
+#define DLSAVE          // enable save buffer
 
 #ifdef DOUBLEBUFFER
 #define NUMPAGES 2
@@ -17,11 +17,11 @@
 #endif
 #define NUMSLOTS (SLOTSPERPAGE*NUMPAGES)
 
-extern DLLEntry DLL[NUMSLOTS];		// display list list
-extern byte DL[NUMSLOTS][SLOTSIZE];	// display list slots
-extern byte DL_len[NUMSLOTS];		// current bytes in each slot
+extern DLLEntry DLL[NUMSLOTS];      // display list list
+extern byte DL[NUMSLOTS][SLOTSIZE]; // display list slots
+extern byte DL_len[NUMSLOTS];       // current bytes in each slot
 #ifdef DLSAVE
-extern byte DL_save[NUMSLOTS];		// save lengths of each slot
+extern byte DL_save[NUMSLOTS];      // save lengths of each slot
 #endif
 
 // set current page (0 or 1)

@@ -7,15 +7,15 @@
 
         processor 6502
 
-	include "atari.inc"
+    include "atari.inc"
 
 ;*************** Variable ***********************
-line	equ 	$20                  ;Current DLI line
-pm0pos	equ	$21                  ;Current pos of P0
+line    equ     $20                  ;Current DLI line
+pm0pos  equ $21                  ;Current pos of P0
 
 ;*************** Start of Code *******************
 
-	org     $a000           ;Start of cartridge area
+    org     $a000           ;Start of cartridge area
 Start
 
 ;************* Setup display list *******************
@@ -43,14 +43,14 @@ dlloop                          ;Copy display list to RAM
         sta     CHBAS
         lda     #$22            ;Enable DMA
         sta     SDMCTL
-	; load display list interrupt address
-	lda	#<dli
-	sta	VDSLST
-	lda	#>dli
-	sta	VDSLST+1
-	; activate display list interrupt and vertical blank interrupt
-	lda	#$C0
-	sta	NMIEN
+    ; load display list interrupt address
+    lda #<dli
+    sta VDSLST
+    lda #>dli
+    sta VDSLST+1
+    ; activate display list interrupt and vertical blank interrupt
+    lda #$C0
+    sta NMIEN
 
 ;************ Draw display graphics *******************
 

@@ -10,11 +10,11 @@
    0x3c00 - 0x3fff sprite attribute table
 */
 
-#define PATTERN		((const cv_vmemp)0x0000)
-#define IMAGE		((const cv_vmemp)0x1800)
-#define COLOR		((const cv_vmemp)0x2000)
+#define PATTERN     ((const cv_vmemp)0x0000)
+#define IMAGE       ((const cv_vmemp)0x1800)
+#define COLOR       ((const cv_vmemp)0x2000)
 #define SPRITE_PATTERNS ((const cv_vmemp)0x3800)
-#define SPRITES		((const cv_vmemp)0x3c00)
+#define SPRITES     ((const cv_vmemp)0x3c00)
 
 #ifndef COLS
 #define COLS 32

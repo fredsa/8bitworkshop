@@ -13,47 +13,47 @@
 #include <joystick.h>
 #endif
 
-typedef uint8_t byte;	// 8-bit unsigned
-typedef int8_t sbyte;	// 8-bit signed
-typedef uint16_t word;	// 16-bit unsigned
+typedef uint8_t byte;   // 8-bit unsigned
+typedef int8_t sbyte;   // 8-bit signed
+typedef uint16_t word;  // 16-bit unsigned
 typedef enum { false, true } bool; // boolean
 
-#define COLS 40		// total # of columns
-#define ROWS 25		// total # of rows
+#define COLS 40     // total # of columns
+#define ROWS 25     // total # of rows
 
 
 ///// MACROS /////
 
 // VIC Control Register 1 Flags
-#define VIC_CTRL1_RST8	0x80          // Bit 8 of RASTER (read) or raster line interrupt set (write)
-#define VIC_CTRL1_ECM	0x40          // Extended Color Mode
-#define VIC_CTRL1_BMM	0x20          // Bitmap Mode
-#define VIC_CTRL1_DEN	0x10          // Display Enable
-#define VIC_CTRL1_RSEL	0x08          // Row Select (25 or 24 rows)
-#define VIC_CTRL1_YSCROLL_MASK	0x07  // Vertical Fine Scrolling
+#define VIC_CTRL1_RST8  0x80          // Bit 8 of RASTER (read) or raster line interrupt set (write)
+#define VIC_CTRL1_ECM   0x40          // Extended Color Mode
+#define VIC_CTRL1_BMM   0x20          // Bitmap Mode
+#define VIC_CTRL1_DEN   0x10          // Display Enable
+#define VIC_CTRL1_RSEL  0x08          // Row Select (25 or 24 rows)
+#define VIC_CTRL1_YSCROLL_MASK  0x07  // Vertical Fine Scrolling
 
 // VIC Control Register 2 Flags
-#define VIC_CTRL2_RES	0x20          // Chip reset
-#define VIC_CTRL2_MCM	0x10          // Multicolor Mode Enable
-#define VIC_CTRL2_CSEL	0x08          // Column Select (40 or 38 columns)
-#define VIC_CTRL2_XSCROLL_MASK	0x07  // Horizontal Fine Scrolling
+#define VIC_CTRL2_RES   0x20          // Chip reset
+#define VIC_CTRL2_MCM   0x10          // Multicolor Mode Enable
+#define VIC_CTRL2_CSEL  0x08          // Column Select (40 or 38 columns)
+#define VIC_CTRL2_XSCROLL_MASK  0x07  // Horizontal Fine Scrolling
 
 // VIC Memory Control Register Flags
-#define VIC_ADDR_VM_MASK	0xf0      // Video Matrix Base Address Mask (character data)
-#define VIC_ADDR_CB_MASK	0x0e      // Character Bank Base Address Mask (screen memory)
+#define VIC_ADDR_VM_MASK    0xf0      // Video Matrix Base Address Mask (character data)
+#define VIC_ADDR_CB_MASK    0x0e      // Character Bank Base Address Mask (screen memory)
 
 // VIC Interrupt Register Flags
-#define VIC_IRR_IRQ	0x80             // Interrupt Request
-#define VIC_IRR_ILP	0x08             // Light Pen Interrupt
-#define VIC_IRR_IMMC	0x04             // Sprite-Sprite Collision Interrupt
-#define VIC_IRR_IMBC	0x02             // Sprite-Background Collision Interrupt
-#define VIC_IRR_IRST	0x01             // Raster Line Interrupt
+#define VIC_IRR_IRQ 0x80             // Interrupt Request
+#define VIC_IRR_ILP 0x08             // Light Pen Interrupt
+#define VIC_IRR_IMMC    0x04             // Sprite-Sprite Collision Interrupt
+#define VIC_IRR_IMBC    0x02             // Sprite-Background Collision Interrupt
+#define VIC_IRR_IRST    0x01             // Raster Line Interrupt
 
 // VIC Interrupt Mask Register Flags
-#define VIC_IMR_ELP	0x08             // Enable Light Pen Interrupt
-#define VIC_IMR_EMMC	0x04             // Enable Sprite-Sprite Collision Interrupt
-#define VIC_IMR_EMBC	0x02             // Enable Sprite-Background Collision Interrupt
-#define VIC_IMR_ERST	0x01             // Enable Raster Interrupt
+#define VIC_IMR_ELP 0x08             // Enable Light Pen Interrupt
+#define VIC_IMR_EMMC    0x04             // Enable Sprite-Sprite Collision Interrupt
+#define VIC_IMR_EMBC    0x02             // Enable Sprite-Background Collision Interrupt
+#define VIC_IMR_ERST    0x01             // Enable Raster Interrupt
 
 // lookup screen address macro
 #define SCRNADR(base,col,row) ((base)+(col)+(row)*40)

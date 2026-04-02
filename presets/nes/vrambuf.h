@@ -24,7 +24,7 @@ extern byte updptr;
   VRAMBUF_ADD(len);
 
 // OR with address to put vertical run
-#define VRAMBUF_VERT	0x8000
+#define VRAMBUF_VERT    0x8000
 
 // add EOF marker to buffer (but don't increment pointer)
 void vrambuf_end(void);

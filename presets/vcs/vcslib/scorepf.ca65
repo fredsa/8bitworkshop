@@ -9,8 +9,8 @@
 .import Return
 
 .zeropage
-digit_ofs:	.res 4
-;pftmp:		.res 2
+digit_ofs:  .res 4
+;pftmp:     .res 2
 ; no one is using this, right??
 pftmp = tmp1
 
@@ -30,7 +30,7 @@ pftmp = tmp1
   pha
   and #$0f
   sta pftmp
-  jsr mul5store		; (clever inlining)
+  jsr mul5store     ; (clever inlining)
   pla
   and #$f0
   lsr
@@ -41,14 +41,14 @@ mul5store:
   sta pftmp
   asl
   asl
-  adc pftmp		; mul by 5
+  adc pftmp     ; mul by 5
   sta digit_ofs,x
   inx
   rts
 .endproc
 
 .proc _scorepf_kernel
-  jsr _reset_gfx	; returns A=0
+  jsr _reset_gfx    ; returns A=0
   sta pftmp+0
   sta pftmp+1
   tax
@@ -61,9 +61,9 @@ mul5store:
   inc digit_ofs+0
   lda DigitsBitmap,y
   and #$0f
-  ldy pftmp+0		; load old value digits 0/1
+  ldy pftmp+0       ; load old value digits 0/1
   sta pftmp+0
-  sty PF1		; store in PF1
+  sty PF1       ; store in PF1
   ldy digit_ofs+1
   inc digit_ofs+1
   lda DigitsBitmap,y
@@ -71,8 +71,8 @@ mul5store:
   ora pftmp+0
   sta pftmp+0
 ; second digit pair
-  ldy pftmp+1		; load old value digits 2/3
-  sty PF1		; store in PF1
+  ldy pftmp+1       ; load old value digits 2/3
+  sty PF1       ; store in PF1
   ldy digit_ofs+2
   inc digit_ofs+2
   lda DigitsBitmap,y

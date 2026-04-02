@@ -15,7 +15,7 @@ typedef struct SpriteShadow {
   byte spr_mcolor;     /* Sprite multicolor bits */
   byte spr_exp_x;      /* Expand sprites in X dir */
   byte spr_color[8];   /* Colors for the sprites */
-  byte spr_shapes[8];	/* sprite shapes */
+  byte spr_shapes[8];   /* sprite shapes */
 } SpriteShadow;
 
 /* sprite shadow buffer */

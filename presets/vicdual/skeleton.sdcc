@@ -55,11 +55,11 @@ void gsinit();
 // start routine @ 0x0
 void start() {
 __asm
-  	LD    SP,#0xE800 ; set up stack pointer
-        DI		 ; disable interrupts
+    LD    SP,#0xE800 ; set up stack pointer
+        DI       ; disable interrupts
 __endasm;
-  	gsinit();
-	main();
+    gsinit();
+    main();
 }
 
 #define INIT_MAGIC 0xdeadbeef
@@ -73,11 +73,11 @@ void gsinit() {
     return;
 __asm
 ; copy initialized data to RAM
-	LD    BC, #l__INITIALIZER
-	LD    A, B
-	LD    DE, #s__INITIALIZED
-	LD    HL, #s__INITIALIZER
-      	LDIR
+    LD    BC, #l__INITIALIZER
+    LD    A, B
+    LD    DE, #s__INITIALIZED
+    LD    HL, #s__INITIALIZER
+        LDIR
 __endasm;
 }
 

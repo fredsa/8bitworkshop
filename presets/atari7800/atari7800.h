@@ -2,16 +2,16 @@
 #define _ATARI7800
 
 // define basic types for convenience
-typedef unsigned char byte;	// 8-bit unsigned
-typedef signed char sbyte;	// 8-bit signed
-typedef unsigned short word;	// 16-bit signed
-typedef enum { false, true } bool;	// boolean
+typedef unsigned char byte; // 8-bit unsigned
+typedef signed char sbyte;  // 8-bit signed
+typedef unsigned short word;    // 16-bit signed
+typedef enum { false, true } bool;  // boolean
 
 /// MEMORY MAPS
 
 typedef struct t_TIA {
     byte _00;
-    byte VBLANK;	// input port control
+    byte VBLANK;    // input port control
     byte _02_07[6];
     byte INPT0; // PADDLE CONTROL INPUT 0                WO
     byte INPT1; // PADDLE CONTROL INPUT 1                WO
@@ -64,10 +64,10 @@ typedef struct t_MARIA {
 } t_MARIA;
 
 typedef struct t_P6532 {
-    byte SWCHA;		// P0,P1 JOYSTICK DIRECTIONAL INPUT      R/W
-    byte CTLSWA;	// CONSOLE SWITCHES                      RO
-    byte SWCHB;		// I/O CONTROL FOR SWCHA                 R/W
-    byte CTLSWB;	// I/O CONTROL FOR SWCHB                 R/W
+    byte SWCHA;     // P0,P1 JOYSTICK DIRECTIONAL INPUT      R/W
+    byte CTLSWA;    // CONSOLE SWITCHES                      RO
+    byte SWCHB;     // I/O CONTROL FOR SWCHA                 R/W
+    byte CTLSWB;    // I/O CONTROL FOR SWCHB                 R/W
 } t_P6532;
 
 typedef struct DLLEntry {
@@ -108,39 +108,39 @@ typedef struct DL5Entry {
 
 /// CONSTANTS
 
-#define DLL_DLI		0x80	// Display List Interrupt flag
-#define DLL_H16		0x40	// Holey DMA 4k flag
-#define DLL_H8		0x20	// Holey DMA 2k flag
+#define DLL_DLI     0x80    // Display List Interrupt flag
+#define DLL_H16     0x40    // Holey DMA 4k flag
+#define DLL_H8      0x20    // Holey DMA 2k flag
 
-#define DL5_WM		0x80	// Write Mode
-#define DL5_DIRECT	0x40	// Direct Mode
-#define DL5_INDIRECT	0x60	// Indirect Mode
+#define DL5_WM      0x80    // Write Mode
+#define DL5_DIRECT  0x40    // Direct Mode
+#define DL5_INDIRECT    0x60    // Indirect Mode
 
-#define DL_WIDTH(x)	(32-(x))	// for width_pal
-#define DL_PAL(x)	((x)<<5)	// OR them together
-#define DL_WP(w,p)	(DL_WIDTH(w)|DL_PAL(p))
+#define DL_WIDTH(x) (32-(x))    // for width_pal
+#define DL_PAL(x)   ((x)<<5)    // OR them together
+#define DL_WP(w,p)  (DL_WIDTH(w)|DL_PAL(p))
 
-#define CTRL_COLORKILL	0x80
-#define CTRL_DMA_ON	0x40
-#define CTRL_DMA_OFF	0x60
-#define CTRL_DBLBYTE	0x10
-#define CTRL_BLKBORDER	0x08
-#define CTRL_KANGAROO	0x04
-#define CTRL_160AB	0x00
-#define CTRL_320BD	0x02
-#define CTRL_320AC	0x03
+#define CTRL_COLORKILL  0x80
+#define CTRL_DMA_ON 0x40
+#define CTRL_DMA_OFF    0x60
+#define CTRL_DBLBYTE    0x10
+#define CTRL_BLKBORDER  0x08
+#define CTRL_KANGAROO   0x04
+#define CTRL_160AB  0x00
+#define CTRL_320BD  0x02
+#define CTRL_320AC  0x03
 
-#define MSTAT_VBLANK	0x80
+#define MSTAT_VBLANK    0x80
 
 /// GLOBALS
 
-#define TIA		(*((t_TIA*) 0x00))
-#define MARIA		(*((t_MARIA*) 0x20))
-#define P6532		(*((t_P6532*) 0x280))
+#define TIA     (*((t_TIA*) 0x00))
+#define MARIA       (*((t_MARIA*) 0x20))
+#define P6532       (*((t_P6532*) 0x280))
 
 /// MACROS
 
-#define STROBE(addr)	__asm__ ("sta %w", addr)
-#define WSYNC()		STROBE(0x24)
+#define STROBE(addr)    __asm__ ("sta %w", addr)
+#define WSYNC()     STROBE(0x24)
 
 #endif

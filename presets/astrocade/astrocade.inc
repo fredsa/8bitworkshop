@@ -357,7 +357,7 @@ URINAL  =     0x4FFF   ; WASTER flushes here!
 
 ;
 ; MACROs to generate SYSTEM CALLs:
-	.macro	SYSTEM NUMBA
+    .macro  SYSTEM NUMBA
         rst     0x38
         .db     NUMBA
 ;        .if     NUMBA = INTPC
@@ -365,7 +365,7 @@ URINAL  =     0x4FFF   ; WASTER flushes here!
 ;        .endif
         .endm
 ; MACRO to generate SYSTEM CALL with SUCK option ON:
-	.macro	SYSSUK UMBA
+    .macro  SYSSUK UMBA
         rst     0x38
         .db     UMBA + 1
 ;        .if     UMBA = INTPC
@@ -374,10 +374,10 @@ URINAL  =     0x4FFF   ; WASTER flushes here!
         .endm
 ; MACROs to generate MACRO INTERPRETER CALLs:
 ; INTERPRET without INLINE SUCK:
-	.macro	DONT CID
+    .macro  DONT CID
         .db     CID
         .endm
 ; INTERPRET with INLINE SUCK option ON:
-	.macro	DO CID
-       	.db     CID + 1
+    .macro  DO CID
+        .db     CID + 1
         .endm

@@ -7,14 +7,14 @@
 #define COLS 40
 #define ROWS 25
 
-extern sbyte scroll_fine_x;	// X fine scroll (pixels)
-extern sbyte scroll_fine_y;	// Y fine scroll (pixels)
-extern byte origin_x;		// X scroll origin (columns)
-extern byte origin_y;		// Y scroll origin (rows)
-extern byte* hidbuf;		// hidden screen buffer(s)
-extern byte* visbuf;		// visible screen buffer(s)
+extern sbyte scroll_fine_x; // X fine scroll (pixels)
+extern sbyte scroll_fine_y; // Y fine scroll (pixels)
+extern byte origin_x;       // X scroll origin (columns)
+extern byte origin_y;       // Y scroll origin (rows)
+extern byte* hidbuf;        // hidden screen buffer(s)
+extern byte* visbuf;        // visible screen buffer(s)
 extern byte colorbuf[COLS*ROWS]; // color RAM buffer
-extern byte swap_needed;	// TRUE if scroll_update() swaps
+extern byte swap_needed;    // TRUE if scroll_update() swaps
 
 // call this at start of program
 void scroll_setup(void);
@@ -33,8 +33,8 @@ void scroll_draw_row(byte row);
 
 
 /* incremental scrolling library */
-extern int pixofs_x;		// X scroll pixel offset
-extern int pixofs_y;		// Y scroll pixel offset
+extern int pixofs_x;        // X scroll pixel offset
+extern int pixofs_y;        // Y scroll pixel offset
 extern sbyte fine_correct_x;
 extern sbyte fine_correct_y;
 

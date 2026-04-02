@@ -81,7 +81,7 @@ void main();
 
 void start() __naked {
 __asm
-	LD      SP,#0x4800
+    LD      SP,#0x4800
         EI
 ; copy initialized data to RAM
         LD    BC, #l__INITIALIZER
@@ -90,9 +90,9 @@ __asm
         LD    HL, #s__INITIALIZER
         LDIR
 .skipinit:
-  	JP    _main
+    JP    _main
 ; padding to get to offset 0x66
-  	.ds   0x66 - (. - _start)
+    .ds   0x66 - (. - _start)
 __endasm;
 }
 

@@ -9,17 +9,17 @@
 ; NOTE: This version of the routine does a NEWLINE before executing.
 ; It does NOT do a HMOVE and HCLR.
 SetHorizPos subroutine
-	sec		; set carry flag
-	sta WSYNC	; start a new line
+    sec     ; set carry flag
+    sta WSYNC   ; start a new line
 .DivideLoop
-	sbc #15		; subtract 15
-	bcs .DivideLoop	; branch until negative
-	eor #7		; calculate fine offset
-	asl
-	asl
-	asl
-	asl
-	sta HMP0,x	; set fine offset
-	sta RESP0,x	; fix coarse position
-	rts		; return to caller
+    sbc #15     ; subtract 15
+    bcs .DivideLoop ; branch until negative
+    eor #7      ; calculate fine offset
+    asl
+    asl
+    asl
+    asl
+    sta HMP0,x  ; set fine offset
+    sta RESP0,x ; fix coarse position
+    rts     ; return to caller
 

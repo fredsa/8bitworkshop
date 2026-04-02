@@ -1,4 +1,4 @@
- 		
+
 ; Atari 8-bit "Hello World" sample code
 ; Written by Daniel Boris (danlb_2000@yahoo.com)
 ; Modified by Steven Hugg @8bitworkshop
@@ -10,14 +10,14 @@
 	include "atari.inc"
 
         org     $a000           ;Start of left cartridge area
-Start	
+Start
         ldx     #(dlistend-dlist)
 dlloop                          ;Create Display List
         lda     dlist,x         ;Get byte
         sta     $1000,x         ;Copy to RAM
         dex                     ;next byte
         bpl     dlloop
-        
+
         lda     #$06
         sta     CHACTL          ;Set Character Control
         lda	#$28
@@ -25,7 +25,7 @@ dlloop                          ;Create Display List
         lda     #$0F
         sta     COLOR0+1
         lda     #$d6
-        sta     COLOR0+2             
+        sta     COLOR0+2
         lda	#$58
         sta     COLOR0+3
         lda     #$84
@@ -41,7 +41,7 @@ dlloop                          ;Create Display List
         sta     SDMCTL		;Shadow DMACTL
 
 print
-        ldy     #$00           
+        ldy     #$00
         cld
 prloop
         lda     text1,y         ;Get character

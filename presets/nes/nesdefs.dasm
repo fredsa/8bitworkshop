@@ -88,7 +88,7 @@ NES_MIRR_QUAD	= 8
 	ENDM
 
 ;;;;; NES_INIT SETUP MACRO (place at start)
-        
+
         MAC NES_INIT
         sei			;disable IRQs
         cld			;decimal mode not supported
@@ -103,7 +103,7 @@ NES_MIRR_QUAD	= 8
 	lda #$40
 	sta APU_FRAME		;disable APU Frame IRQ
 	lda #$0F
-	sta APU_CHAN_CTRL	;disable DMC, enable/init other channels.        
+	sta APU_CHAN_CTRL	;disable DMC, enable/init other channels.
         ENDM
 
 ;;;;; NES_VECTORS - CPU vectors at end of address space
@@ -126,7 +126,7 @@ NES_MIRR_QUAD	= 8
         ENDM
 
 ;;;;; PPU_SETVALUE <value> - feed 8-bit value to PPU
-        
+
         MAC PPU_SETVALUE
         lda #{1}
         sta PPU_DATA
@@ -177,7 +177,7 @@ NO_ILLEGAL_OPCODES = 1
                     ENDIF
 .CYCLES             SET .CYCLES - 3
                 ENDIF
-            
+
                 REPEAT .CYCLES / 2
                     nop
                 REPEND

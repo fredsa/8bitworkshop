@@ -22,8 +22,8 @@ typedef struct SpriteShadow {
 extern SpriteShadow sprshad;
 
 /* set one or more sprite patterns from a byte array */
-void sprite_set_shapes(const void* sprite_data, 
-                       byte index, 
+void sprite_set_shapes(const void* sprite_data,
+                       byte index,
                        byte count);
 /* clear all sprites from shadow buffer */
 void sprite_clear();

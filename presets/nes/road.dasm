@@ -5,7 +5,7 @@
 
 	seg.u ZEROPAGE
 	org $0
-        
+
 Ptr1		.word	; for temporary pointer storage
 
 TrackFrac	.byte	; fractional position along track
@@ -19,7 +19,7 @@ TrackLookahead	.byte	; current fractional track increment
 ; Variables for track generation
 Random		.byte	; random counter
 GenTarget	.byte	; target of current curve
-GenDelta	.byte	; curve increment 
+GenDelta	.byte	; curve increment
 GenCur		.byte	; current curve value
 
 ZOfs		.byte	; counter to draw striped center line
@@ -30,7 +30,7 @@ NMITmp		.byte
 
 NumRoadScanlines = 112
 NumRoadSegments = 56
-; Preprocessing result: X positions for all track segments 
+; Preprocessing result: X positions for all track segments
 RoadX0		ds NumRoadSegments
 
 ; Generated track curve data
@@ -69,7 +69,7 @@ Start:
         sta PPU_MASK 	; enable rendering (first!)
         lda #CTRL_NMI
         sta PPU_CTRL	; enable NMI
-        
+
 .endless
 	jmp .endless	; endless loop
 
@@ -207,7 +207,7 @@ GenTrack subroutine
         adc GenDelta
         cmp GenTarget
         beq .ChangeTarget   ; target == cur?
-        bit GenTarget	    ; we need the sign flag 
+        bit GenTarget	    ; we need the sign flag
         bmi .TargetNeg	    ; target<0?
         bcs .ChangeTarget   ; target>=0 && cur>=target?
         bcc .NoChangeTarget ; branch always taken
@@ -309,7 +309,7 @@ SetSprite0: subroutine
                     bit $00
 .CYCLES             SET .CYCLES - 3
                 ENDIF
-            
+
                 REPEAT .CYCLES / 2
                     nop
                 REPEND

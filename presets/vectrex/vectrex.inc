@@ -1,6 +1,6 @@
 ; this file is part of vectrex frogger, written by Christopher Salomon
 ; in March-April 1998 all stuff contained here is public domain (?)
-; 
+;
 ; Fixed to compile with AS6809 by Joakim Larsson Edström 2015.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

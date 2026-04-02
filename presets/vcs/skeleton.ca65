@@ -11,16 +11,16 @@ Reset:
 
 NextFrame:
 	FRAME_START
-        
+
         lda #$80
         sta COLUBK
-        
+
         KERNEL_START
-        
+
         KERNEL_END
 
 	FRAME_END
-        
+
 	jmp NextFrame
 
 

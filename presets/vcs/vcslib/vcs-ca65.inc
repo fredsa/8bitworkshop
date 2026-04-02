@@ -5,9 +5,9 @@
 VSYNC  := $00 ; ---- --1- This address controls vertical sync time by writing D1 into the VSYNC latch.
 VBLANK := $01 ; 76-- --1- 1=Start VBLANK, 6=Enable INPT4, INPT5 latches, 7=Dump INPT1,2,3,6 to ground
 WSYNC  := $02 ; ---- ---- This address halts microprocessor by clearing RDY latch to zero. RDY is set true again by the leading edge of horizontal blank.
-RSYNC  := $03 ; ---- ---- This address resets the horizontal sync counter to define the beginning of horizontal blank time, and is used in chip testing. 
+RSYNC  := $03 ; ---- ---- This address resets the horizontal sync counter to define the beginning of horizontal blank time, and is used in chip testing.
 NUSIZ0 := $04 ; --54 -210 \ 0,1,2: player copys'n'size, 4,5: missile size: 2^x pixels
-NUSIZ1 := $05 ; --54 -210 / 
+NUSIZ1 := $05 ; --54 -210 /
 COLUP0 := $06 ; 7654 321- color player 0
 COLUP1 := $07 ; 7654 321- color player 1
 COLUPF := $08 ; 7654 321- color playfield

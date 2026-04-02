@@ -34,7 +34,7 @@ dlloop                          ;Copy display list to RAM
         lda     #$0F            ;Set color PF1
         sta     COLOR1
         lda     #$84            ;Set color PF2
-        sta     COLOR2             
+        sta     COLOR2
         lda     #$00            ;Set Display list pointer
         sta     SDLSTL
         lda     #$10
@@ -56,14 +56,14 @@ dlloop                          ;Copy display list to RAM
 
         ldy     #$02            ;Draw bars on screen
         lda     #$18            ;Screen memory starts at $1800
-        sta     $81             
+        sta     $81
         lda     #$00
         sta     $80
         ldx     #$18
 crloop5
         lda     #$FF            ;Bar 4 pixels wide of color 3
         sta     ($80),y         ;Store data
-        iny                     
+        iny
         iny                     ;Skip 4 pixels
         lda     #$55            ;Bar 4 pixels wide of color 1
         sta     ($80),y         ;Store data
@@ -72,7 +72,7 @@ crloop5
         lda     #$AA            ;Bar 4 pixels wide of color 2
         sta     ($80),y         ;Store data
         tya
-        clc         
+        clc
         adc     #$06            ;Move pointer to next line
         tay
         dex                     ;Next line
@@ -93,12 +93,12 @@ crloop5
         sta     SIZEP0
         lda     #$01           ;Give players priority over playfield
         sta     GPRIOR
-      
+
 
 ;************ Copy player data to RAM ********************************
 
-pmloop1        
-        lda     pm1,y           ;Get data         
+pmloop1
+        lda     pm1,y           ;Get data
         sta     $2430,y         ;Write it into RAM
         sta     $24C0,y
         iny
@@ -156,7 +156,7 @@ dli
         lda #$0F        ;Change player color
         sta COLPM0      ;
         ; Note: Player color is changed in hardware register not the shadow
-        ; register so it takes effect immediatly. 
+        ; register so it takes effect immediatly.
 done
         pla             ;Restore A
         rti             ;Done

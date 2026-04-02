@@ -7,7 +7,7 @@
 ;-------------------------------------------------------------------------
 ; ATASCII CHARACTER DEFS
 ;-------------------------------------------------------------------------
- 
+
 ATEOL   = $9B      ; END-OF-LINE, used by CONIO
 
 ;-------------------------------------------------------------------------
@@ -27,9 +27,9 @@ CH_VLINE    = $01  ; exclamation mark
 
 POKMSK  =  $00     ; Mask for Pokey IRQ enable
 RTCLOK  =  $01     ; 60 hz. clock
-JUMP    =  $01   
+JUMP    =  $01
 CRITIC  =  $03     ; Critical section
-ATRACT  =  $04     ; Attract Mode 
+ATRACT  =  $04     ; Attract Mode
 
 SDLSTL  =  $05     ; DLISTL Shadow
 SDLSTH  =  $06     ; DLISTH  "
@@ -66,20 +66,20 @@ SAVMSC          =       $1B             ; pointer to screen memory (conio)
 ;-------------------------------------------------------------------------
 
 ;Interrupt Vectors
-                 
-VIMIRQ  =  $0200   ; Immediate IRQ    
+
+VIMIRQ  =  $0200   ; Immediate IRQ
                       ; Preset $FC03 (SYSIRQ)
 VVBLKI  =  $0202   ; Vblank immediate
                       ; Preset $FCB8 (SYSVBL)
 VVBLKD  =  $0204   ; Vblank deferred
                       ; Preset $FCB2 (XITVBL)
-VDSLST  =  $0206   ; Display List 
+VDSLST  =  $0206   ; Display List
                       ; Preset $FEA1 (OSDLI)
 VKYBDI  =  $0208   ; Keyboard immediate
                       ; Preset $FD02 (SYSKBD)
 VKYBDF  =  $020A   ; Deferred Keyboard
                       ; Preset $FCB2 (XITVBL)
-VTRIGR  =  $020C   ; Soft Trigger   
+VTRIGR  =  $020C   ; Soft Trigger
 VBRKOP  =  $020E   ; BRK Opcode
 VSERIN  =  $0210   ; Serial in Ready
 VSEROR  =  $0212   ; Serial Out Ready
@@ -206,13 +206,13 @@ DL_CHR20x8x2  = 6               ; colour (duochrome per character), 20 character
 DL_CHR20x16x2 = 7               ; colour (duochrome per character), 20 character & 16 scanlines per mode line (GR. 2)
 
 DL_MAP40x8x4  = 8               ; colour, 40 pixel & 8 scanlines per mode line (GR. 3)
-DL_MAP80x4x2  = 9               ; 'duochrome', 80 pixel & 4 scanlines per mode line (GR.4) 
-DL_MAP80x4x4  = 10              ; colour, 80 pixel & 4 scanlines per mode line (GR.5) 
-DL_MAP160x2x2 = 11              ; 'duochrome', 160 pixel & 2 scanlines per mode line (GR.6) 
-DL_MAP160x1x2 = 12              ; 'duochrome', 160 pixel & 1 scanline per mode line (GR.14) 
-DL_MAP160x2x4 = 13              ; 4 colours, 160 pixel & 2 scanlines per mode line (GR.7) 
-DL_MAP160x1x4 = 14              ; 4 colours, 160 pixel & 1 scanline per mode line (GR.15) 
-DL_MAP320x1x1 = 15              ; monochrome, 320 pixel & 1 scanline per mode line (GR.8) 
+DL_MAP80x4x2  = 9               ; 'duochrome', 80 pixel & 4 scanlines per mode line (GR.4)
+DL_MAP80x4x4  = 10              ; colour, 80 pixel & 4 scanlines per mode line (GR.5)
+DL_MAP160x2x2 = 11              ; 'duochrome', 160 pixel & 2 scanlines per mode line (GR.6)
+DL_MAP160x1x2 = 12              ; 'duochrome', 160 pixel & 1 scanline per mode line (GR.14)
+DL_MAP160x2x4 = 13              ; 4 colours, 160 pixel & 2 scanlines per mode line (GR.7)
+DL_MAP160x1x4 = 14              ; 4 colours, 160 pixel & 1 scanline per mode line (GR.15)
+DL_MAP320x1x1 = 15              ; monochrome, 320 pixel & 1 scanline per mode line (GR.8)
 
 ; modifiers on mode lines...
 

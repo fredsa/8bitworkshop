@@ -4,7 +4,7 @@
 
 int main(void) {
   byte i;
-  
+
   // write to graphics ROM
   rom_select = 1;
   // set palette
@@ -12,12 +12,12 @@ int main(void) {
     palette[i] = (byte)(i*7);
   // draw a rectangle
   blit_solid(0, 0, 152, 255, 0x1f);
-  
+
   // main loop
   while (1) {
     watchdog0x39 = 0x39;
     // code here
   }
-  
+
   return 0;
 }

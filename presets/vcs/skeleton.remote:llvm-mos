@@ -62,6 +62,6 @@ int main() {
 #else
   do_kernel_loop();
 #endif
-  
+
   return 0;
 }

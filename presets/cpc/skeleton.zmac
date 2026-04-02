@@ -1,7 +1,7 @@
 
 ; from https://www.chibiakumas.com/z80/helloworld.php#LessonH1
 
-PrintChar = 0xbb5a   
+PrintChar = 0xbb5a
 WaitChar  = 0xbb06
 
     org 0x4000

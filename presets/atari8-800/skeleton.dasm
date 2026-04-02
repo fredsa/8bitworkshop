@@ -15,11 +15,11 @@ dlloop                          ;Create Display List
         sta     $1000,x         ;Copy to RAM
         dex                     ;next byte
         bpl     dlloop
-        
+
         lda     #$06
         sta     CHACTL          ;Set Character Control
         lda     #$84            ;Set color PF2
-        sta     COLOR0+2             
+        sta     COLOR0+2
         sta     COLOR0+4	; bakground
         lda     #$0F            ;Set color PF1
         sta     COLOR0+1
@@ -37,7 +37,7 @@ dlloop                          ;Create Display List
         sta     SDMCTL		;Shadow DMACTL
 
 print
-        ldy     #$00           
+        ldy     #$00
         cld
 prloop
         lda     text1,y         ;Get character

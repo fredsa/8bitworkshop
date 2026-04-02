@@ -234,8 +234,8 @@ void add_LCD(int_handler h) OLDCALL;
 */
 void add_TIM(int_handler h) OLDCALL;
 
-/** Adds a timer interrupt handler, that could be 
-    interrupted by the other interrupts, 
+/** Adds a timer interrupt handler, that could be
+    interrupted by the other interrupts,
     as well as itself, if it runs too slow.
 
     Can not be used together with @ref add_TIM

@@ -6,7 +6,7 @@
 ; start of vectrex memory with cartridge name...
                 ORG     0
 ;***************************************************************************
-; HEADER SECTION 
+; HEADER SECTION
 ;***************************************************************************
 		FCC     "g GCE 2020"
                 DB      $80      	        ; 'g' is copyright sign

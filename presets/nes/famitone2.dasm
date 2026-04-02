@@ -408,11 +408,11 @@ FamiToneMusicPause: subroutine
 
 	tax					;set SZ flags for A
 	beq .unpause
-	
+
 .pause:
 
 	jsr FamiToneSampleStop
-	
+
 	lda #0				;mute sound
 	sta FT_CH1_VOLUME
 	sta FT_CH2_VOLUME
@@ -942,7 +942,7 @@ FamiToneSampleStop: subroutine
 	rts
 
 
-	
+
 	IFCONST FT_DPCM_ENABLE
 
 ;------------------------------------------------------------------------------
@@ -981,7 +981,7 @@ _FT2SamplePlay:
 	asl
 	clc
 	adc <FT_TEMP
-	
+
 	adc FT_DPCM_LIST_L
 	sta <FT_TEMP_PTR_L
 	lda #0
@@ -1021,9 +1021,9 @@ FamiToneSfxInit: subroutine
 
 	stx <FT_TEMP_PTR_L
 	sty <FT_TEMP_PTR_H
-	
+
 	ldy #0
-	
+
 	IFCONST FT_PITCH_FIX
 
 	lda FT_PAL_ADJUST		;add 2 to the sound list pointer for PAL
@@ -1033,7 +1033,7 @@ FamiToneSfxInit: subroutine
 .ntsc:
 
 	ENDIF
-	
+
 	lda (FT_TEMP_PTR),y		;read and store pointer to the effects list
 	sta FT_SFX_ADR_L
 	iny

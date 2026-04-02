@@ -64,7 +64,7 @@ extern void fastcall score6_add(int delta_bcd);
 #pragma wrapped-call (push, bankselect, bank)
 
 // Setup TIA for Playfield score display
-extern void scorepf_build(void); 
+extern void scorepf_build(void);
 
 // Kernel for Playfield score display
 extern void scorepf_kernel(void);
@@ -103,7 +103,7 @@ extern byte sndchan_sfx[2];	// sound channel sound index
 /**** 48-PIXEL BITMAP ROUTINES ****/
 
 // Setup TIA for 48-pixel wide bitmap mode
-extern void fastcall bitmap48_setup();           
+extern void fastcall bitmap48_setup();
 
 #pragma wrapped-call (push, ramselect, 0)
 

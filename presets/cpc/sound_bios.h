@@ -5,7 +5,7 @@ unsigned char sound(
   int nDuration,
   unsigned char nVolume,
   char nVolumeEnvelope,
-  char nToneEnvelope, 
+  char nToneEnvelope,
   unsigned char nNoisePeriod);
 
 void ent(

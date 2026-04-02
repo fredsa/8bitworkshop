@@ -5,7 +5,7 @@
 
 	seg.u ZEROPAGE
 	org $0
-        
+
 RLEPtr	word
 Temp1	byte
 
@@ -139,13 +139,13 @@ Palette:
         hex 14243400	;sp0
         hex 15253500	;sp1
         hex 16263600	;sp2
-        hex 17273700	;sp3        
+        hex 17273700	;sp3
 
 HelloWorld:
 	byte 12
 	word $2000 + (32*12) + 11
 	byte "HELLO WORLD!"
-        
+
         byte 32
         word $2041
         byte "ABCDEF0123456789"

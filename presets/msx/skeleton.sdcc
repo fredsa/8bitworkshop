@@ -9,10 +9,10 @@
 void main()
 {
   int counter=0;
-  
+
   INITXT();
   SCNCNT = 1; // set keyboard scan counter
- 
+
   while (1) {
     counter++;
     printf("Hello, World!    %04x\n", counter++);

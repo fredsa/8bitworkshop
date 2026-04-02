@@ -37,7 +37,7 @@ _music_duty:
 :	sta	Chan0duty,x
 	lda	Chan0note,x
         beq	:+
-; If next bit is set, add 1 to AUDF0 
+; If next bit is set, add 1 to AUDF0
         adc	#0
         sta	AUDF0,y
 :
@@ -64,7 +64,7 @@ _music_tick:
         iny
 	dex
         bpl	@loop1
-        
+
 ; Also decrement next-note timer, fetch next note
         lda	DurationTimer
         bmi	@Done
@@ -161,4 +161,4 @@ FREQZ:
 ; Table of duty-cycle bits for each note
 DUTYZ:
   .byte 0, 0, 0, 0, 181, 1, 17, 1, 219, 0, 239, 17, 17, 181, 181, 0, 239, 0, 181, 181, 239, 85, 73, 181, 1, 239, 219, 0, 73, 0, 239, 219, 0, 17, 219, 73, 0, 239, 239, 0, 17, 85, 239, 73, 0, 181, 73, 1, 0, 0, 0, 0, 1, 17, 85, 219, 0, 73, 181, 1, 85, 0, 85, 0
-  
+

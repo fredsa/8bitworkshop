@@ -24,7 +24,7 @@
 ; > zmac -d -o <outfile> -x <listfile> <filename>
 ; >
 ; > For example, assemble this Astrocade Z-80 ROM file:
-; >   
+; >
 ; > zmac -d -o BallyROM.bin -x BallyROM.lst BallyROM.asm
 ; >
 ; >  Currently the Listing file is full of 'Undeclared'

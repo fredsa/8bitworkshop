@@ -30,7 +30,7 @@
 ; we're done with this loop.
 
 ; This scheme can only display up to two objects on a given
-; scanline, so if the system tries to schedule a third, it will 
+; scanline, so if the system tries to schedule a third, it will
 ; be ignored. Also, the positioning routine takes a few scanlines
 ; to complete, so if the top of a sprite is too close to the
 ; bottom of another sprite, the latter may not be displayed.
@@ -207,7 +207,7 @@ MSpriteDraw2 subroutine
         sta PF1
         lda tmpPF2
         sta PF2
-; Go to next scanline, unless playfield is done 
+; Go to next scanline, unless playfield is done
 ; or unless this segment is done
 	dec PFIndex
         bmi .NoMoreLines	; playfield done
@@ -451,7 +451,7 @@ FindAnotherSprite ; subroutine entry point
         adc #MinYDist
         sta Scanline
 FindAnotherSprite2 ; alternate entry point when scanline known
-; Calculate the distance to next sprite 
+; Calculate the distance to next sprite
 	ldx CurIndex
 	cpx #NSprites
         bcs .OutOfSprites
@@ -476,7 +476,7 @@ FindAnotherSprite2 ; alternate entry point when scanline known
 ; First let's set its horizontal offset
         ldx #1
         jsr SetHorizPos	; set horizontal position (does WSYNC)
-; Assign the sprite's Y position to player 1 
+; Assign the sprite's Y position to player 1
 	lda YPos0,y
         sta SIndx1
 ; Set player 1 reflection/number/size flags

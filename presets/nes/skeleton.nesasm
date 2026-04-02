@@ -3,17 +3,17 @@
   .ineschr 1   ; 1x  8KB CHR data
   .inesmap 0   ; mapper 0 = NROM, no bank swapping
   .inesmir 1   ; background mirroring
-  
+
 ;;;;;;;;;;;;;;;
 
   .bank 0
-  .org $C000 
+  .org $C000
 RESET:
   SEI          ; disable IRQs
   CLD          ; disable decimal mode
-  LDX #$40	
+  LDX #$40
   STX $4017    ; disable APU frame IRQ
-  LDX #$FF	
+  LDX #$FF
   TXS          ; Set up stack
   INX          ; now X = 0
   STX $2000    ; disable NMI
@@ -36,7 +36,7 @@ clrmem:
   STA $0300, x
   INX
   BNE clrmem
-   
+
 vblankwait2:      ; Second wait for vblank, PPU is ready after this
   BIT $2002
   BPL vblankwait2
@@ -47,16 +47,16 @@ Foreverloop:
 IRQ:
 NMI:
   RTI
- 
-;;;;;;;;;;;;;;  
+
+;;;;;;;;;;;;;;
 
   .bank 1
   .org $FFFA
   .dw NMI
   .dw RESET
   .dw IRQ
-  
-;;;;;;;;;;;;;;  
+
+;;;;;;;;;;;;;;
 
   .bank 2
   .org $0000

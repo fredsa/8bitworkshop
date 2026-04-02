@@ -58,10 +58,10 @@ The main() function is called at startup.
 It resides in the shared ROM area (PERM).
 */
 void main(void) {
-  
+
   // initialization
   init();
-  
+
   // main kernel loop
   kernel_loop();
 }

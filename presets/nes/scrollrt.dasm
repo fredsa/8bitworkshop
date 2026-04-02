@@ -5,11 +5,11 @@
 
 	seg.u ZEROPAGE
 	org $0
-        
+
 ;;;;; OTHER VARIABLES
 
 	seg.u RAM
-; page-align to prevent messing up the timing        
+; page-align to prevent messing up the timing
 	org $300
 LineXLo	ds 224
 	align $100
@@ -132,7 +132,7 @@ Div3Table:
 	REPEAT 38	; repeat 3*38 times
         .byte 0,1,1	; repeating 0-1-1 bytes
         REPEND		; end of repeat block
-        
+
 Palette:
 	hex 1f		;background
 	hex 09092c00	;bg0

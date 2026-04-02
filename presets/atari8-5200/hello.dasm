@@ -15,7 +15,7 @@
 Start
         ldx     #$00
         lda     #$00
-crloop1    
+crloop1
         sta     $00,x           ;Clear zero page
         sta     $D400,x         ;Clear ANTIC
         sta     $C000,x         ;Clear GTIA
@@ -24,11 +24,11 @@ crloop1
         bne     crloop1
         ldy     #$00            ;Clear Ram
         lda     #$02            ;Start at $0200
-        sta     $81             
+        sta     $81
         lda     #$00
         sta     $80
 crloop2
-        lda     #$00            
+        lda     #$00
 crloop3
         sta     ($80),y         ;Store data
         iny                     ;Next byte
@@ -44,7 +44,7 @@ dlloop                          ;Create Display List
         sta     $1000,x         ;Copy to RAM
         dex                     ;next byte
         bpl     dlloop
-        
+
         lda     #$03            ;point IRQ vector
         sta     $200            ;to BIOS routine
         lda     #$FC
@@ -60,7 +60,7 @@ dlloop                          ;Create Display List
         lda     #$06
         sta     CHACTL          ;Set Character Control
         lda     #$84            ;Set color PF2
-        sta     COLOR0+2             
+        sta     COLOR0+2
         sta     COLOR0+4	; bakground
         lda     #$0F            ;Set color PF1
         sta     COLOR0+1
@@ -82,7 +82,7 @@ dlloop                          ;Create Display List
         sta     NMIEN
 
 print
-        ldy     #$00           
+        ldy     #$00
         cld
 prloop
         lda     text1,y         ;Get character

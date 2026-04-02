@@ -47,7 +47,7 @@ Start:
         sta PPU_CTRL	; enable NMI
         lda #MASK_BG
         sta PPU_MASK	; enable rendering
-        
+
         ldx #<music_data
         ldy #>music_data
         lda PPU_STATUS
@@ -56,7 +56,7 @@ Start:
         jsr FamiToneInit
         lda #0
         jsr FamiToneMusicPlay
-        
+
 .endless:
 	jmp .endless	; endless loop
 

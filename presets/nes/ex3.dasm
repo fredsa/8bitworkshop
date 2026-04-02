@@ -92,7 +92,7 @@ MoveSprites: subroutine
         inx		; X = X + 1
         bne .loop	; loop until X wraps
         rts		; return to caller
-	
+
 
 ;;;;; COMMON SUBROUTINES
 

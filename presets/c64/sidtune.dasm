@@ -16,7 +16,7 @@ S			= $10	;Song "speed"
 
 TICKCOUNTERS		= $02	;Use zp for tickcounters.. TICKCOUNTERS+0, TICKCOUNTERS+7,
 				;TICKCOUNTERS+14 will be used.
-DATAPOS			= $03	;Use zp for SONGPOSITIONS... 0, 7, 14.. 
+DATAPOS			= $03	;Use zp for SONGPOSITIONS... 0, 7, 14..
 FILTERHI		= $23
 
 ;---------------------------------
@@ -27,7 +27,7 @@ FILTERHI		= $23
 
 Start:		sei
 
-		ldy #$02	;Set it to $02 so the first incorrectly timed 
+		ldy #$02	;Set it to $02 so the first incorrectly timed
 				;iteration won't affect anything
 		sty FILTERHI	;Init filtersweep to make it a bit more deterministic.
 
@@ -35,16 +35,16 @@ Start:		sei
 		lda #(NUMBEROFVOICES-1)*7	;Voice indeX
 _initlp:	tax
 		sta DATAPOS,x		;Init datapos+0 to 0, datapos+7 to 7 and datapos+14 to 14.
-		sty TICKCOUNTERS,x	;y can be anything.. doesn't matter, but now I happen to 
+		sty TICKCOUNTERS,x	;y can be anything.. doesn't matter, but now I happen to
 					;init the filter so set it to $01 too
 		sec
 		sbc #7
 		bpl _initlp
 
 ;--
-; Main player loop		
+; Main player loop
 _outerloop:
-_wrast:		cpx $d012	;After the loop, x is a negative number, thus well above $3e 
+_wrast:		cpx $d012	;After the loop, x is a negative number, thus well above $3e
 				;(or whatever the critical raster value is again..)
 		bne _wrast	;First iteration won't be correct though, but since the
 				;counters are set to 2 initially it doesn't matter.
@@ -63,20 +63,20 @@ _wrast:		cpx $d012	;After the loop, x is a negative number, thus well above $3e
 _innerloop:
 		dec TICKCOUNTERS,x
 		bne _loopend
-		
+
 		;Time for new sound settings, turn gate and oscillator off..
 		lda #8
 		sta $d404,x
 
 		;Turn on global volume to make sure we'll hear anything at all.
-		;Reason for having this code *inside* the loop: 
+		;Reason for having this code *inside* the loop:
 		;  To make sure the player won't run too fast and get executed
 		;  twice on the same rasterline.
 		lda #$5f	;Hi-pass + Lo-pass filter on.
 		sta $d418
 		lda #$a2	;Filter used on middle (melody) voice.
 		sta $d417
-		
+
 		;Parse data sequence data
 		ldy DATAPOS,x
 _newseq:
@@ -107,12 +107,12 @@ _nonewseq:
 		sta TICKCOUNTERS,x
 		lda ctrltab,y
 		sta $d404,x
-		
+
 _loopend:
 		txa
 		.byte $cb,7		;axs #7 / sbx #7 / whatever..
 		bpl _innerloop
-		
+
 		#if DEBUG
 			dec $d020
 			dec $d021
@@ -136,7 +136,7 @@ sweep
 ; can represent a whole empty pattern by just one byte in
 ; the sequence data. At the same time, this format allows
 ; for changes to the waveform every tick, which means we
-; can also make drums and such things. But, not in this 
+; can also make drums and such things. But, not in this
 ; tune. Perhaps in the next one..
 ;
 ;		       00   01   02   03   04   05   06
@@ -152,7 +152,7 @@ durtab:	.byte S*1, S*3, S*6, S*2, S*1, S*8, S*8
 ; Voc2 starts at 14
 ;
 ; Note and duration stored in one byte and the byte following a $00 (JP)
-; byte is interpreted as the destination of a jump to another place in 
+; byte is interpreted as the destination of a jump to another place in
 ; the data.
 
 _musicdata:
@@ -167,11 +167,11 @@ _Voc0start:
 _Voc1start:
 	.byte $20 | D5
 	.byte $30 | Dz5
-	
+
 	.byte $20 | D5
 	.byte $40 | A4
 	.byte $40 | Az4
-	
+
 	.byte JP
 	.byte <(_Voc1melody-_musicdata)
 _Voc2start:
@@ -197,7 +197,7 @@ _Voc2loop:
 	.byte $30 | Az4
 	.byte $20 | A4
 	.byte $30 | F4
-	
+
 	;-
 	.byte $60 | G4
 	.byte $50 | 0
@@ -209,7 +209,7 @@ _Voc2loop:
 	.byte $60 | D5
 	.byte $60 | Dz5
 	.byte $60 | F5
-	
+
 	;-
 	.byte $60 | G5
 	.byte JP
@@ -230,7 +230,7 @@ _Voc0komp:
 	.byte $00 | Az4
 	.byte $00 | C5
 	.byte $10 | Dz5
-	
+
 	.byte $00 | F4
 	.byte $00 | A4
 	.byte $00 | C5
@@ -247,10 +247,10 @@ _Voc1melody:
 
 	.byte $20 | A4
 	.byte $30 | F4
-	
+
 	;-
 	.byte $60 | G4
-	
+
 	.byte $50 | 0
 
 	.byte $20 | F4
@@ -277,7 +277,7 @@ _Voc1melody:
 	.byte $00 | C5
 	.byte $00 | G5
 	.byte $00 | F5
-	
+
 	.byte JP
 	.byte <(_Voc1start-_musicdata)
 

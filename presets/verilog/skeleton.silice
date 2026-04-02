@@ -14,7 +14,7 @@ algorithm frame_display(
   output! uint$color_depth$ pix_g,
   output! uint$color_depth$ pix_b
 ) <autorun> {
-  
+
   uint8 frame = 0;
 
   // by default r,g,b are set to zero
@@ -30,8 +30,8 @@ algorithm frame_display(
         pix_b = frame << 2;
         pix_g = pix_y[0,$color_depth$];
         pix_r = pix_x[0,$color_depth$];
-      }      
-    }    
+      }
+    }
     while (pix_vblank == 1) {} // wait for sync
     frame = frame + 1;
   }
@@ -46,8 +46,8 @@ algorithm main(
   output! uint$color_depth$ video_b,
   output! uint1 video_hs,
   output! uint1 video_vs
-) 
-<@clock,!reset> 
+)
+<@clock,!reset>
 {
 
   uint1  active = 0;
@@ -76,7 +76,7 @@ algorithm main(
 
   // forever
   while (1) {
-  
+
     while (vblank == 0) { }
 
   }

@@ -77,7 +77,7 @@ __asm
         LD    HL, #s__INITIALIZER
         LDIR
 __endasm;
-  
+
   main();
 }
 

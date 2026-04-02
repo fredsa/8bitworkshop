@@ -84,7 +84,7 @@ NMIHandler:
         lsr
         lsr
         and #$03	; take next two bits
-        tay		
+        tay
         lda ScrollDirTab,y ; do another lookup
         clc
         adc ScrollY	; A = A + ScrollY
@@ -96,7 +96,7 @@ NMIHandler:
 ; Scroll direction lookup table
 ScrollDirTab:
 	hex 00 01 ff 00	; 0,1,-1,0
- 
+
 ;;;;; CONSTANT DATA
 
 	align $100

@@ -150,9 +150,7 @@ export class SourceEditor implements ProjectView {
           keydown(event, view) {
             if (event.shiftKey && event.altKey && event.code === 'KeyF') {
               event.preventDefault();
-              if (isAsm) {
-                return formatDocument(view);
-              }
+              formatDocument(view, isAsm);
             }
           }
         }),

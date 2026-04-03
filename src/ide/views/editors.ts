@@ -173,6 +173,7 @@ export class SourceEditor implements ProjectView {
         keymap.of([
           { key: "Ctrl-Shift-i", run: indentSelection },
           { key: "Cmd-Shift-i", run: indentSelection },
+          { key: "Backspace", run: deleteCharBackwardStrict },
         ]),
         keymap.of(defaultKeymap),
 

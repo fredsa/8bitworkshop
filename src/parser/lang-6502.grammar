@@ -3,6 +3,8 @@
 @skip { space | Comment }
 
 Line {
+  MacroDef |
+  RepeatBlock |
   Label? Statement? eol
 }
 
@@ -10,8 +12,6 @@ Statement {
   Instruction |
   Directive |
   HexDirective |
-  MacroDef |
-  MacEnd |
   ControlOp
 }
 
@@ -40,12 +40,16 @@ HexDirective {
 
 @external tokens hexTokenizer from "../../src/parser/tokens-6502" { HexByte }
 
-@external specialize {Identifier} macSpecializer from "../../src/parser/tokens-6502" { Mac, MacEnd }
+@external specialize {Identifier} macSpecializer from "../../src/parser/tokens-6502" { Mac, MacEnd, Repeat, RepEnd }
 
 @external specialize {Identifier} controlOpSpecializer from "../../src/parser/tokens-6502" { ControlOp }
 
 MacroDef {
-  Mac Identifier
+  Mac Identifier eol Line* MacEnd eol
+}
+
+RepeatBlock {
+  Repeat Expression? eol Line* RepEnd eol
 }
 
 CurrentAddress {

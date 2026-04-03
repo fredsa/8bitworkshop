@@ -1,5 +1,5 @@
 import { ExternalTokenizer } from "@lezer/lr"
-import { HexByte, PseudoOp, Mac, MacEnd, ControlOp, LocalIdentifier, Opcode, Register, OnOff, HexOp } from "../../gen/parser/lang-6502.grammar.terms"
+import { HexByte, PseudoOp, Mac, MacEnd, Repeat, RepEnd, ControlOp, LocalIdentifier, Opcode, Register, OnOff, HexOp } from "../../gen/parser/lang-6502.grammar.terms"
 
 function isHexDigit(ch: number) {
     return (ch >= 48 && ch <= 57) ||  // 0-9
@@ -19,14 +19,17 @@ const pseudoOps = new Set([
     "byte", "word", "long",
     "subroutine", "processor",
     "include", "incbin", "incdir",
-    "echo", "repeat", "repend", "set",
+    "echo", "set",
     "list",
     "err",
 ])
 
 const macKeywords: Record<string, number> = {
     "mac": Mac, "macro": Mac,
-    "endm": MacEnd, "mexit": MacEnd,
+    "endm": MacEnd,
+    "mexit": ControlOp,
+    "repeat": Repeat,
+    "repend": RepEnd,
 }
 
 const controlOps = new Set([
@@ -63,7 +66,11 @@ export function controlOpSpecializer(value: string) {
 }
 
 export function localIdentifierSpecializer(value: string) {
-    return value.startsWith(".") && value.length > 1 ? LocalIdentifier : -1
+    if (!value.startsWith(".") || value.length <= 1) return -1
+    // Don't claim dot-prefixed keywords that other specializers handle
+    const bare = value.slice(1).toLowerCase()
+    if (pseudoOps.has(bare) || bare in macKeywords || controlOps.has(bare)) return -1
+    return LocalIdentifier
 }
 
 export function opcodeSpecializer(value: string) {

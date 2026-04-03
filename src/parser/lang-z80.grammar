@@ -3,6 +3,7 @@
 @skip { space | Comment }
 
 Line {
+  RepeatBlock |
   Label? Statement? eol
 }
 
@@ -10,7 +11,6 @@ Statement {
   Instruction |
   Directive |
   MacroDef |
-  MacEnd |
   ControlOp
 }
 
@@ -25,11 +25,15 @@ Directive {
 }
 
 MacroDef {
-  Mac Identifier
+  Mac (Identifier (Comma Identifier)*)? eol Line* MacEnd
+}
+
+RepeatBlock {
+  Repeat Expression? eol Line* MacEnd eol
 }
 
 @external specialize {Identifier} pseudoOpSpecializer from "../../src/parser/tokens-z80" { PseudoOp }
-@external specialize {Identifier} macSpecializer from "../../src/parser/tokens-z80" { Mac, MacEnd }
+@external specialize {Identifier} macSpecializer from "../../src/parser/tokens-z80" { Mac, MacEnd, Repeat }
 @external specialize {Identifier} controlOpSpecializer from "../../src/parser/tokens-z80" { ControlOp }
 @external specialize {Identifier} opcodeSpecializer from "../../src/parser/tokens-z80" { Opcode }
 @external specialize {Identifier} registerSpecializer from "../../src/parser/tokens-z80" { Register }

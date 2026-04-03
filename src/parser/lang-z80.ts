@@ -1,10 +1,14 @@
-import { LRLanguage, LanguageSupport } from "@codemirror/language"
+import { LRLanguage, LanguageSupport, foldInside, foldNodeProp } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight"
 import { parser } from "../../gen/parser/lang-z80.grammar.js"
 
 export const LezerZ80: LRLanguage = LRLanguage.define({
     parser: parser.configure({
         props: [
+            foldNodeProp.add({
+                MacroDef: foldInside,
+                RepeatBlock: foldInside
+            }),
             styleTags({
                 Identifier: t.variableName,
                 PseudoOp: t.keyword,
@@ -31,6 +35,7 @@ export const LezerZ80: LRLanguage = LRLanguage.define({
                 UnaryGt: t.arithmeticOperator,
                 Mac: t.definitionKeyword,
                 MacEnd: t.definitionKeyword,
+                Repeat: t.controlKeyword,
                 "MacroDef/Identifier": t.macroName,
                 ControlOp: t.controlKeyword,
                 Comma: t.separator,

@@ -1,4 +1,4 @@
-import { PseudoOp, Mac, MacEnd, ControlOp, Opcode, Register, Condition } from "../../gen/parser/lang-z80.grammar.terms"
+import { PseudoOp, Mac, MacEnd, Repeat, ControlOp, Opcode, Register, Condition } from "../../gen/parser/lang-z80.grammar.terms"
 
 const pseudoOps = new Set([
     "org", "equ", "defl", "end",
@@ -11,7 +11,7 @@ const pseudoOps = new Set([
     "public", "global", "entry", "extern", "ext", "extrn",
     "assert", "list", "nolist", "title", "name", "eject", "space",
     "jrpromote", "jperror",
-    "rept", "irp", "irpc", "local",
+    "irp", "irpc", "local",
     "sett", "tstate", "setocf",
     "rsym", "wsym",
     "aseg", "cseg", "dseg", "common",
@@ -22,7 +22,9 @@ const pseudoOps = new Set([
 
 const macKeywords: Record<string, number> = {
     "macro": Mac,
-    "endm": MacEnd, "exitm": MacEnd,
+    "endm": MacEnd,
+    "exitm": ControlOp,
+    "rept": Repeat,
 }
 
 const controlOps = new Set([

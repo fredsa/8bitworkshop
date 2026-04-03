@@ -1,7 +1,7 @@
 import { indentRange, indentUnit } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { formatLine } from "../common/format-src";
+import { formatLine } from "../common/format-asm";
 import { tabStopsFacet } from "./settings";
 
 export function formatDocument(view: EditorView, isAsm: boolean) {

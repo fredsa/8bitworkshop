@@ -1,11 +1,10 @@
 import { defaultKeymap, history, historyKeymap, indentSelection, isolateHistory, redo, undo } from "@codemirror/commands";
-import { formatAsm } from "../../parser/format-asm";
 import { cpp } from "@codemirror/lang-cpp";
 import { markdown } from "@codemirror/lang-markdown";
 import { bracketMatching, foldGutter, indentOnInput } from "@codemirror/language";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { EditorState, Extension } from "@codemirror/state";
-import { crosshairCursor, drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers, rectangularSelection, ViewUpdate } from "@codemirror/view";
+import { crosshairCursor, drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, rectangularSelection, ViewUpdate } from "@codemirror/view";
 import { CodeAnalyzer } from "../../common/analysis";
 import { hex, rpad } from "../../common/util";
 import { SourceFile, SourceLocation, WorkerError } from "../../common/workertypes";
@@ -21,6 +20,7 @@ import { cobalt } from "../../themes/cobalt";
 import { disassemblyTheme } from "../../themes/disassemblyTheme";
 import { editorTheme } from "../../themes/editorTheme";
 import { mbo } from "../../themes/mbo";
+import { formatDocument } from "../format";
 import { loadSettings, registerEditor, settingsExtensions } from "../settings";
 import { clearBreakpoint, current_project, lastDebugState, platform, qs, runToPC } from "../ui";
 import { createAssetHeaderPlugin } from "./assetdecorations";
@@ -151,7 +151,7 @@ export class SourceEditor implements ProjectView {
             if (event.shiftKey && event.altKey && event.code === 'KeyF') {
               event.preventDefault();
               if (isAsm) {
-                return formatAsm(view);
+                return formatDocument(view);
               }
             }
           }

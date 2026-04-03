@@ -1,10 +1,10 @@
 import { indentUnit } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { tabStopsFacet } from "../ide/settings";
-import { formatLine } from "./format-asm-core";
+import { formatLine } from "../common/format-src";
+import { tabStopsFacet } from "./settings";
 
-export function formatAsm(view: EditorView): boolean {
+export function formatDocument(view: EditorView): boolean {
     const doc = view.state.doc;
     const indent = view.state.facet(indentUnit);
     const tabSize = view.state.facet(EditorState.tabSize);

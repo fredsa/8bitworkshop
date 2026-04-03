@@ -1,6 +1,6 @@
-// Pure asm formatting logic — no browser or CodeMirror dependencies.
+// Pure formatting logic — no browser or CodeMirror dependencies.
 
-import { columnAt } from "../common/tabdetect";
+import { columnAt } from "./tabdetect";
 
 export function findCommentIndex(text: string): number {
     let quote = '';
@@ -102,13 +102,13 @@ export function formatLine(raw: string, lineNum: number, indentUnit: string, tab
 
     const newText = buildFormattedLine(indented, label, opcode, operand, comment, indentUnit, tabSize, stops);
     if (newText.replace(/\s/g, '') !== text.replace(/\s/g, '')) {
-        console.warn(`format-asm: skipping line ${lineNum}, mangles non-whitespace characters\n- before: ${JSON.stringify(text)}\n- after:  ${JSON.stringify(newText)}`);
+        console.warn(`format: skipping line ${lineNum}, mangles non-whitespace characters\n- before: ${JSON.stringify(text)}\n- after:  ${JSON.stringify(newText)}`);
         return text;
     }
     return newText;
 }
 
-export function formatAsmText(text: string, tabSize: number, stops: number[]): string {
+export function formatText(text: string, tabSize: number, stops: number[]): string {
     if (stops.length === 0) return text;
     const indent = ' '.repeat(tabSize);
     const lines = text.split('\n');

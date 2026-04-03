@@ -4,7 +4,7 @@
 import { opcodes as opcodes6502 } from "../parser/tokens-6502";
 import { opcodes as opcodes6809 } from "../parser/tokens-6809";
 import { opcodes as opcodesZ80 } from "../parser/tokens-z80";
-import { findCommentIndex } from "../parser/format-asm-core";
+import { findCommentIndex } from "./format-src";
 
 export type Dialect = '6502' | 'z80' | '6809' | 'c' | 'basic' | 'unknown';
 

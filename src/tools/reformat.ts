@@ -5,11 +5,11 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { PLATFORM_PARAMS } from '../worker/platforms';
-import { detectTabStopsFromAsm, detectTabSizeFromSource, Dialect } from '../common/tabdetect';
-import { getToolForFilename_6502, getToolForFilename_z80, getToolForFilename_6809, getDialect } from '../common/toolutil';
-import { formatAsmText } from '../parser/format-asm-core';
+import { formatText } from '../common/format-src';
+import { detectTabSizeFromSource, detectTabStopsFromAsm, Dialect } from '../common/tabdetect';
+import { getDialect, getToolForFilename_6502, getToolForFilename_6809, getToolForFilename_z80 } from '../common/toolutil';
 import { getBasePlatform, isProbablyBinary } from '../common/util';
+import { PLATFORM_PARAMS } from '../worker/platforms';
 
 const DEFAULT_TAB_SIZE = 8;
 const PRESETS_DIR = path.resolve(__dirname, '../../presets');
@@ -82,7 +82,7 @@ function formatFile(filePath: string, text: string, dialect: Dialect, tabSize: n
     case '6502':
     case 'z80':
     case '6809':
-      return formatAsmText(text, tabSize, stops);
+      return formatText(text, tabSize, stops);
     default:
       // TODO: implement formatting for dialect: ${dialect}
       return null;

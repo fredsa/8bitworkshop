@@ -1,6 +1,6 @@
 // Pure formatting logic — no browser or CodeMirror dependencies.
 
-import { columnAt } from "./tabdetect";
+import { AsmTabStops, columnAt } from "./tabdetect";
 
 export function findCommentIndex(text: string): number {
     let quote = '';
@@ -33,15 +33,7 @@ function padToColumn(s: string, targetCol: number, indentUnit: string, tabSize: 
     return s + ' '.repeat(targetCol - col);
 }
 
-function buildFormattedLine(indented: boolean, label: string, opcode: string, operand: string, comment: string, indentUnit: string, tabSize: number, stops: number[]): string {
-    // 3+ stops:  opcode @ stop[0], operand @ stop[1], comment @ stop[2]
-    // 2  stops:  opcode @ stop[0], operand @ stop[1]
-    // 1  stop :  opcode @ stop[0], rest unmodified
-    // 0  stops:  no formatting
-    const opcodeStop = stops[0];
-    const operandStop = stops.length >= 2 ? stops[1] : undefined;
-    const commentStop = stops.length >= 3 ? stops[2] : undefined;
-
+function buildFormattedLine(indented: boolean, label: string, opcode: string, operand: string, comment: string, indentUnit: string, tabSize: number, asmTabStops: AsmTabStops): string {
     let result = '';
 
     if (label) {
@@ -50,12 +42,12 @@ function buildFormattedLine(indented: boolean, label: string, opcode: string, op
 
     if (opcode) {
         if (label || indented) {
-            result = padToColumn(result, opcodeStop, indentUnit, tabSize);
+            result = padToColumn(result, asmTabStops.opcodes, indentUnit, tabSize);
         }
         result += opcode;
         if (operand) {
-            if (operandStop !== undefined) {
-                result = padToColumn(result, operandStop, indentUnit, tabSize);
+            if (asmTabStops.operands !== undefined) {
+                result = padToColumn(result, asmTabStops.operands, indentUnit, tabSize);
             } else {
                 result += ' ';
             }
@@ -65,8 +57,8 @@ function buildFormattedLine(indented: boolean, label: string, opcode: string, op
 
     if (comment) {
         if (result) {
-            if (commentStop !== undefined) {
-                result = padToColumn(result, commentStop, indentUnit, tabSize);
+            if (asmTabStops.comments !== undefined) {
+                result = padToColumn(result, asmTabStops.comments, indentUnit, tabSize);
             } else {
                 result += ' ';
             }
@@ -77,7 +69,7 @@ function buildFormattedLine(indented: boolean, label: string, opcode: string, op
     return result;
 }
 
-export function formatLine(raw: string, lineNum: number, indentUnit: string, tabSize: number, stops: number[]): string {
+export function formatAsmLine(raw: string, lineNum: number, indentUnit: string, tabSize: number, asmTabStops: AsmTabStops): string {
     const text = raw.trimEnd();
     if (text === '') return '';
 
@@ -100,7 +92,7 @@ export function formatLine(raw: string, lineNum: number, indentUnit: string, tab
         [opcode, operand] = splitFirst(content);
     }
 
-    const newText = buildFormattedLine(indented, label, opcode, operand, comment, indentUnit, tabSize, stops);
+    const newText = buildFormattedLine(indented, label, opcode, operand, comment, indentUnit, tabSize, asmTabStops);
     if (newText.replace(/\s/g, '') !== text.replace(/\s/g, '')) {
         console.warn(`format: skipping line ${lineNum}, mangles non-whitespace characters\n- before: ${JSON.stringify(text)}\n- after:  ${JSON.stringify(newText)}`);
         return text;
@@ -108,10 +100,10 @@ export function formatLine(raw: string, lineNum: number, indentUnit: string, tab
     return newText;
 }
 
-export function formatText(text: string, tabSize: number, stops: number[]): string {
-    if (stops.length === 0) return text;
+export function formatText(text: string, tabSize: number, asmTabStops: AsmTabStops): string {
+    if (!asmTabStops) return text;
     const indent = ' '.repeat(tabSize);
     const lines = text.split('\n');
-    const formatted = lines.map((line, i) => formatLine(line, i + 1, indent, tabSize, stops));
+    const formatted = lines.map((line, i) => formatAsmLine(line, i + 1, indent, tabSize, asmTabStops));
     return formatted.join('\n');
 }

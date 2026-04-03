@@ -1,37 +1,85 @@
 import { indentRange, indentUnit } from "@codemirror/language";
-import { EditorState } from "@codemirror/state";
+import { ChangeSet, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { formatLine } from "../common/format-src";
+import { formatAsmLine } from "../common/format-asm";
 import { tabStopsFacet } from "./settings";
 
 export function formatDocument(view: EditorView, isAsm: boolean) {
-    if (isAsm) {
-        // Format using custom tab stops.
-        formatAsm(view);
-    } else {
-        // Use CodeMirror's built-in indentation for non-asm languages (e.g. cpp)
-        view.dispatch({ changes: indentRange(view.state, 0, view.state.doc.length) });
+    let state = view.state;
+    const changeSets: ChangeSet[] = [];
+
+    function apply(cs: ChangeSet) {
+        changeSets.push(cs);
+        // Update state so subsequent passes have correct line positions.
+        state = state.update({ changes: cs }).state;
     }
-}
 
-export function formatAsm(view: EditorView) {
-    const doc = view.state.doc;
-    const indent = view.state.facet(indentUnit);
-    const tabSize = view.state.facet(EditorState.tabSize);
-    const stops = view.state.facet(tabStopsFacet);
-
-    if (stops.length === 0) return;
-
-    const changes: { from: number, to: number, insert: string }[] = [];
-    for (let i = 1; i <= doc.lines; i++) {
-        const line = doc.line(i);
-        const formatted = formatLine(line.text, i, indent, tabSize, stops);
-        if (formatted !== line.text) {
-            changes.push({ from: line.from, to: line.to, insert: formatted });
+    const indent = state.facet(indentUnit);
+    const tabSize = state.facet(EditorState.tabSize);
+    if (indent !== '\t') {
+        const specs: { from: number, to: number, insert: string }[] = [];
+        for (let i = 1; i <= state.doc.lines; i++) {
+            const line = state.doc.line(i);
+            if (line.text.indexOf('\t') >= 0) {
+                let col = 0;
+                let newText = "";
+                for (const char of line.text) {
+                    if (char === '\t') {
+                        const nextTab = col + tabSize - (col % tabSize);
+                        newText += ' '.repeat(nextTab - col);
+                        col = nextTab;
+                    } else {
+                        newText += char;
+                        col++;
+                    }
+                }
+                specs.push({ from: line.from, to: line.to, insert: newText });
+            }
+        }
+        if (specs.length > 0) {
+            apply(state.changes(specs));
         }
     }
 
-    if (changes.length > 0) {
-        view.dispatch({ changes, scrollIntoView: false });
+    if (isAsm) {
+        // Format using custom tab stops.
+        const stops = state.facet(tabStopsFacet);
+        if (stops.opcodes > 0 || stops.operands > 0 || stops.comments > 0) {
+            const specs: { from: number, to: number, insert: string }[] = [];
+            for (let i = 1; i <= state.doc.lines; i++) {
+                const line = state.doc.line(i);
+                const formatted = formatAsmLine(line.text, i, indent, tabSize, stops);
+                if (formatted !== line.text) {
+                    specs.push({ from: line.from, to: line.to, insert: formatted });
+                }
+            }
+            if (specs.length > 0) {
+                apply(state.changes(specs));
+            }
+        }
+    } else {
+        // Use CodeMirror's built-in indentation for non-asm languages (e.g. cpp)
+        const indentChanges = indentRange(state, 0, state.doc.length);
+        if (!indentChanges.empty) {
+            apply(indentChanges);
+        }
+    }
+
+    // Strip trailing whitespace from all lines.
+    const trimSpecs: { from: number, to: number, insert: string }[] = [];
+    for (let i = 1; i <= state.doc.lines; i++) {
+        const line = state.doc.line(i);
+        const trimmed = line.text.replace(/\s+$/, "");
+        if (trimmed !== line.text) {
+            trimSpecs.push({ from: line.from + trimmed.length, to: line.to, insert: "" });
+        }
+    }
+    if (trimSpecs.length > 0) {
+        apply(state.changes(trimSpecs));
+    }
+
+    // Compose and dispatch all changes; selections are mapped automatically.
+    if (changeSets.length > 0) {
+        view.dispatch({ changes: changeSets.reduce((a, b) => a.compose(b)) });
     }
 }

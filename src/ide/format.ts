@@ -1,7 +1,7 @@
 import { indentRange, indentUnit } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { formatLine } from "../common/format-asm";
+import { formatAsmLine } from "../common/format-asm";
 import { tabStopsFacet } from "./settings";
 
 export function formatDocument(view: EditorView, isAsm: boolean) {
@@ -25,7 +25,7 @@ export function formatAsm(view: EditorView) {
     const changes: { from: number, to: number, insert: string }[] = [];
     for (let i = 1; i <= doc.lines; i++) {
         const line = doc.line(i);
-        const formatted = formatLine(line.text, i, indent, tabSize, stops);
+        const formatted = formatAsmLine(line.text, i, indent, tabSize, stops);
         if (formatted !== line.text) {
             changes.push({ from: line.from, to: line.to, insert: formatted });
         }

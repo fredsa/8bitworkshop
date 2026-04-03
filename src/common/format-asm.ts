@@ -77,7 +77,7 @@ function buildFormattedLine(indented: boolean, label: string, opcode: string, op
     return result;
 }
 
-export function formatLine(raw: string, lineNum: number, indentUnit: string, tabSize: number, stops: number[]): string {
+export function formatAsmLine(raw: string, lineNum: number, indentUnit: string, tabSize: number, stops: number[]): string {
     const text = raw.trimEnd();
     if (text === '') return '';
 
@@ -112,6 +112,6 @@ export function formatText(text: string, tabSize: number, stops: number[]): stri
     if (stops.length === 0) return text;
     const indent = ' '.repeat(tabSize);
     const lines = text.split('\n');
-    const formatted = lines.map((line, i) => formatLine(line, i + 1, indent, tabSize, stops));
+    const formatted = lines.map((line, i) => formatAsmLine(line, i + 1, indent, tabSize, stops));
     return formatted.join('\n');
 }

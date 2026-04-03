@@ -14,10 +14,35 @@ export function formatDocument(view: EditorView, isAsm: boolean) {
         state = state.update({ changes: cs }).state;
     }
 
+    const indent = state.facet(indentUnit);
+    const tabSize = state.facet(EditorState.tabSize);
+    if (indent !== '\t') {
+        const specs: { from: number, to: number, insert: string }[] = [];
+        for (let i = 1; i <= state.doc.lines; i++) {
+            const line = state.doc.line(i);
+            if (line.text.indexOf('\t') >= 0) {
+                let col = 0;
+                let newText = "";
+                for (const char of line.text) {
+                    if (char === '\t') {
+                        const nextTab = col + tabSize - (col % tabSize);
+                        newText += ' '.repeat(nextTab - col);
+                        col = nextTab;
+                    } else {
+                        newText += char;
+                        col++;
+                    }
+                }
+                specs.push({ from: line.from, to: line.to, insert: newText });
+            }
+        }
+        if (specs.length > 0) {
+            apply(state.changes(specs));
+        }
+    }
+
     if (isAsm) {
         // Format using custom tab stops.
-        const tabSize = state.facet(EditorState.tabSize);
-        const indent = state.facet(indentUnit);
         const stops = state.facet(tabStopsFacet);
         if (stops.length > 0) {
             const specs: { from: number, to: number, insert: string }[] = [];

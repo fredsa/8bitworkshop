@@ -1,10 +1,10 @@
-import { defaultKeymap, history, historyKeymap, indentSelection, isolateHistory, redo, undo } from "@codemirror/commands";
+import { defaultKeymap, deleteCharBackwardStrict, history, historyKeymap, indentSelection, isolateHistory, redo, undo } from "@codemirror/commands";
 import { cpp } from "@codemirror/lang-cpp";
 import { markdown } from "@codemirror/lang-markdown";
 import { bracketMatching, foldGutter, indentOnInput } from "@codemirror/language";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { EditorState, Extension } from "@codemirror/state";
-import { crosshairCursor, drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, rectangularSelection, ViewUpdate } from "@codemirror/view";
+import { crosshairCursor, drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, rectangularSelection, scrollPastEnd, ViewUpdate } from "@codemirror/view";
 import { CodeAnalyzer } from "../../common/analysis";
 import { hex, rpad } from "../../common/util";
 import { SourceFile, SourceLocation, WorkerError } from "../../common/workertypes";
@@ -175,6 +175,8 @@ export class SourceEditor implements ProjectView {
           { key: "Cmd-Shift-i", run: indentSelection },
           { key: "Backspace", run: deleteCharBackwardStrict },
         ]),
+        // https://codemirror.net/docs/ref/#commands.defaultKeymap includes
+        // https://codemirror.net/docs/ref/#commands.standardKeymap
         keymap.of(defaultKeymap),
 
         // Undo history.

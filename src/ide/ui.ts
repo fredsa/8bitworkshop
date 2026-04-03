@@ -429,7 +429,7 @@ async function loadMainWindow(preset_id: string) {
   var maindata = current_project.getFile(preset_id);
   if (typeof maindata === 'string') {
     await current_project.loadFileDependencies(maindata);
-    // Uses main file tab stops for all files in project
+    // Use main file tab stops for all files in project
     autoDetectTabStops(preset_id, maindata);
   }
   // we need this to build create functions for the editor

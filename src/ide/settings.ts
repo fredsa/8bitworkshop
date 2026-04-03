@@ -1,7 +1,7 @@
 import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
-import { Compartment, EditorState, Extension, Facet } from "@codemirror/state";
+import { Compartment, Extension, Facet } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
-import { detectTabSizeFromSource, detectTabStopsFromAsm } from "../common/tabdetect";
+import { detectTabStopsFromAsm } from "../common/tabdetect";
 import { getDialect } from "../common/toolutil";
 import { getCurrentEditorFilename, platform } from "./ui";
 import { isMobileDevice } from "./views/baseviews";
@@ -121,19 +121,15 @@ export function autoDetectTabStops(filename: string, text: string) {
     case '6502':
     case 'z80':
     case '6809':
-      settings.tabSize = DEFAULT_TAB_SIZE;
-      settings.tabStops = detectTabStopsFromAsm(text, dialect, DEFAULT_TAB_SIZE).join(' ');
+      settings.tabStops = detectTabStopsFromAsm(text, dialect, settings.tabSize).join(' ');
       break;
     case 'c':
-      settings.tabSize = detectTabSizeFromSource(text) || DEFAULT_TAB_SIZE;
       settings.tabStops = "";
       break;
     case 'basic':
-      settings.tabSize = DEFAULT_TAB_SIZE;
       settings.tabStops = "";
       break;
     case 'unknown':
-      settings.tabSize = DEFAULT_TAB_SIZE;
       settings.tabStops = "";
       break;
   }
@@ -141,7 +137,30 @@ export function autoDetectTabStops(filename: string, text: string) {
 }
 
 export function openSettings() {
-  var settings = loadSettings();
+  const settings = loadSettings();
+  const editor = editors.values().next().value;
+  const text = editor.state.doc.toString();
+  const tool = platform.getToolForFilename(getCurrentEditorFilename());
+  const dialect = getDialect(tool);
+  const isAsm = dialect === '6502' || dialect === 'z80' || dialect === '6809';
+
+  function getSelectedTabSize() {
+    return parseInt($('#setting_tabSize').val() as string) || DEFAULT_TAB_SIZE;
+  }
+
+  function detectTabStops() {
+    return detectTabStopsFromAsm(text, dialect, getSelectedTabSize());
+  }
+
+  function checkStaleTabStops() {
+    const currentStops = parseTabStops($('#setting_tabStops').val() as string);
+    if (detectTabStops().join(' ') === currentStops.join(' ')) {
+      $('#setting_detectTabStops').removeClass('click-me btn-primary');
+    } else {
+      $('#setting_detectTabStops').addClass('click-me btn-primary');
+    }
+  }
+
   var dialog = bootbox.dialog({
     onEscape: true,
     // title: "Settings",
@@ -150,11 +169,11 @@ export function openSettings() {
       <div class="checkbox"><label>Tab size: <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em"></label></div>
       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsTabs" ${!settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts tabs</label></div>
       <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts spaces</label></div>
-      <div id="setting_tabStopsRow" style="margin-left:20px;${!settings.tabsToSpaces ? 'visibility:hidden' : ''}">
+      <div id="setting_tabStopsRow" style="margin-left:20px;${!settings.tabsToSpaces || !isAsm ? 'visibility:hidden' : ''}">
         Tab stops <input type="text" id="setting_tabStops" value="${settings.tabStops}" style="width:8em" ${!settings.tabsToSpaces ? 'disabled' : ''}>
         <button type="button" class="btn btn-default btn-sm" id="setting_standardTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Standard</button>
         <button type="button" class="btn btn-default btn-sm" id="setting_noneTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>None</button>
-        <button type="button" class="btn btn-primary btn-sm" id="setting_detectTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Analyze <span style="font-family:monospace">${getCurrentEditorFilename()}</span></button>
+        <button type="button" class="btn btn-default btn-sm" id="setting_detectTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Analyze <span style="font-family:monospace">${getCurrentEditorFilename()}</span></button>
       </div>
       <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers" ${settings.showLineNumbers ? 'checked' : ''}> Show line numbers</label></div>
       <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Highlight special characters</label></div>
@@ -188,8 +207,11 @@ export function openSettings() {
       }
     }
   });
+  checkStaleTabStops();
   dialog.on('shown.bs.modal', () => {
-    $('#setting_tabSize').focus().select();
+    $('#setting_tabSize, #setting_tabStops').on('input', () => {
+      checkStaleTabStops();
+    }).focus().select();
     $('input[name="tabMode"]').on('change', () => {
       var spacesSelected = $('#setting_tabInsertsSpaces').is(':checked');
       $('#setting_tabStopsRow').css('visibility', spacesSelected ? '' : 'hidden');
@@ -202,22 +224,14 @@ export function openSettings() {
       $('#setting_tabStops').val('');
     });
     $('#setting_detectTabStops').on('click', () => {
-      var editor = editors.values().next().value;
-      if (!editor) return;
-      var text = editor.state.doc.toString();
-      var tool = platform.getToolForFilename(getCurrentEditorFilename());
-      var dialect = getDialect(tool);
-      if (dialect) {
-        var tabSize = editor.state.facet(EditorState.tabSize);
-        var stops = detectTabStopsFromAsm(text, dialect, tabSize);
-        $('#setting_tabStops').val(stops.join(' '));
-      }
+      $('#setting_tabStops').val(detectTabStops().join(' '));
+      checkStaleTabStops();
     });
   });
   dialog.on('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      dialog.find('.btn-primary').trigger('click');
+      dialog.find('.modal-footer .btn-primary').trigger('click');
     }
   });
 }

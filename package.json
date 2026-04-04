@@ -95,10 +95,7 @@
     "fuzzhdl": "jsfuzz -r binaryen gen/common/hdl/fuzz.js ~/verilator/corpus/ --versifier false",
     "machine": "node gen/tools/runmachine.js",
     "cli": "node gen/tools/8bws.js",
-    "mkdoc": "typedoc --out web/jsdoc src/common/",
-    "reformat": "npm run tsbuild && node gen/tools/reformat.js",
-    "detab": "npm run tsbuild && node gen/tools/reformat.js detab",
-    "strip-trailing-ws": "npm run tsbuild && node gen/tools/reformat.js strip-trailing-ws"
+    "mkdoc": "typedoc --out web/jsdoc src/common/"
   },
   "keywords": [
     "8bit",

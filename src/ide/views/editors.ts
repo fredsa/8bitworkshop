@@ -169,7 +169,7 @@ export class SourceEditor implements ProjectView {
         }]) : [],
 
         // Keybindings from settings must appear before default keymap.
-        ...settingsExtensions(loadSettings()),
+        ...settingsExtensions(isAsm, loadSettings()),
         keymap.of([
           { key: "Ctrl-Shift-i", run: indentSelection },
           { key: "Cmd-Shift-i", run: indentSelection },

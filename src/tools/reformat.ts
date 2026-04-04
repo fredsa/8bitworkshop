@@ -10,6 +10,7 @@ import { detectTabSizeFromSource, detectTabStopsFromAsm, Dialect } from '../comm
 import { getDialect, getToolForFilename_6502, getToolForFilename_6809, getToolForFilename_z80 } from '../common/toolutil';
 import { getBasePlatform, isProbablyBinary } from '../common/util';
 import { PLATFORM_PARAMS } from '../worker/platforms';
+import { TabStopSettings } from '../ide/views/tabs';
 
 const DEFAULT_TAB_SIZE = 8;
 const PRESETS_DIR = path.resolve(__dirname, '../../presets');
@@ -72,12 +73,12 @@ interface FormatResult {
   file: string;
   dialect: Dialect;
   formatted: boolean;
-  tabStops?: number[];
+  tabStops?: TabStopSettings;
   tabSize?: number;
   includes?: string[];
 }
 
-function formatFile(filePath: string, text: string, dialect: Dialect, tabSize: number, stops: number[]): string | null {
+function formatFile(filePath: string, text: string, dialect: Dialect, tabSize: number, stops: TabStopSettings): string | null {
   switch (dialect) {
     case '6502':
     case 'z80':
@@ -103,7 +104,7 @@ function processMainFile(filePath: string, arch: string, platformDir: string): F
 
   // Detect tab stops from main file
   let tabSize = DEFAULT_TAB_SIZE;
-  let stops: number[] = [];
+  let stops: TabStopSettings = {};
 
   switch (dialect) {
     case '6502':
@@ -272,7 +273,7 @@ function reformat() {
       totalMain++;
       const result = processMainFile(filePath, arch, platformDir);
       const relPath = path.relative(platformDir, filePath);
-      const stopsStr = result.tabStops?.length ? ` stops=[${result.tabStops.join(',')}]` : '';
+      const stopsStr = ` stops=[${result.tabStops.opcodes},${result.tabStops.operands},${result.tabStops.comments}]`;
       const sizeStr = result.tabSize !== DEFAULT_TAB_SIZE ? ` tabSize=${result.tabSize}` : '';
       const incStr = result.includes?.length ? ` includes=[${result.includes.join(',')}]` : '';
 

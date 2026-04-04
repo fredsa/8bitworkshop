@@ -1,14 +1,15 @@
 import { EditorState } from "@codemirror/state";
 import { EditorView, Panel, showPanel } from "@codemirror/view";
 import { openSettings, tabStopsFacet } from "../settings";
+import { TabStopSettings } from "./tabs";
 
 const MAX_COLS = 300;
 
-function buildContent(stops: number[], tabSize: number): string {
+function buildContent(stops: TabStopSettings, tabSize: number): string {
   const chars = new Array(MAX_COLS);
-  if (stops.length > 0) {
+  if (stops.opcodes > 0 || stops.operands > 0 || stops.comments > 0) {
     chars.fill(" ");
-    for (const s of stops) {
+    for (const s of [stops.opcodes, stops.operands, stops.comments]) {
       if (s > 0 && s < MAX_COLS) chars[s] = "▾";
     }
   } else {
@@ -24,7 +25,7 @@ function rulerPanel(view: EditorView): Panel {
   const dom = document.createElement("div");
   dom.className = "tab-stop-ruler";
   dom.setAttribute("aria-hidden", "true");
-  let currentStops: number[] = [];
+  let currentStops: TabStopSettings = {};
   let currentTabSize = 0;
 
   function rebuild() {

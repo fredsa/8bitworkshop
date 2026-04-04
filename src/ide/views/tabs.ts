@@ -5,14 +5,26 @@ import { EditorView, keymap } from "@codemirror/view";
 import { columnAt } from "../../common/tabdetect";
 import { tabStopsFacet } from "../settings";
 
+export interface TabStopSettings {
+  opcodes?: number;
+  operands?: number;
+  comments?: number;
+}
 
 export interface TabSettings {
   tabSize: number;
   tabsToSpaces: boolean;
+  tabStopsSettings: TabStopSettings;
+  tabStops: number[];
 }
 
-function nextTabStop(col: number, stops: number[], tabSize: number): number {
-  for (const stop of stops) {
+function tabStopsToColumns(tabStops: TabStopSettings): number[] {
+  return [tabStops.opcodes, tabStops.operands, tabStops.comments].filter(n => n > 0).sort((a, b) => a - b);
+}
+
+function nextTabStop(col: number, stops: TabStopSettings, tabSize: number): number {
+  const columns = tabStopsToColumns(stops);
+  for (const stop of columns) {
     if (stop > col) return stop;
   }
   return col + tabSize - (col % tabSize);
@@ -39,7 +51,7 @@ function insertToNextTabStop(view: EditorView): boolean {
   return true;
 }
 
-export function tabExtension(s: TabSettings, stops: number[]): Extension {
+export function tabExtension(s: TabSettings): Extension {
   return [
     EditorState.tabSize.of(s.tabSize),
     indentUnit.of(s.tabsToSpaces ? " ".repeat(s.tabSize) : "\t"),
@@ -47,6 +59,6 @@ export function tabExtension(s: TabSettings, stops: number[]): Extension {
       { key: "Tab", run: insertToNextTabStop },
       { key: "Shift-Tab", run: indentLess }
     ]),
-    tabStopsFacet.of(stops),
+    tabStopsFacet.of(s.tabStopsSettings),
   ];
 }

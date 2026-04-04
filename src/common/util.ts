@@ -140,7 +140,7 @@ export function lzgmini() {
     {
       return null;
     }
-    
+
     // what's the length?
     var uncomplen = data[6] | (data[5]<<8) | (data[4]<<16) | (data[3]<<24);
 

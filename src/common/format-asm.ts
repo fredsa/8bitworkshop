@@ -1,5 +1,6 @@
 // Pure formatting logic — no browser or CodeMirror dependencies.
 
+import { TabStopSettings } from "../ide/views/tabs";
 import { columnAt } from "./tabdetect";
 
 export function findCommentIndex(text: string): number {
@@ -33,15 +34,7 @@ function padToColumn(s: string, targetCol: number, indentUnit: string, tabSize: 
     return s + ' '.repeat(targetCol - col);
 }
 
-function buildFormattedLine(indented: boolean, label: string, opcode: string, operand: string, comment: string, indentUnit: string, tabSize: number, stops: number[]): string {
-    // 3+ stops:  opcode @ stop[0], operand @ stop[1], comment @ stop[2]
-    // 2  stops:  opcode @ stop[0], operand @ stop[1]
-    // 1  stop :  opcode @ stop[0], rest unmodified
-    // 0  stops:  no formatting
-    const opcodeStop = stops[0];
-    const operandStop = stops.length >= 2 ? stops[1] : undefined;
-    const commentStop = stops.length >= 3 ? stops[2] : undefined;
-
+function buildFormattedLine(indented: boolean, label: string, opcode: string, operand: string, comment: string, indentUnit: string, tabSize: number, stops: TabStopSettings): string {
     let result = '';
 
     if (label) {
@@ -50,12 +43,12 @@ function buildFormattedLine(indented: boolean, label: string, opcode: string, op
 
     if (opcode) {
         if (label || indented) {
-            result = padToColumn(result, opcodeStop, indentUnit, tabSize);
+            result = padToColumn(result, stops.opcodes, indentUnit, tabSize);
         }
         result += opcode;
         if (operand) {
-            if (operandStop !== undefined) {
-                result = padToColumn(result, operandStop, indentUnit, tabSize);
+            if (stops.operands !== undefined) {
+                result = padToColumn(result, stops.operands, indentUnit, tabSize);
             } else {
                 result += ' ';
             }
@@ -65,8 +58,8 @@ function buildFormattedLine(indented: boolean, label: string, opcode: string, op
 
     if (comment) {
         if (result) {
-            if (commentStop !== undefined) {
-                result = padToColumn(result, commentStop, indentUnit, tabSize);
+            if (stops.comments !== undefined) {
+                result = padToColumn(result, stops.comments, indentUnit, tabSize);
             } else {
                 result += ' ';
             }
@@ -77,7 +70,7 @@ function buildFormattedLine(indented: boolean, label: string, opcode: string, op
     return result;
 }
 
-export function formatAsmLine(raw: string, lineNum: number, indentUnit: string, tabSize: number, stops: number[]): string {
+export function formatAsmLine(raw: string, lineNum: number, indentUnit: string, tabSize: number, stops: TabStopSettings): string {
     const text = raw.trimEnd();
     if (text === '') return '';
 
@@ -108,8 +101,8 @@ export function formatAsmLine(raw: string, lineNum: number, indentUnit: string, 
     return newText;
 }
 
-export function formatText(text: string, tabSize: number, stops: number[]): string {
-    if (stops.length === 0) return text;
+export function formatText(text: string, tabSize: number, stops: TabStopSettings): string {
+    if (!stops) return text;
     const indent = ' '.repeat(tabSize);
     const lines = text.split('\n');
     const formatted = lines.map((line, i) => formatAsmLine(line, i + 1, indent, tabSize, stops));

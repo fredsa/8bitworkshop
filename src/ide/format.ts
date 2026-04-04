@@ -44,7 +44,7 @@ export function formatDocument(view: EditorView, isAsm: boolean) {
     if (isAsm) {
         // Format using custom tab stops.
         const stops = state.facet(tabStopsFacet);
-        if (stops.length > 0) {
+        if (stops.opcodes > 0 || stops.operands > 0 || stops.comments > 0) {
             const specs: { from: number, to: number, insert: string }[] = [];
             for (let i = 1; i <= state.doc.lines; i++) {
                 const line = state.doc.line(i);

@@ -5,9 +5,9 @@
 VSYNC  := $00 ; ---- --1- This address controls vertical sync time by writing D1 into the VSYNC latch.
 VBLANK := $01 ; 76-- --1- 1=Start VBLANK, 6=Enable INPT4, INPT5 latches, 7=Dump INPT1,2,3,6 to ground
 WSYNC  := $02 ; ---- ---- This address halts microprocessor by clearing RDY latch to zero. RDY is set true again by the leading edge of horizontal blank.
-RSYNC  := $03 ; ---- ---- This address resets the horizontal sync counter to define the beginning of horizontal blank time, and is used in chip testing.
+RSYNC  := $03 ; ---- ---- This address resets the horizontal sync counter to define the beginning of horizontal blank time, and is used in chip testing. 
 NUSIZ0 := $04 ; --54 -210 \ 0,1,2: player copys'n'size, 4,5: missile size: 2^x pixels
-NUSIZ1 := $05 ; --54 -210 /
+NUSIZ1 := $05 ; --54 -210 / 
 COLUP0 := $06 ; 7654 321- color player 0
 COLUP1 := $07 ; 7654 321- color player 1
 COLUPF := $08 ; 7654 321- color playfield
@@ -62,8 +62,8 @@ INPT0  := $08 ;   x000 0000       Read Pot Port 0
 INPT1  := $09 ;   x000 0000       Read Pot Port 1
 INPT2  := $0A ;   x000 0000       Read Pot Port 2
 INPT3  := $0B ;   x000 0000       Read Pot Port 3
-INPT4  := $0C ;         x000 0000       Read Input (Trigger) 0
-INPT5  := $0D ;         x000 0000       Read Input (Trigger) 1
+INPT4  := $0C ;		x000 0000       Read Input (Trigger) 0
+INPT5  := $0D ;		x000 0000       Read Input (Trigger) 1
 
 ; RIOT
 
@@ -94,16 +94,16 @@ TIM1024T := $0297
 .endif
 .if cycles & 1
 .ifndef NO_ILLEGAL_OPCODES
-        nop 0
+	nop 0
 .else
-        bit VSYNC
+	bit VSYNC
 .endif
 .repeat (cycles-3)/2
-        nop
+	nop
 .endrep
 .else
 .repeat cycles/2
-        nop
+	nop
 .endrep
 .endif
 .endmacro
@@ -136,12 +136,12 @@ VSLP1:          sta WSYNC           ; 1st '0' bit resets Vsync, 2nd '0' bit exit
 cycles = ((lines * 76) - 13)
 ; special case for when we have two timer events in a line
 ; and our 2nd event straddles the WSYNC boundary
-        .if (cycles .mod 64) < 12
-                lda #(cycles / 64) - 1
-                sta WSYNC
+	.if (cycles .mod 64) < 12
+		lda #(cycles / 64) - 1
+		sta WSYNC
         .else
-                lda #(cycles / 64)
-                sta WSYNC
+		lda #(cycles / 64)
+		sta WSYNC
         .endif
         sta TIM64T
 .endmacro
@@ -193,7 +193,7 @@ CLEAR_STACK:    dex
 ; IN 1: 2 byte RAM location reserved for pointer
 ; IN 2: absolute address
 .macro SET_POINTER ptr, addr
-        lda #<addr
+	lda #<addr
         sta ptr
         lda #>addr
         sta ptr+1
@@ -216,9 +216,9 @@ LINESD12 = 16
 
 ; start of frame -- vsync and set back porch timer
 .macro FRAME_START
-        VERTICAL_SYNC
+	VERTICAL_SYNC
         .if PAL
-                TIMER_SETUP 44
+        	TIMER_SETUP 44
         .else
                 TIMER_SETUP 36
         .endif
@@ -229,7 +229,7 @@ LINESD12 = 16
         TIMER_WAIT
         lda #0
         sta VBLANK
-        .if !PAL
+       	.if !PAL
                 TIMER_SETUP 194
         .endif
 .endmacro
@@ -260,10 +260,10 @@ LINESD12 = 16
 
 .macro SLEEPR cycles
 .if cycles >= 14 || cycles = 12
-        jsr Return
+	jsr Return
         SLEEPR (cycles-12)
 .else
-        SLEEP cycles
+	SLEEP cycles
 .endif
 .endmacro
 
@@ -272,10 +272,10 @@ LINESD12 = 16
 
 .macro SLEEPH cycles
 .if cycles >= 9 || cycles = 7
-        pha
-        pla
-        SLEEPH (cycles-7)
+	pha
+	pla
+	SLEEPH (cycles-7)
 .else
-        SLEEP cycles
+	SLEEP cycles
 .endif
 .endmacro

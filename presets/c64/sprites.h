@@ -15,15 +15,15 @@ typedef struct SpriteShadow {
   byte spr_mcolor;     /* Sprite multicolor bits */
   byte spr_exp_x;      /* Expand sprites in X dir */
   byte spr_color[8];   /* Colors for the sprites */
-  byte spr_shapes[8];   /* sprite shapes */
+  byte spr_shapes[8];	/* sprite shapes */
 } SpriteShadow;
 
 /* sprite shadow buffer */
 extern SpriteShadow sprshad;
 
 /* set one or more sprite patterns from a byte array */
-void sprite_set_shapes(const void* sprite_data,
-                       byte index,
+void sprite_set_shapes(const void* sprite_data, 
+                       byte index, 
                        byte count);
 /* clear all sprites from shadow buffer */
 void sprite_clear();

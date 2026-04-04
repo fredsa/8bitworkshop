@@ -3,7 +3,7 @@ import { Compartment, Extension, Facet } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
 import { detectTabStopsFromAsm, Dialect } from "../common/tabdetect";
 import { getDialect } from "../common/toolutil";
-import { getCurrentEditorFilename, platform } from "./ui";
+import { current_project, getCurrentEditorFilename, platform, projectWindows } from "./ui";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
 import { AsmTabStops, tabExtension } from "./views/tabs";
@@ -143,7 +143,9 @@ export function detectAndApplyTabStops(filename: string, text: string) {
 }
 
 export function openSettings() {
-  const editor = editors.values().next().value;
+  const activeView = projectWindows.getActive();
+  const editorView = (activeView as any)?.editor ?? (projectWindows.id2window[current_project.mainPath] as any)?.editor;
+  const editor = editorView as EditorView;
   const text = editor.state.doc.toString();
   const tool = platform.getToolForFilename(getCurrentEditorFilename());
   const dialect = getDialect(tool);

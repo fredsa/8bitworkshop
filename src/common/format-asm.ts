@@ -1,7 +1,6 @@
 // Pure formatting logic — no browser or CodeMirror dependencies.
 
-import { AsmTabStops } from "../ide/views/tabs";
-import { columnAt } from "./tabdetect";
+import { AsmTabStops, columnAt } from "./tabdetect";
 
 export function findCommentIndex(text: string): number {
     let quote = '';

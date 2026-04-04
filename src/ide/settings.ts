@@ -1,12 +1,12 @@
 import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
 import { Compartment, Extension, Facet } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
-import { detectTabStopsFromAsm, Dialect } from "../common/tabdetect";
+import { AsmTabStops, detectTabStopsFromAsm, Dialect } from "../common/tabdetect";
 import { getDialect } from "../common/toolutil";
 import { current_project, getCurrentEditorFilename, platform, projectWindows } from "./ui";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
-import { AsmTabStops, tabExtension } from "./views/tabs";
+import { tabExtension } from "./views/tabs";
 
 declare var bootbox;
 declare var $: JQueryStatic;

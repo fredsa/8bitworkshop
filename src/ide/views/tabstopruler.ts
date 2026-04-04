@@ -1,8 +1,8 @@
 import { indentUnit } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView, Panel, showPanel } from "@codemirror/view";
-import { openSettings, tabStopsFacet } from "../settings";
-import { AsmTabStops } from "./tabs";
+import { AsmTabStops } from "../../common/tabdetect";
+import { openSettings, tabStopsEquals, tabStopsFacet } from "../settings";
 
 const MAX_COLS = 300;
 
@@ -32,14 +32,14 @@ function rulerPanel(view: EditorView): Panel {
   let currentIndent = "";
 
   function rebuild() {
-    const asmTapStops = view.state.facet(tabStopsFacet);
+    const asmTabStops = view.state.facet(tabStopsFacet);
     const tabSize = view.state.facet(EditorState.tabSize);
     const indent = view.state.facet(indentUnit);
-    if (asmTapStops === currentAsmTabStops && tabSize === currentTabSize && indent === currentIndent) return;
-    currentAsmTabStops = asmTapStops;
+    if (tabStopsEquals(asmTabStops, currentAsmTabStops) && tabSize === currentTabSize && indent === currentIndent) return;
+    currentAsmTabStops = asmTabStops;
     currentTabSize = tabSize;
     currentIndent = indent;
-    dom.innerHTML = buildContent(asmTapStops, tabSize, indent);
+    dom.innerHTML = buildContent(asmTabStops, tabSize, indent);
   }
 
   function sync() {

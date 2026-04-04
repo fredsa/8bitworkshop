@@ -1,7 +1,11 @@
 // Pure tab-detection and column utilities — no browser or CodeMirror dependencies.
 // Used by both the IDE (via tabs.ts) and CLI tools (reformat.ts).
 
-import { AsmTabStops } from "../ide/views/tabs";
+export interface AsmTabStops {
+  opcodes?: number;
+  operands?: number;
+  comments?: number;
+}
 import { opcodes as opcodes6502 } from "../parser/tokens-6502";
 import { opcodes as opcodes6809 } from "../parser/tokens-6809";
 import { opcodes as opcodesZ80 } from "../parser/tokens-z80";
@@ -23,6 +27,7 @@ const MNEMONICS_6809 = new Set([...opcodes6809].map(s => s.toLowerCase()));
 const MNEMONICS_Z80 = new Set([...opcodesZ80].map(s => s.toLowerCase()));
 
 function mostCommon(counts: Map<number, number>): number | undefined {
+  if (counts.size === 0) return undefined;
   let best: number | undefined;
   let bestCount = 0;
   counts.forEach((count, val) => {

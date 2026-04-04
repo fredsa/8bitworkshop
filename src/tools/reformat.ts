@@ -6,10 +6,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatText } from '../common/format-asm';
-import { detectTabSizeFromSource, detectTabStopsFromAsm, Dialect } from '../common/tabdetect';
+import { AsmTabStops, detectTabSizeFromSource, detectTabStopsFromAsm, Dialect } from '../common/tabdetect';
 import { getDialect, getToolForFilename_6502, getToolForFilename_6809, getToolForFilename_z80 } from '../common/toolutil';
 import { getBasePlatform, isProbablyBinary } from '../common/util';
-import { AsmTabStops } from '../ide/views/tabs';
 import { PLATFORM_PARAMS } from '../worker/platforms';
 
 const DEFAULT_TAB_SIZE = 8;

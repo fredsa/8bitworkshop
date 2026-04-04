@@ -14,17 +14,30 @@ declare var $: JQueryStatic;
 export const tabCompartment = new Compartment();
 export const showLineNumbersCompartment = new Compartment();
 export const highlightSpecialCharsCompartment = new Compartment();
-export const highlightWhitespaceCompartment = new Compartment();
 export const highlightTrailingWhitespaceCompartment = new Compartment();
+export const highlightWhitespaceCompartment = new Compartment();
 export const closeBracketsCompartment = new Compartment();
 export const debugHighlightTagsCompartment = new Compartment();
 
+export interface TabStops {
+  opcodes?: number;
+  operands?: number;
+  comments?: number;
+}
+
+export function tabStopsEquals(a: TabStops, b: TabStops): boolean {
+  return a.opcodes === b.opcodes && a.operands === b.operands && a.comments === b.comments;
+}
 
 const MAX_COLS = 300;
 const MIN_TAB_SIZE = 1;
 const MAX_TAB_SIZE = 40;
 const DEFAULT_TAB_SIZE = 8;
-const DEFAULT_TAB_STOPS = "10 15 35";
+const DEFAULT_TAB_STOPS = {
+  opcodes: 10,
+  operands: 15,
+  comments: 35,
+};
 
 const editors: Set<EditorView> = new Set();
 
@@ -36,29 +49,28 @@ export function unregisterEditor(editor: EditorView) {
   editors.delete(editor);
 }
 
-export function parseTabStops(input: string): number[] {
-  // Returns unique, monotonically increasing tab stops
-  return [...new Set(input.split(/\D+/).map(s => parseInt(s)).filter(n => n > 0))].sort((a, b) => a - b);
-}
-
 function uniformTabStops(interval: number): number[] {
   const stops: number[] = [];
   for (let col = interval; col <= MAX_COLS; col += interval) stops.push(col);
   return stops;
 }
 
-export const tabStopsFacet = Facet.define<number[], number[]>({
+function tabStopsToColumns(tabStops: TabStops): number[] {
+  return [tabStops.opcodes, tabStops.operands, tabStops.comments].filter(n => n > 0).sort((a, b) => a - b);
+}
+
+export const tabStopsFacet = Facet.define<TabStops, TabStops>({
   combine: values => values[0],
 });
 
 export interface EditorSettings {
   tabSize: number;
+  tabStops: TabStops;
   tabsToSpaces: boolean;
-  tabStops: string;
   showLineNumbers: boolean;
   highlightSpecialChars: boolean;
-  highlightWhitespace: boolean;
   highlightTrailingWhitespace: boolean;
+  highlightWhitespace: boolean;
   closeBrackets: boolean;
   debugHighlightTags: boolean;
 }
@@ -67,12 +79,12 @@ const SETTINGS_KEY = "8bitworkshop/editorSettings";
 
 const defaultSettings: EditorSettings = {
   tabSize: DEFAULT_TAB_SIZE,
-  tabsToSpaces: true,
   tabStops: DEFAULT_TAB_STOPS,
+  tabsToSpaces: true,
   showLineNumbers: !isMobileDevice,
   highlightSpecialChars: true,
+  highlightTrailingWhitespace: true,
   highlightWhitespace: false,
-  highlightTrailingWhitespace: false,
   closeBrackets: false,
   debugHighlightTags: false,
 };
@@ -82,8 +94,6 @@ export function loadSettings(): EditorSettings {
     var stored = localStorage.getItem(SETTINGS_KEY);
     if (stored) {
       var settings = { ...defaultSettings, ...JSON.parse(stored) };
-      // Sanitize user input
-      settings.tabStops = parseTabStops(settings.tabStops || '').join(' ');
       return settings;
     }
   } catch (e) { }
@@ -99,11 +109,11 @@ export function saveAndApplySettings(settings: EditorSettings) {
 }
 
 const compartmentValues: [Compartment, (s: EditorSettings) => Extension][] = [
-  [tabCompartment, s => tabExtension(s, s.tabsToSpaces ? parseTabStops(s.tabStops) : uniformTabStops(s.tabSize))],
+  [tabCompartment, s => tabExtension(s, s.tabsToSpaces ? tabStopsToColumns(s.tabStops) : uniformTabStops(s.tabSize))],
   [showLineNumbersCompartment, s => s.showLineNumbers ? lineNumbers() : []],
   [highlightSpecialCharsCompartment, s => s.highlightSpecialChars ? highlightSpecialChars() : []],
-  [highlightWhitespaceCompartment, s => s.highlightWhitespace ? highlightWhitespace() : []],
   [highlightTrailingWhitespaceCompartment, s => s.highlightTrailingWhitespace ? highlightTrailingWhitespace() : []],
+  [highlightWhitespaceCompartment, s => s.highlightWhitespace ? highlightWhitespace() : []],
   [closeBracketsCompartment, s => s.closeBrackets ? [closeBrackets(), keymap.of([{ key: "Backspace", run: deleteBracketPair }])] : []],
   [debugHighlightTagsCompartment, s => s.debugHighlightTags ? debugHighlightTagsTooltip : []],
 ];
@@ -111,7 +121,6 @@ const compartmentValues: [Compartment, (s: EditorSettings) => Extension][] = [
 export function settingsExtensions(settings: EditorSettings): Extension[] {
   return compartmentValues.map(([c, fn]) => c.of(fn(settings)));
 }
-
 
 export function autoDetectTabStops(filename: string, text: string) {
   var tool = platform.getToolForFilename(filename);
@@ -121,23 +130,22 @@ export function autoDetectTabStops(filename: string, text: string) {
     case '6502':
     case 'z80':
     case '6809':
-      settings.tabStops = detectTabStopsFromAsm(text, dialect, settings.tabSize).join(' ');
+      settings.tabStops = detectTabStopsFromAsm(text, dialect, settings.tabSize);
       break;
     case 'c':
-      settings.tabStops = "";
+      settings.tabStops = {};
       break;
     case 'basic':
-      settings.tabStops = "";
+      settings.tabStops = {};
       break;
     case 'unknown':
-      settings.tabStops = "";
+      settings.tabStops = {};
       break;
   }
   saveAndApplySettings(settings);
 }
 
 export function openSettings() {
-  const settings = loadSettings();
   const editor = editors.values().next().value;
   const text = editor.state.doc.toString();
   const tool = platform.getToolForFilename(getCurrentEditorFilename());
@@ -152,39 +160,70 @@ export function openSettings() {
     return detectTabStopsFromAsm(text, dialect, getSelectedTabSize());
   }
 
-  function checkStaleTabStops() {
-    const currentStops = parseTabStops($('#setting_tabStops').val() as string);
-    if (detectTabStops().join(' ') === currentStops.join(' ')) {
-      $('#setting_detectTabStops').removeClass('click-me btn-primary');
+  function updateUI(s: EditorSettings) {
+    $('#setting_tabSize').val(s.tabSize);
+    if (isAsm) {
+      $('#setting_tabStopsRow').removeClass('disabled');
+      $('#setting_tabStopOpcodes, #setting_tabStopOperands, #setting_tabStopComments').prop('disabled', false);
     } else {
-      $('#setting_detectTabStops').addClass('click-me btn-primary');
+      $('#setting_tabStopsRow').addClass('disabled');
+      $('#setting_tabStopOpcodes, #setting_tabStopOperands, #setting_tabStopComments').prop('disabled', true);
     }
+    $('#setting_tabStopOpcodes').val(s.tabStops.opcodes || "");
+    $('#setting_tabStopOperands').val(s.tabStops.operands || "");
+    $('#setting_tabStopComments').val(s.tabStops.comments || "");
+    $('#setting_tabInsertsTabs').prop('checked', !s.tabsToSpaces);
+    $('#setting_tabInsertsSpaces').prop('checked', s.tabsToSpaces);
+    $('#setting_showLineNumbers').prop('checked', s.showLineNumbers);
+    $('#setting_highlightSpecialChars').prop('checked', s.highlightSpecialChars);
+    $('#setting_highlightTrailingWhitespace').prop('checked', s.highlightTrailingWhitespace);
+    $('#setting_highlightWhitespace').prop('checked', s.highlightWhitespace);
+    $('#setting_closeBrackets').prop('checked', s.closeBrackets);
+    $('#setting_debugHighlightTags').prop('checked', s.debugHighlightTags);
+    $('input[name="tabMode"]').first().trigger('change');
   }
 
+  let settings = loadSettings();
   var dialog = bootbox.dialog({
     onEscape: true,
     // title: "Settings",
     message: `<form id="settingsForm" onsubmit="return false">
       <h5>Editor settings</h5>
-      <div class="checkbox"><label>Tab size: <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em"></label></div>
-      <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsTabs" ${!settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts tabs</label></div>
-      <div class="radio"><label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> Tab key inserts spaces</label></div>
-      <div id="setting_tabStopsRow" style="margin-left:20px;${!settings.tabsToSpaces || !isAsm ? 'visibility:hidden' : ''}">
-        Tab stops <input type="text" id="setting_tabStops" value="${settings.tabStops}" style="width:8em" ${!settings.tabsToSpaces ? 'disabled' : ''}>
-        <button type="button" class="btn btn-default btn-sm" id="setting_standardTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Standard</button>
-        <button type="button" class="btn btn-default btn-sm" id="setting_noneTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>None</button>
-        <button type="button" class="btn btn-default btn-sm" id="setting_detectTabStops" ${!settings.tabsToSpaces ? 'disabled' : ''}>Analyze <span style="font-family:monospace">${getCurrentEditorFilename()}</span></button>
+      <div>
+        <label class="main">Tab size</label> <input type="number" id="setting_tabSize" min="${MIN_TAB_SIZE}" max="${MAX_TAB_SIZE}" value="${settings.tabSize}" style="width:4em">
       </div>
+      <div class="tab-stops" id="setting_tabStopsRow">
+        <label class="main">Tab stops</label> (${isAsm ? getCurrentEditorFilename() : 'assembly only'})
+        <label class="tab-stop">opcodes</label>: <input type="text" id="setting_tabStopOpcodes" value="${settings.tabStops.opcodes || ''}">
+        <label class="tab-stop">operands</label>: <input type="text" id="setting_tabStopOperands" value="${settings.tabStops.operands || ''}">
+        <label class="tab-stop">comments</label>: <input type="text" id="setting_tabStopComments" value="${settings.tabStops.comments || ''}">
+      </div>
+      <div>
+        <label class="main">Tab key inserts</label>
+        <label><input type="radio" name="tabMode" id="setting_tabInsertsTabs" ${!settings.tabsToSpaces ? 'checked' : ''}> tabs</label>
+        <label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces" ${settings.tabsToSpaces ? 'checked' : ''}> spaces</label>
+      </div>
+
       <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers" ${settings.showLineNumbers ? 'checked' : ''}> Show line numbers</label></div>
-      <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Highlight special characters</label></div>
-      <div class="checkbox"><label><input type="checkbox" id="setting_highlightWhitespace" ${settings.highlightWhitespace ? 'checked' : ''}> Highlight all whitespace</label></div>
+      <div class="checkbox"><label><input type="checkbox" id="setting_highlightSpecialChars" ${settings.highlightSpecialChars ? 'checked' : ''}> Show special characters</label></div>
       <div class="checkbox"><label><input type="checkbox" id="setting_highlightTrailingWhitespace" ${settings.highlightTrailingWhitespace ? 'checked' : ''}> Highlight trailing whitespace</label></div>
+      <div class="checkbox"><label><input type="checkbox" id="setting_highlightWhitespace" ${settings.highlightWhitespace ? 'checked' : ''}> Show whitespace</label></div>
       <div class="checkbox"><label><input type="checkbox" id="setting_closeBrackets" ${settings.closeBrackets ? 'checked' : ''}> Automatically add and remove closing brackets</label></div>
 
       <h5>8bitworkshop IDE internal settings</h5>
       <div class="checkbox"><label><input type="checkbox" id="setting_debugHighlightTags" ${settings.debugHighlightTags ? 'checked' : ''}> Debug parser and syntax highlighting</label></div>
     </form>`,
     buttons: {
+      reset: {
+        label: "Reset",
+        className: "btn-default",
+        callback: () => {
+          settings = defaultSettings;
+          settings.tabStops = detectTabStops();
+          updateUI(settings);
+          return false;
+        }
+      },
       cancel: {
         label: "Cancel",
         className: "btn-default"
@@ -194,12 +233,14 @@ export function openSettings() {
         className: "btn-primary",
         callback: () => {
           settings.tabSize = Math.min(MAX_TAB_SIZE, Math.max(MIN_TAB_SIZE, parseInt($('#setting_tabSize').val() as string) || MIN_TAB_SIZE));
+          settings.tabStops.opcodes = parseInt($('#setting_tabStopOpcodes').val() as string) || undefined;
+          settings.tabStops.operands = parseInt($('#setting_tabStopOperands').val() as string) || undefined;
+          settings.tabStops.comments = parseInt($('#setting_tabStopComments').val() as string) || undefined;
           settings.tabsToSpaces = $('#setting_tabInsertsSpaces').is(':checked');
-          settings.tabStops = parseTabStops(($('#setting_tabStops').val() as string)).join(' ');
           settings.showLineNumbers = $('#setting_showLineNumbers').is(':checked');
           settings.highlightSpecialChars = $('#setting_highlightSpecialChars').is(':checked');
-          settings.highlightWhitespace = $('#setting_highlightWhitespace').is(':checked');
           settings.highlightTrailingWhitespace = $('#setting_highlightTrailingWhitespace').is(':checked');
+          settings.highlightWhitespace = $('#setting_highlightWhitespace').is(':checked');
           settings.closeBrackets = $('#setting_closeBrackets').is(':checked');
           settings.debugHighlightTags = $('#setting_debugHighlightTags').is(':checked');
           saveAndApplySettings(settings);
@@ -207,26 +248,9 @@ export function openSettings() {
       }
     }
   });
-  checkStaleTabStops();
   dialog.on('shown.bs.modal', () => {
-    $('#setting_tabSize, #setting_tabStops').on('input', () => {
-      checkStaleTabStops();
-    }).focus().select();
-    $('input[name="tabMode"]').on('change', () => {
-      var spacesSelected = $('#setting_tabInsertsSpaces').is(':checked');
-      $('#setting_tabStopsRow').css('visibility', spacesSelected ? '' : 'hidden');
-      $('#setting_tabStops, #setting_detectTabStops, #setting_standardTabStops, #setting_noneTabStops').prop('disabled', !spacesSelected);
-    });
-    $('#setting_standardTabStops').on('click', () => {
-      $('#setting_tabStops').val(DEFAULT_TAB_STOPS);
-    });
-    $('#setting_noneTabStops').on('click', () => {
-      $('#setting_tabStops').val('');
-    });
-    $('#setting_detectTabStops').on('click', () => {
-      $('#setting_tabStops').val(detectTabStops().join(' '));
-      checkStaleTabStops();
-    });
+    updateUI(settings);
+    $('#setting_tabSize, #setting_tabStops').focus().select();
   });
   dialog.on('keydown', (e) => {
     if (e.key === 'Enter') {

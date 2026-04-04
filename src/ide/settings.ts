@@ -146,28 +146,24 @@ export function openSettings() {
   const dialect = getDialect(tool);
   const isAsm = dialect === '6502' || dialect === 'z80' || dialect === '6809';
 
-  function getSelectedTabSize() {
-    return parseInt($('#setting_tabSize').val() as string) || DEFAULT_TAB_SIZE;
-  }
-
-  function updateTabStopRow(tabsToSpaces: boolean) {
-    if (isAsm && tabsToSpaces) {
-      $('#setting_tabStopsRow').removeClass('disabled');
-      $('#setting_tabStopOpcodes, #setting_tabStopOperands, #setting_tabStopComments').prop('disabled', false);
+  function updateTabStopRow() {
+    if (isAsm) {
+      $('#setting_asmColumns').removeClass('disabled');
+      $('#setting_asmOpcodes, #setting_asmOperands, #setting_asmComments').prop('disabled', false);
     } else {
-      $('#setting_tabStopsRow').addClass('disabled');
-      $('#setting_tabStopOpcodes, #setting_tabStopOperands, #setting_tabStopComments').prop('disabled', true);
+      $('#setting_asmColumns').addClass('disabled');
+      $('#setting_asmOpcodes, #setting_asmOperands, #setting_asmComments').prop('disabled', true);
     }
   }
 
   function updateUI(s: EditorSettings) {
     $('#setting_tabSize').val(s.tabSize);
-    updateTabStopRow(s.tabsToSpaces);
+    updateTabStopRow();
     $('#setting_tabInsertsTabs').prop('checked', !s.tabsToSpaces);
     $('#setting_tabInsertsSpaces').prop('checked', s.tabsToSpaces);
-    $('#setting_tabStopOpcodes').val(s.asmTabStops.opcodes || "");
-    $('#setting_tabStopOperands').val(s.asmTabStops.operands || "");
-    $('#setting_tabStopComments').val(s.asmTabStops.comments || "");
+    $('#setting_asmOpcodes').val(s.asmTabStops.opcodes || "");
+    $('#setting_asmOperands').val(s.asmTabStops.operands || "");
+    $('#setting_asmComments').val(s.asmTabStops.comments || "");
     $('#setting_showLineNumbers').prop('checked', s.showLineNumbers);
     $('#setting_highlightSpecialChars').prop('checked', s.highlightSpecialChars);
     $('#setting_highlightTrailingWhitespace').prop('checked', s.highlightTrailingWhitespace);
@@ -191,11 +187,11 @@ export function openSettings() {
         <label><input type="radio" name="tabMode" id="setting_tabInsertsTabs"> tabs</label>
         <label><input type="radio" name="tabMode" id="setting_tabInsertsSpaces"> spaces</label>
       </div>
-      <div class="tab-stops" id="setting_tabStopsRow">
-        <label class="main">Tab stops</label> [assembly only]
-        <label class="tab-stop">opcodes</label>: <input type="text" id="setting_tabStopOpcodes">
-        <label class="tab-stop">operands</label>: <input type="text" id="setting_tabStopOperands">
-        <label class="tab-stop">comments</label>: <input type="text" id="setting_tabStopComments">
+      <div class="tab-stops" id="setting_asmColumns">
+        <label class="main">Format assembly</label>
+        <label class="tab-stop">opcodes</label>: <input type="text" id="setting_asmOpcodes">
+        <label class="tab-stop">operands</label>: <input type="text" id="setting_asmOperands">
+        <label class="tab-stop">comments</label>: <input type="text" id="setting_asmComments">
       </div>
 
       <div class="checkbox"><label><input type="checkbox" id="setting_showLineNumbers"> Show line numbers</label></div>
@@ -228,9 +224,9 @@ export function openSettings() {
         callback: () => {
           settings.tabSize = Math.min(MAX_TAB_SIZE, Math.max(MIN_TAB_SIZE, parseInt($('#setting_tabSize').val() as string) || MIN_TAB_SIZE));
           settings.tabsToSpaces = $('#setting_tabInsertsSpaces').is(':checked');
-          settings.asmTabStops.opcodes = parseInt($('#setting_tabStopOpcodes').val() as string) || undefined;
-          settings.asmTabStops.operands = parseInt($('#setting_tabStopOperands').val() as string) || undefined;
-          settings.asmTabStops.comments = parseInt($('#setting_tabStopComments').val() as string) || undefined;
+          settings.asmTabStops.opcodes = parseInt($('#setting_asmOpcodes').val() as string) || undefined;
+          settings.asmTabStops.operands = parseInt($('#setting_asmOperands').val() as string) || undefined;
+          settings.asmTabStops.comments = parseInt($('#setting_asmComments').val() as string) || undefined;
           settings.showLineNumbers = $('#setting_showLineNumbers').is(':checked');
           settings.highlightSpecialChars = $('#setting_highlightSpecialChars').is(':checked');
           settings.highlightTrailingWhitespace = $('#setting_highlightTrailingWhitespace').is(':checked');
@@ -247,12 +243,9 @@ export function openSettings() {
     $('#setting_tabSize').focus().select().on('input', () => {
       settings.tabSize = parseInt($('#setting_tabSize').val() as string) || MIN_TAB_SIZE;
       settings.asmTabStops = detectTabStops(dialect, settings.tabSize, editor.state.doc.toString());
-      $('#setting_tabStopOpcodes').val(settings.asmTabStops.opcodes || "");
-      $('#setting_tabStopOperands').val(settings.asmTabStops.operands || "");
-      $('#setting_tabStopComments').val(settings.asmTabStops.comments || "");
-    });
-    $('#setting_tabInsertsTabs, #setting_tabInsertsSpaces').on('change', () => {
-      updateTabStopRow($('#setting_tabInsertsSpaces').is(':checked'));
+      $('#setting_asmOpcodes').val(settings.asmTabStops.opcodes || "");
+      $('#setting_asmOperands').val(settings.asmTabStops.operands || "");
+      $('#setting_asmComments').val(settings.asmTabStops.comments || "");
     });
   });
   dialog.on('keydown', (e) => {

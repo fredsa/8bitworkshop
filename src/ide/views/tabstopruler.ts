@@ -14,8 +14,10 @@ function buildContent(asmTabStops: AsmTabStops, tabSize: number, indent: string)
       chars[col] = "▾";
     }
   } else {
-    for (const s of [asmTabStops.opcodes, asmTabStops.operands, asmTabStops.comments]) {
-      if (s > 0 && s < MAX_COLS) chars[s] = "▾";
+    for (const col of [asmTabStops.opcodes, asmTabStops.operands, asmTabStops.comments]) {
+      if (col > 0 && col < MAX_COLS) {
+        chars[col] = "▾";
+      }
     }
   }
   return chars.join("");

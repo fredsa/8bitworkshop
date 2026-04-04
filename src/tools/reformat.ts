@@ -10,7 +10,7 @@ import { detectTabSizeFromSource, detectTabStopsFromAsm, Dialect } from '../comm
 import { getDialect, getToolForFilename_6502, getToolForFilename_6809, getToolForFilename_z80 } from '../common/toolutil';
 import { getBasePlatform, isProbablyBinary } from '../common/util';
 import { PLATFORM_PARAMS } from '../worker/platforms';
-import { TabStopSettings } from '../ide/views/tabs';
+import { AsmTabStops } from '../ide/views/tabs';
 
 const DEFAULT_TAB_SIZE = 8;
 const PRESETS_DIR = path.resolve(__dirname, '../../presets');
@@ -73,12 +73,12 @@ interface FormatResult {
   file: string;
   dialect: Dialect;
   formatted: boolean;
-  tabStops?: TabStopSettings;
+  asmTabStops?: AsmTabStops;
   tabSize?: number;
   includes?: string[];
 }
 
-function formatFile(filePath: string, text: string, dialect: Dialect, tabSize: number, stops: TabStopSettings): string | null {
+function formatFile(filePath: string, text: string, dialect: Dialect, tabSize: number, stops: AsmTabStops): string | null {
   switch (dialect) {
     case '6502':
     case 'z80':
@@ -104,24 +104,24 @@ function processMainFile(filePath: string, arch: string, platformDir: string): F
 
   // Detect tab stops from main file
   let tabSize = DEFAULT_TAB_SIZE;
-  let stops: TabStopSettings = {};
+  let sasmTabStops: AsmTabStops = {};
 
   switch (dialect) {
     case '6502':
     case 'z80':
     case '6809':
-      stops = detectTabStopsFromAsm(text, dialect, DEFAULT_TAB_SIZE);
+      sasmTabStops = detectTabStopsFromAsm(dialect, DEFAULT_TAB_SIZE, text);
       break;
     case 'c':
       tabSize = detectTabSizeFromSource(text) || DEFAULT_TAB_SIZE;
       break;
   }
 
-  result.tabStops = stops;
+  result.asmTabStops = sasmTabStops;
   result.tabSize = tabSize;
 
   // Format the main file
-  const formatted = formatFile(filePath, text, dialect, tabSize, stops);
+  const formatted = formatFile(filePath, text, dialect, tabSize, sasmTabStops);
   if (formatted !== null && formatted !== text) {
     fs.writeFileSync(filePath, formatted, 'utf-8');
     result.formatted = true;
@@ -141,7 +141,7 @@ function processMainFile(filePath: string, arch: string, platformDir: string): F
     try {
       const incText = fs.readFileSync(incPath, 'utf-8');
       // Use the same dialect/stops from the main file for includes
-      const incFormatted = formatFile(incPath, incText, dialect, tabSize, stops);
+      const incFormatted = formatFile(incPath, incText, dialect, tabSize, sasmTabStops);
       if (incFormatted !== null && incFormatted !== incText) {
         fs.writeFileSync(incPath, incFormatted, 'utf-8');
       }
@@ -273,7 +273,7 @@ function reformat() {
       totalMain++;
       const result = processMainFile(filePath, arch, platformDir);
       const relPath = path.relative(platformDir, filePath);
-      const stopsStr = ` stops=[${result.tabStops.opcodes},${result.tabStops.operands},${result.tabStops.comments}]`;
+      const stopsStr = ` stops=[${result.asmTabStops.opcodes},${result.asmTabStops.operands},${result.asmTabStops.comments}]`;
       const sizeStr = result.tabSize !== DEFAULT_TAB_SIZE ? ` tabSize=${result.tabSize}` : '';
       const incStr = result.includes?.length ? ` includes=[${result.includes.join(',')}]` : '';
 

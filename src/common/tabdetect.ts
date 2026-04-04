@@ -1,7 +1,7 @@
 // Pure tab-detection and column utilities — no browser or CodeMirror dependencies.
 // Used by both the IDE (via tabs.ts) and CLI tools (reformat.ts).
 
-import { TabStopSettings } from "../ide/views/tabs";
+import { AsmTabStops } from "../ide/views/tabs";
 import { opcodes as opcodes6502 } from "../parser/tokens-6502";
 import { opcodes as opcodes6809 } from "../parser/tokens-6809";
 import { opcodes as opcodesZ80 } from "../parser/tokens-z80";
@@ -35,7 +35,7 @@ function tally(map: Map<number, number>, key: number) {
   map.set(key, (map.get(key) || 0) + 1);
 }
 
-export function detectTabStopsFromAsm(text: string, dialect: Dialect, tabSize: number): TabStopSettings {
+export function detectTabStopsFromAsm(dialect: Dialect, tabSize: number, text: string): AsmTabStops {
   const mnemonics = dialect === '6502' ? MNEMONICS_6502 : dialect === '6809' ? MNEMONICS_6809 : MNEMONICS_Z80;
   const lines = text.split('\n');
 
@@ -74,12 +74,12 @@ export function detectTabStopsFromAsm(text: string, dialect: Dialect, tabSize: n
     if (commentCol !== undefined) tally(commentCols, commentCol);
   }
 
-  const stops = { opcodes: opcodeCol } as TabStopSettings;
+  const asmTabStops = { opcodes: opcodeCol } as AsmTabStops;
   const operandCol = mostCommon(operandCols);
-  if (operandCol !== undefined) stops.operands = operandCol;
+  if (operandCol !== undefined) asmTabStops.operands = operandCol;
   const commentCol = mostCommon(commentCols);
-  if (commentCol !== undefined) stops.comments = commentCol;
-  return stops;
+  if (commentCol !== undefined) asmTabStops.comments = commentCol;
+  return asmTabStops;
 }
 
 export function detectTabSizeFromSource(text: string): number {

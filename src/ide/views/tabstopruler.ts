@@ -1,21 +1,21 @@
+import { indentUnit } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView, Panel, showPanel } from "@codemirror/view";
 import { openSettings, tabStopsFacet } from "../settings";
-import { TabStopSettings } from "./tabs";
+import { AsmTabStops } from "./tabs";
 
 const MAX_COLS = 300;
 
-function buildContent(stops: TabStopSettings, tabSize: number): string {
+function buildContent(asmTabStops: AsmTabStops, tabSize: number, indent: string): string {
   const chars = new Array(MAX_COLS);
-  if (stops.opcodes > 0 || stops.operands > 0 || stops.comments > 0) {
-    chars.fill(" ");
-    for (const s of [stops.opcodes, stops.operands, stops.comments]) {
-      if (s > 0 && s < MAX_COLS) chars[s] = "▾";
-    }
-  } else {
-    chars.fill("<span class='cm-highlightSpace'> </span>");
+  chars.fill(indent === '\t' ? " " : "<span class='cm-highlightSpace'> </span>");
+  if (indent === '\t' || (!asmTabStops.opcodes && !asmTabStops.operands && !asmTabStops.comments)) {
     for (let col = tabSize; col < MAX_COLS; col += tabSize) {
       chars[col] = "▾";
+    }
+  } else {
+    for (const s of [asmTabStops.opcodes, asmTabStops.operands, asmTabStops.comments]) {
+      if (s > 0 && s < MAX_COLS) chars[s] = "▾";
     }
   }
   return chars.join("");
@@ -25,16 +25,19 @@ function rulerPanel(view: EditorView): Panel {
   const dom = document.createElement("div");
   dom.className = "tab-stop-ruler";
   dom.setAttribute("aria-hidden", "true");
-  let currentStops: TabStopSettings = {};
+  let currentAsmTabStops: AsmTabStops = {};
   let currentTabSize = 0;
+  let currentIndent = "";
 
   function rebuild() {
-    const stops = view.state.facet(tabStopsFacet);
+    const asmTapStops = view.state.facet(tabStopsFacet);
     const tabSize = view.state.facet(EditorState.tabSize);
-    if (stops === currentStops && tabSize === currentTabSize) return;
-    currentStops = stops;
+    const indent = view.state.facet(indentUnit);
+    if (asmTapStops === currentAsmTabStops && tabSize === currentTabSize && indent === currentIndent) return;
+    currentAsmTabStops = asmTapStops;
     currentTabSize = tabSize;
-    dom.innerHTML = buildContent(stops, tabSize);
+    currentIndent = indent;
+    dom.innerHTML = buildContent(asmTapStops, tabSize, indent);
   }
 
   function sync() {

@@ -1,12 +1,12 @@
 import { closeBrackets, deleteBracketPair } from "@codemirror/autocomplete";
 import { Compartment, Extension, Facet } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
-import { detectTabStopsFromAsm } from "../common/tabdetect";
+import { detectTabStopsFromAsm, Dialect } from "../common/tabdetect";
 import { getDialect } from "../common/toolutil";
-import { getCurrentEditorFilename, platform } from "./ui";
+import { getCurrentEditorFilename, getCurrentMainFilename, platform } from "./ui";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
-import { tabExtension, TabStopSettings } from "./views/tabs";
+import { tabExtension, AsmTabStops } from "./views/tabs";
 
 declare var bootbox;
 declare var $: JQueryStatic;
@@ -19,7 +19,7 @@ export const highlightWhitespaceCompartment = new Compartment();
 export const closeBracketsCompartment = new Compartment();
 export const debugHighlightTagsCompartment = new Compartment();
 
-export function tabStopsEquals(a: TabStopSettings, b: TabStopSettings): boolean {
+export function tabStopsEquals(a: AsmTabStops, b: AsmTabStops): boolean {
   return a.opcodes === b.opcodes && a.operands === b.operands && a.comments === b.comments;
 }
 
@@ -49,18 +49,18 @@ function uniformTabStops(interval: number): number[] {
   return stops;
 }
 
-function tabStopsToColumns(tabStops: TabStopSettings): number[] {
+function tabStopsToColumns(tabStops: AsmTabStops): number[] {
   return [tabStops.opcodes, tabStops.operands, tabStops.comments].filter(n => n > 0).sort((a, b) => a - b);
 }
 
-export const tabStopsFacet = Facet.define<TabStopSettings, TabStopSettings>({
+export const tabStopsFacet = Facet.define<AsmTabStops, AsmTabStops>({
   combine: values => values[0],
 });
 
 export interface EditorSettings {
   tabSize: number;
   tabsToSpaces: boolean;
-  tabStopsSettings: TabStopSettings;
+  asmTabStops: AsmTabStops;
   showLineNumbers: boolean;
   highlightSpecialChars: boolean;
   highlightTrailingWhitespace: boolean;
@@ -74,7 +74,7 @@ const SETTINGS_KEY = "8bitworkshop/editorSettings";
 const defaultSettings: EditorSettings = {
   tabSize: DEFAULT_TAB_SIZE,
   tabsToSpaces: true,
-  tabStopsSettings: DEFAULT_TAB_STOPS,
+  asmTabStops: DEFAULT_TAB_STOPS,
   showLineNumbers: !isMobileDevice,
   highlightSpecialChars: true,
   highlightTrailingWhitespace: true,
@@ -106,8 +106,8 @@ const compartmentValues: [Compartment, (s: EditorSettings, isAsm?: boolean) => E
   [tabCompartment, (s, isAsm) => tabExtension({
     tabSize: s.tabSize,
     tabsToSpaces: s.tabsToSpaces,
-    tabStopsSettings: s.tabStopsSettings,
-    tabStops: isAsm ? tabStopsToColumns(s.tabStopsSettings) : uniformTabStops(s.tabSize)
+    asmTabStops: s.asmTabStops,
+    tabStops: isAsm ? tabStopsToColumns(s.asmTabStops) : uniformTabStops(s.tabSize)
   })],
   [showLineNumbersCompartment, s => s.showLineNumbers ? lineNumbers() : []],
   [highlightSpecialCharsCompartment, s => s.highlightSpecialChars ? highlightSpecialChars() : []],
@@ -121,16 +121,21 @@ export function settingsExtensions(isAsm: boolean, settings: EditorSettings): Ex
   return compartmentValues.map(([c, fn]) => c.of(fn(settings, isAsm)));
 }
 
-export function autoDetectTabStops(filename: string, text: string) {
+export function detectTabStops(dialect: Dialect, tabSize: number, text: string) {
+  var isAsm = dialect === '6502' || dialect === 'z80' || dialect === '6809';
+  if (isAsm) {
+    return detectTabStopsFromAsm(dialect, tabSize, text);
+  } else {
+    return {};
+  }
+}
+
+export function detectAndApplyTabStops(filename: string, text: string) {
   var tool = platform.getToolForFilename(filename);
   var dialect = getDialect(tool);
   var settings = loadSettings();
+  settings.asmTabStops = detectTabStops(dialect, settings.tabSize, text);
   var isAsm = dialect === '6502' || dialect === 'z80' || dialect === '6809';
-  if (isAsm) {
-    settings.tabStopsSettings = detectTabStopsFromAsm(text, dialect, settings.tabSize);
-  } else {
-    settings.tabStopsSettings = {};
-  }
   saveAndApplySettings(isAsm, settings);
 }
 
@@ -160,9 +165,9 @@ export function openSettings() {
     updateTabStopRow(s.tabsToSpaces);
     $('#setting_tabInsertsTabs').prop('checked', !s.tabsToSpaces);
     $('#setting_tabInsertsSpaces').prop('checked', s.tabsToSpaces);
-    $('#setting_tabStopOpcodes').val(s.tabStopsSettings.opcodes || "");
-    $('#setting_tabStopOperands').val(s.tabStopsSettings.operands || "");
-    $('#setting_tabStopComments').val(s.tabStopsSettings.comments || "");
+    $('#setting_tabStopOpcodes').val(s.asmTabStops.opcodes || "");
+    $('#setting_tabStopOperands').val(s.asmTabStops.operands || "");
+    $('#setting_tabStopComments').val(s.asmTabStops.comments || "");
     $('#setting_showLineNumbers').prop('checked', s.showLineNumbers);
     $('#setting_highlightSpecialChars').prop('checked', s.highlightSpecialChars);
     $('#setting_highlightTrailingWhitespace').prop('checked', s.highlightTrailingWhitespace);
@@ -208,7 +213,7 @@ export function openSettings() {
         className: "btn-default",
         callback: () => {
           settings = { ...defaultSettings };
-          settings.tabStopsSettings = detectTabStopsFromAsm(text, dialect, defaultSettings.tabSize);
+          settings.asmTabStops = detectTabStopsFromAsm(dialect, defaultSettings.tabSize, text);
           updateUI(settings);
           return false;
         }
@@ -223,9 +228,9 @@ export function openSettings() {
         callback: () => {
           settings.tabSize = Math.min(MAX_TAB_SIZE, Math.max(MIN_TAB_SIZE, parseInt($('#setting_tabSize').val() as string) || MIN_TAB_SIZE));
           settings.tabsToSpaces = $('#setting_tabInsertsSpaces').is(':checked');
-          settings.tabStopsSettings.opcodes = parseInt($('#setting_tabStopOpcodes').val() as string) || undefined;
-          settings.tabStopsSettings.operands = parseInt($('#setting_tabStopOperands').val() as string) || undefined;
-          settings.tabStopsSettings.comments = parseInt($('#setting_tabStopComments').val() as string) || undefined;
+          settings.asmTabStops.opcodes = parseInt($('#setting_tabStopOpcodes').val() as string) || undefined;
+          settings.asmTabStops.operands = parseInt($('#setting_tabStopOperands').val() as string) || undefined;
+          settings.asmTabStops.comments = parseInt($('#setting_tabStopComments').val() as string) || undefined;
           settings.showLineNumbers = $('#setting_showLineNumbers').is(':checked');
           settings.highlightSpecialChars = $('#setting_highlightSpecialChars').is(':checked');
           settings.highlightTrailingWhitespace = $('#setting_highlightTrailingWhitespace').is(':checked');
@@ -239,7 +244,13 @@ export function openSettings() {
   });
   dialog.on('shown.bs.modal', () => {
     updateUI(settings);
-    $('#setting_tabSize').focus().select();
+    $('#setting_tabSize').focus().select().on('input', () => {
+      settings.tabSize = parseInt($('#setting_tabSize').val() as string) || MIN_TAB_SIZE;
+      settings.asmTabStops = detectTabStops(dialect, settings.tabSize, editor.state.doc.toString());
+      $('#setting_tabStopOpcodes').val(settings.asmTabStops.opcodes || "");
+      $('#setting_tabStopOperands').val(settings.asmTabStops.operands || "");
+      $('#setting_tabStopComments').val(settings.asmTabStops.comments || "");
+    });
     $('#setting_tabInsertsTabs, #setting_tabInsertsSpaces').on('change', () => {
       updateTabStopRow($('#setting_tabInsertsSpaces').is(':checked'));
     });

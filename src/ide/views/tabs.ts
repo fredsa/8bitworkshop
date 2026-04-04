@@ -5,7 +5,7 @@ import { EditorView, keymap } from "@codemirror/view";
 import { columnAt } from "../../common/tabdetect";
 import { tabStopsFacet } from "../settings";
 
-export interface TabStopSettings {
+export interface AsmTabStops {
   opcodes?: number;
   operands?: number;
   comments?: number;
@@ -14,16 +14,16 @@ export interface TabStopSettings {
 export interface TabSettings {
   tabSize: number;
   tabsToSpaces: boolean;
-  tabStopsSettings: TabStopSettings;
+  asmTabStops: AsmTabStops;
   tabStops: number[];
 }
 
-function tabStopsToColumns(tabStops: TabStopSettings): number[] {
-  return [tabStops.opcodes, tabStops.operands, tabStops.comments].filter(n => n > 0).sort((a, b) => a - b);
+function tabStopsToColumns(asmTabStops: AsmTabStops): number[] {
+  return [asmTabStops.opcodes, asmTabStops.operands, asmTabStops.comments].filter(n => n > 0).sort((a, b) => a - b);
 }
 
-function nextTabStop(col: number, stops: TabStopSettings, tabSize: number): number {
-  const columns = tabStopsToColumns(stops);
+function nextTabStop(col: number, asmTabStops: AsmTabStops, tabSize: number): number {
+  const columns = tabStopsToColumns(asmTabStops);
   for (const stop of columns) {
     if (stop > col) return stop;
   }
@@ -59,6 +59,6 @@ export function tabExtension(s: TabSettings): Extension {
       { key: "Tab", run: insertToNextTabStop },
       { key: "Shift-Tab", run: indentLess }
     ]),
-    tabStopsFacet.of(s.tabStopsSettings),
+    tabStopsFacet.of(s.asmTabStops),
   ];
 }

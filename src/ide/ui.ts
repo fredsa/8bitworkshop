@@ -15,7 +15,7 @@ import { gaEvent, gaPageView } from "./analytics";
 import { alertError, alertInfo, fatalError, setWaitDialog } from "./dialogs";
 import { CodeProject, createNewPersistentStore, LocalForageFilesystem, OverlayFilesystem, ProjectFilesystem, WebPresetsFileSystem } from "./project";
 import { getRepos, parseGithubURL } from "./services";
-import { autoDetectTabStops, openSettings } from "./settings";
+import { detectAndApplyTabStops, openSettings } from "./settings";
 import { _downloadAllFilesZipFile, _downloadCassetteFile, _downloadProjectZipFile, _downloadROMImage, _downloadSourceFile, _downloadSymFile, _getCassetteFunction, _recordVideo, _shareEmbedLink } from "./shareexport";
 import { _importProjectFromGithub, _loginToGithub, _logoutOfGithub, _publishProjectToGithub, _pullProjectFromGithub, _pushProjectToGithub, _removeRepository, importProjectFromGithub } from "./sync";
 import { Toolbar } from "./toolbar";
@@ -430,7 +430,7 @@ async function loadMainWindow(preset_id: string) {
   if (typeof maindata === 'string') {
     await current_project.loadFileDependencies(maindata);
     // Use main file tab stops for all files in project
-    autoDetectTabStops(preset_id, maindata);
+    detectAndApplyTabStops(preset_id, maindata);
   }
   // we need this to build create functions for the editor
   refreshWindowList();

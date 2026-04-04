@@ -87,7 +87,7 @@ export function detectTabStopsFromAsm(dialect: Dialect, tabSize: number, text: s
   return asmTabStops;
 }
 
-export function detectTabSizeFromSource(text: string): number {
+export function detectTabSizeFromSource(text: string): number | undefined {
   const cols = new Map<number, number>();
   for (const line of text.split('\n')) {
     const match = line.match(/^(\s+)\S/);

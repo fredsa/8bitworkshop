@@ -3,10 +3,10 @@ import { Compartment, Extension, Facet } from "@codemirror/state";
 import { EditorView, highlightSpecialChars, highlightTrailingWhitespace, highlightWhitespace, keymap, lineNumbers } from "@codemirror/view";
 import { detectTabStopsFromAsm, Dialect } from "../common/tabdetect";
 import { getDialect } from "../common/toolutil";
-import { getCurrentEditorFilename, getCurrentMainFilename, platform } from "./ui";
+import { getCurrentEditorFilename, platform } from "./ui";
 import { isMobileDevice } from "./views/baseviews";
 import { debugHighlightTagsTooltip } from "./views/debug";
-import { tabExtension, AsmTabStops } from "./views/tabs";
+import { AsmTabStops, tabExtension } from "./views/tabs";
 
 declare var bootbox;
 declare var $: JQueryStatic;

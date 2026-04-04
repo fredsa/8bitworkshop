@@ -85,9 +85,9 @@ const defaultSettings: EditorSettings = {
 
 export function loadSettings(): EditorSettings {
   try {
-    var stored = localStorage.getItem(SETTINGS_KEY);
+    const stored = localStorage.getItem(SETTINGS_KEY);
     if (stored) {
-      var settings = { ...defaultSettings, ...JSON.parse(stored) };
+      const settings = { ...defaultSettings, ...JSON.parse(stored) };
       return settings;
     }
   } catch (e) { }
@@ -96,8 +96,8 @@ export function loadSettings(): EditorSettings {
 
 export function saveAndApplySettings(isAsm: boolean, settings: EditorSettings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  var effects = compartmentValues.map(([c, fn]) => c.reconfigure(fn(settings, isAsm)));
-  for (var editor of editors) {
+  const effects = compartmentValues.map(([c, fn]) => c.reconfigure(fn(settings, isAsm)));
+  for (const editor of editors) {
     editor.dispatch({ effects });
   }
 }
@@ -121,9 +121,12 @@ export function settingsExtensions(isAsm: boolean, settings: EditorSettings): Ex
   return compartmentValues.map(([c, fn]) => c.of(fn(settings, isAsm)));
 }
 
+export function isAsmDialect(dialect: Dialect): boolean {
+  return dialect === '6502' || dialect === 'z80' || dialect === '6809';
+}
+
 export function detectTabStops(dialect: Dialect, tabSize: number, text: string) {
-  var isAsm = dialect === '6502' || dialect === 'z80' || dialect === '6809';
-  if (isAsm) {
+  if (isAsmDialect(dialect)) {
     return detectTabStopsFromAsm(dialect, tabSize, text);
   } else {
     return {};
@@ -131,11 +134,11 @@ export function detectTabStops(dialect: Dialect, tabSize: number, text: string) 
 }
 
 export function detectAndApplyTabStops(filename: string, text: string) {
-  var tool = platform.getToolForFilename(filename);
-  var dialect = getDialect(tool);
-  var settings = loadSettings();
+  const tool = platform.getToolForFilename(filename);
+  const dialect = getDialect(tool);
+  const isAsm = isAsmDialect(dialect);
+  const settings = loadSettings();
   settings.asmTabStops = detectTabStops(dialect, settings.tabSize, text);
-  var isAsm = dialect === '6502' || dialect === 'z80' || dialect === '6809';
   saveAndApplySettings(isAsm, settings);
 }
 
@@ -144,7 +147,7 @@ export function openSettings() {
   const text = editor.state.doc.toString();
   const tool = platform.getToolForFilename(getCurrentEditorFilename());
   const dialect = getDialect(tool);
-  const isAsm = dialect === '6502' || dialect === 'z80' || dialect === '6809';
+  const isAsm = isAsmDialect(dialect);
 
   function updateTabStopRow() {
     if (isAsm) {
@@ -174,7 +177,7 @@ export function openSettings() {
   }
 
   let settings = loadSettings();
-  var dialog = bootbox.dialog({
+  const dialog = bootbox.dialog({
     onEscape: true,
     // title: "Settings",
     message: `<form id="settingsForm" onsubmit="return false">

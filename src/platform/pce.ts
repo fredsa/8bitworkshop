@@ -1,5 +1,4 @@
-import { DisasmLine, Platform, Preset } from "../common/baseplatform";
-import { getToolForFilename_6502 } from "../common/toolutil";
+import { DisasmLine, Platform, Preset, getToolForFilename_6502 } from "../common/baseplatform";
 import { Keys, PLATFORMS, RasterVideo } from "../common/emu";
 
 const PCE_PRESETS = [

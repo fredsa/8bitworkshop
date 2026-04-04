@@ -1,6 +1,5 @@
 import { GameBoyMachine } from "../machine/gb";
-import { BaseMachinePlatform, cpuStateToLongString_SM83, Platform, Preset, dumpStackToString, isDebuggable, EmuState, DisasmLine } from "../common/baseplatform";
-import { getToolForFilename_z80 } from "../common/toolutil";
+import { BaseMachinePlatform, cpuStateToLongString_SM83, getToolForFilename_z80, Platform, Preset, dumpStackToString, isDebuggable, EmuState, DisasmLine } from "../common/baseplatform";
 import { PLATFORMS } from "../common/emu";
 import { disassembleSM83 } from "../common/cpu/disasmSM83";
 

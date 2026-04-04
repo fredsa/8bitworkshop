@@ -5,9 +5,10 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { getToolForFilename_6502, getToolForFilename_6809, getToolForFilename_z80 } from '../common/baseplatform';
 import { formatText } from '../common/format-asm';
 import { AsmTabStops, detectTabSizeFromSource, detectTabStopsFromAsm, Dialect } from '../common/tabdetect';
-import { getDialect, getToolForFilename_6502, getToolForFilename_6809, getToolForFilename_z80 } from '../common/toolutil';
+import { getDialect } from '../common/toolutil';
 import { getBasePlatform, isProbablyBinary } from '../common/util';
 import { PLATFORM_PARAMS } from '../worker/platforms';
 

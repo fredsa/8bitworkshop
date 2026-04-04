@@ -1,7 +1,6 @@
 
 import { Atari7800 } from "../machine/atari7800";
-import { Platform, Base6502MachinePlatform } from "../common/baseplatform";
-import { getToolForFilename_6502 } from "../common/toolutil";
+import { Platform, Base6502MachinePlatform, getToolForFilename_6502 } from "../common/baseplatform";
 import { PLATFORMS } from "../common/emu";
 
 var Atari7800_PRESETS = [

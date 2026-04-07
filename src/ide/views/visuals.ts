@@ -2,7 +2,7 @@
 import { errorMarkers } from "./gutter";
 
 import { SelectionRange, StateEffect, StateField } from "@codemirror/state";
-import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView, showTooltip, Tooltip, WidgetType } from "@codemirror/view";
 
 // Highlight program counter line.
 const currentPcEffect = StateEffect.define<number | null>();
@@ -113,49 +113,38 @@ const errorMessageField = StateField.define<DecorationSet>({
   provide: f => EditorView.decorations.from(f),
 });
 
-// Decorator widget to show values.
-class ShowValueWidget extends WidgetType {
-  constructor(readonly value: string) { super() }
-
-  toDOM() {
-    let div = document.createElement("div");
-    div.textContent = `${this.value}`;
-    div.style.cssText = `
-      color: #ccccff;
-      background-color: #000066;
-      display: inline-block;
-    `;
-    div.className = "cm-line";
-    return div
-  }
-}
-
 // Effect to pass the position and value to the state.
 const showValueEffect = StateEffect.define<{ range: SelectionRange, val: any } | null>();
 
-const showValueDecorationField = StateField.define({
-  create() { return Decoration.none },
-  update(decorations, tr) {
-    decorations = decorations.map(tr.changes);
-
+const showValueTooltipField = StateField.define<Tooltip | null>({
+  create() { return null },
+  update(tooltip, tr) {
     for (let e of tr.effects) {
       if (e.is(showValueEffect)) {
         if (e.value === null || !e.value) {
-          return Decoration.none;
+          return null;
         }
-        const line = tr.state.doc.lineAt(e.value.range.to);
-        return Decoration.set([
-          Decoration.widget({
-            widget: new ShowValueWidget(e.value.val),
-            block: true,
-            side: 1 // Appears after the line
-          }).range(line.to)
-        ])
+        return {
+          pos: Math.floor((e.value.range.from + e.value.range.to) / 2),
+          above: true,
+          arrow: true,
+          create() {
+            let dom = document.createElement("div");
+            dom.className = "cm-showvalue-tooltip";
+            dom.textContent = e.value!.val;
+
+            return { dom };
+          }
+        };
       }
     }
-    return decorations;
+    // Dismiss on doc changes or selection changes
+    if (tooltip && (tr.docChanged || tr.selection)) {
+      return null;
+    }
+    return tooltip;
   },
-  provide: f => EditorView.decorations.from(f),
+  provide: f => showTooltip.from(f),
 });
 
 // Error span decorations for inline column-range highlighting
@@ -250,7 +239,7 @@ export const currentPc = {
 
 export const showValue = {
   effect: showValueEffect,
-  field: showValueDecorationField,
+  field: showValueTooltipField,
 };
 
 export const errorSpans = {

@@ -38,4 +38,19 @@ export const editorTheme = EditorView.theme({
     "& .cm-lineNumbers .cm-gutterElement": {
         color: "#99cc99",
     },
+    ".cm-showvalue-tooltip": {
+        color: "#ddeeff",
+        backgroundColor: "#1e2a3a",
+        padding: "2px 8px",
+        borderRadius: "3px",
+        fontSize: "12px",
+        fontFamily: "monospace",
+        border: "1px solid #556677",
+        pointerEvents: "none",
+        width: "max-content",
+    },
+    ".cm-showvalue-tooltip .cm-tooltip-arrow:before": {
+        borderTopColor: "#556677",
+        borderBottomColor: "#556677",
+    },
 });

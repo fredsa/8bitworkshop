@@ -283,8 +283,13 @@ export class SourceEditor implements ProjectView {
   }
 
   inspectUnderCursor(update: ViewUpdate) {
-    // TODO: handle multi-select
-    const range = update.state.selection.main;
+    const selection = update.state.selection;
+    if (selection.ranges.length > 1) {
+      // Hide tooltip when there are multiple selections.
+      update.view.dispatch({ effects: showValue.effect.of(null) });
+      return;
+    }
+    const range = selection.main;
     const selectedText = update.state.sliceDoc(range.from, range.to).trim();
 
     var result;

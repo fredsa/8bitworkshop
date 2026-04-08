@@ -131,7 +131,8 @@ const showValueTooltipField = StateField.define<Tooltip | null>({
           create() {
             let dom = document.createElement("div");
             dom.className = "cm-showvalue-tooltip";
-            dom.textContent = e.value!.val;
+            dom.textContent = e.value.val;
+            dom.innerHTML = dom.innerHTML.replace(/^([0-9a-fA-F]{4}):/g, "<span class='cm-inspect-value'>$1</span>:");
 
             return { dom };
           }

@@ -48,9 +48,13 @@ export const editorTheme = EditorView.theme({
         border: "1px solid #556677",
         pointerEvents: "none",
         width: "max-content",
+        whiteSpace: "pre",
     },
     ".cm-showvalue-tooltip .cm-tooltip-arrow:before": {
         borderTopColor: "#556677",
         borderBottomColor: "#556677",
+    },
+    ".cm-showvalue-tooltip .cm-inspect-value": {
+        color: "red",
     },
 });

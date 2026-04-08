@@ -423,11 +423,14 @@ export function inspectSymbol(platform: Platform, sym: string): string {
   var b = platform.readAddress(addr);
   // don't show 2 bytes if there's a symbol at the next address
   if (addr2sym && addr2sym[addr + 1] != null) {
-    return "$" + hex(addr, 4) + " = $" + hex(b, 2) + " (" + b + " decimal)"; // unsigned
+    return hex(addr, 4) + ": " + hex(b, 2) +
+      "   ; " + b + " decimal"; // unsigned
   } else {
     let b2 = platform.readAddress(addr + 1);
     let w = b | (b2 << 8);
-    return "$" + hex(addr, 4) + " = $" + hex(b, 2) + " $" + hex(b2, 2) + " (" + ((w << 16) >> 16) + " decimal)"; // signed
+    return hex(addr, 4) + ": " + hex(b, 2) + " " + hex(b2, 2) +
+      "   ; $" + hex(b2, 2) + hex(b, 2) + "\n" +
+      " ".repeat(14) + "; " + ((w << 16) >> 16) + " decimal"; // signed
   }
 }
 

@@ -524,6 +524,7 @@ div.asset_block.asset_highlight {
   padding: 1px 4px;
   border-radius: 4px;
   background: rgba(153, 204, 153, 0.15);
+  user-select: none;  
 }
 .asset_linenos:hover {
   text-decoration: underline;

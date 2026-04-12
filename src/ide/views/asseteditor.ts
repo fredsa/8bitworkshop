@@ -319,7 +319,7 @@ export class AssetEditorView implements ProjectView, pixed.EditorContext {
     if (body.length === 0) {
       var filediv = newDiv(this.maindiv, 'asset_file');
       var header = newDiv(filediv, 'asset_file_header').text(fileid);
-      body = newDiv(filediv).attr('id', divid).addClass('disable-select');
+      body = newDiv(filediv).attr('id', divid);
     }
     return body;
   }

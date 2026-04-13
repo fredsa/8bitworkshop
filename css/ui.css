@@ -606,8 +606,10 @@ div.asset_editor {
   flex-direction:column;
   align-items:center;
 }
+div.asset_editor canvas {
+  margin: 8px 0;
+}
 div.asset_toolbar {
-  padding:8px;
   margin:8px;
 }
 .control-insns {

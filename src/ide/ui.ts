@@ -34,6 +34,11 @@ declare var $: JQueryStatic; // use browser jquery
 
 // query string
 
+interface LocalfsMetadata {
+  platform_id?: string;
+  mainPath?: string;
+}
+
 interface UIQueryString {
   platform?: string;
   options?: string;
@@ -61,6 +66,7 @@ export var qs = decodeQueryString(window.location.search || '?') as UIQueryStrin
 export var platform_id: string;	// platform ID string (platform)
 export var store_id: string;		// store ID string (repo || platform)
 export var repo_id: string;		// repository ID (repo)
+export var localfs_id: string;		// localfs ID (localfs)
 export var platform: Platform;		// emulator object
 export var current_project: CodeProject;	// current CodeProject object
 export var projectWindows: ProjectWindows;	// window manager
@@ -77,6 +83,7 @@ var userPaused: boolean;		// did user explicitly pause?
 var current_output: any;     // current ROM (or other object)
 var current_preset: Preset;	// current preset object (if selected)
 var store: LocalForage;			// persistent store
+var currentDirHandle: any;		// localfs directory handle (if any)
 
 const isElectron = parseBool(qs.electron);
 const isEmbed = parseBool(qs.embed);
@@ -203,8 +210,21 @@ class UserPrefs {
         localStorage.setItem("__lastrepo_" + platform_id, repo_id);
       else
         localStorage.removeItem("__lastrepo_" + platform_id);
+      if (localfs_id && platform_id && !isElectron) {
+        localStorage.setItem("__lastlocalfs_" + platform_id, localfs_id);
+        // Persist mainPath into localfs metadata so reopening lands on the same file.
+        var localkey = '__localfs__' + localfs_id;
+        var existing: LocalfsMetadata = {};
+        try { existing = JSON.parse(localStorage.getItem(localkey)) || {}; } catch (e) { /* ignore */ }
+        existing.platform_id = platform_id;
+        existing.mainPath = id;
+        localStorage.setItem(localkey, JSON.stringify(existing));
+      } else {
+        localStorage.removeItem("__lastlocalfs_" + platform_id);
+      }
       localStorage.setItem("__lastplatform", platform_id);
-      localStorage.setItem("__lastid_" + store_id, id);
+      if (!localfs_id)
+        localStorage.setItem("__lastid_" + store_id, id);
     }
   }
   unsetLastPreset() {
@@ -221,6 +241,9 @@ class UserPrefs {
   }
   getLastRepoID(platform: string) {
     return hasLocalStorage && !isEmbed && platform && localStorage.getItem("__lastrepo_" + platform);
+  }
+  getLastLocalfsID(platform: string) {
+    return hasLocalStorage && !isEmbed && platform && localStorage.getItem("__lastlocalfs_" + platform);
   }
   shouldCompleteTour() {
     return hasLocalStorage && !isEmbed && !localStorage.getItem("8bitworkshop.hello");
@@ -499,9 +522,12 @@ async function loadProject(preset_id: string) {
 }
 
 function reloadProject(id: string) {
-  // leave repository == '/'
+  // '/' == leave repository or localfs
   if (id == '/') {
-    qs = { repo: '/' };
+    if (localfs_id) qs = { localfs: '/' };
+    else qs = { repo: '/' };
+  } else if (id.startsWith('localfs://')) {
+    qs = { localfs: id.substring('localfs://'.length) };
   } else if (id.indexOf('://') >= 0) {
     var urlparse = parseGithubURL(id);
     if (urlparse) {
@@ -657,10 +683,43 @@ function handleFileUpload(files: FileList) {
   if (files) uploadNextFile();
 }
 
+function _forgetLocalDirectory(e) {
+  if (!localfs_id) {
+    alertError("You are not in a local file system directory. Open one from the File menu.");
+    return;
+  }
+  var id = localfs_id;
+  bootbox.prompt("<p>Are you sure you want to forget this local directory (" + DOMPurify.sanitize(id) + ")?</p><p>Files on disk will not be touched.</p><p>Type FORGET to proceed.</p>", async (yes) => {
+    if (!yes || yes.trim().toUpperCase() !== "FORGET") return;
+    var storekey = '__localfs__' + id;
+    if (hasLocalStorage) {
+      localStorage.removeItem(storekey);
+    }
+    try {
+      await localforage.dropInstance({ name: storekey });
+    } catch (err) {
+      console.warn('failed to drop localfs instance', err);
+    }
+    gotoNewLocation(false, { localfs: '/' });
+  });
+}
+
+async function pickLocalfsMainFile(dirHandle: any): Promise<string | null> {
+  if (!platform || !platform.getDefaultExtensions) return null;
+  var extensions: string[] = platform.getDefaultExtensions();
+  if (!extensions.length) return null;
+  var names = await listLocalfsFilenames(dirHandle);
+  var matches = names.filter(name =>
+    extensions.some(ext => name.toLowerCase().endsWith(ext))
+  );
+  if (!matches.length) return null;
+  return matches[0];
+}
+
 async function _openLocalDirectory(e) {
   var pickerfn = window['showDirectoryPicker'];
   if (!pickerfn) {
-    alertError(`This browser can't open local files on your computer, yet. Try Chrome.`);
+    alertError(`This browser can't open directories on your local file system, yet. Try Chrome.`);
   }
   var dirHandle = await pickerfn();
   var repoid = dirHandle.name;
@@ -673,8 +732,32 @@ async function _openLocalDirectory(e) {
     version: 2.0
   });
   await lstore.setItem(storekey, fsdata);
+  // Pick a suitable main file by matching the platform's source extensions.
+  var mainFile = await pickLocalfsMainFile(dirHandle);
+  if (hasLocalStorage) {
+    var meta: LocalfsMetadata = { platform_id: platform_id };
+    if (mainFile) meta.mainPath = mainFile;
+    localStorage.setItem(storekey, JSON.stringify(meta));
+  }
   qs = { localfs: repoid };
+  if (mainFile) qs.file = mainFile;
   gotoNewLocation(true);
+}
+
+async function listLocalfsFilenames(dirHandle: any): Promise<string[]> {
+  var names: string[] = [];
+  try {
+    var iter = dirHandle.values();
+    while (true) {
+      var next = await iter.next();
+      if (next.done) break;
+      var entry = next.value;
+      if (entry.kind === 'file') names.push(entry.name);
+    }
+  } catch (e) {
+    console.warn('failed to enumerate local directory', e);
+  }
+  return names;
 }
 
 async function promptUser(message: string): Promise<string> {
@@ -695,6 +778,7 @@ async function getLocalFilesystem(repoid: string): Promise<ProjectFilesystem> {
   var fsdata: any = await lstore.getItem(storekey);
   var dirHandle = fsdata.handle as any;
   console.log(fsdata, dirHandle);
+  currentDirHandle = dirHandle;
   var granted = await dirHandle.queryPermission(options);
   console.log(granted);
   if (granted !== 'granted') {
@@ -859,18 +943,47 @@ function populateExamples(sel) {
   return files;
 }
 
+function getLocalDirs(): { [id: string]: LocalfsMetadata } {
+  var dirs: { [id: string]: LocalfsMetadata } = {};
+  if (!hasLocalStorage) return dirs;
+  for (var i = 0; i < localStorage.length; i++) {
+    var key = localStorage.key(i);
+    if (key.startsWith('__localfs__')) {
+      try {
+        var meta = JSON.parse(localStorage.getItem(key));
+        var id = key.substring('__localfs__'.length);
+        dirs[id] = meta || {};
+      } catch (e) { /* ignore malformed entries */ }
+    }
+  }
+  return dirs;
+}
+
 function populateRepos(sel) {
   if (hasLocalStorage && !isElectron) {
-    var n = 0;
     var repos = getRepos();
     if (repos) {
-      let optgroup = $("<optgroup />").attr('label', 'Repositories').appendTo(sel);
+      let optgroup;
       for (let repopath in repos) {
         var repo = repos[repopath];
-        if (repo.platform_id && getBasePlatform(repo.platform_id) == getBasePlatform(platform_id)) {
-          optgroup.append($("<option />").val(repo.url).text(repo.url.substring(repo.url.indexOf('/'))));
-        }
+        if (!repo.url) continue;
+        if (!repo.platform_id || getBasePlatform(repo.platform_id) != getBasePlatform(platform_id)) continue;
+        if (!optgroup) optgroup = $("<optgroup />").attr('label', 'GitHub Repositories').appendTo(sel);
+        optgroup.append($("<option />").val(repo.url).text(repo.url.substring(repo.url.indexOf('/'))));
       }
+    }
+  }
+}
+
+function populateLocalDirs(sel) {
+  if (hasLocalStorage && !isElectron) {
+    var dirs = getLocalDirs();
+    let optgroup;
+    for (let id in dirs) {
+      var meta = dirs[id];
+      if (!meta.platform_id || getBasePlatform(meta.platform_id) != getBasePlatform(platform_id)) continue;
+      if (!optgroup) optgroup = $("<optgroup />").attr('label', 'Local File System').appendTo(sel);
+      optgroup.append($("<option />").val('localfs://' + id).text(id));
     }
   }
 }
@@ -889,6 +1002,16 @@ async function populateFiles(sel: JQuery, category: string, prefix: string, foun
   }
 }
 
+async function populateLocalfsFiles(sel: JQuery) {
+  if (!currentDirHandle) return;
+  var names = await listLocalfsFilenames(currentDirHandle);
+  let optgroup;
+  for (var name of names) {
+    if (!optgroup) optgroup = $("<optgroup />").attr('label', localfs_id).appendTo(sel);
+    optgroup.append($("<option />").val(name).text(name).attr('selected', (name == current_project.mainPath) ? 'selected' : null));
+  }
+}
+
 function finishSelector(sel) {
   sel.css('visibility', 'visible');
   // create option if not selected
@@ -900,17 +1023,23 @@ function finishSelector(sel) {
 
 async function updateSelector() {
   var sel = $("#preset_select").empty();
-  if (!repo_id) {
-    // normal: populate repos, examples, and local files
-    populateRepos(sel);
-    var foundFiles = populateExamples(sel);
-    await populateFiles(sel, "Local Files", "", foundFiles);
-    finishSelector(sel);
-  } else {
+  if (repo_id) {
     sel.append($("<option />").val('/').text('Leave Repository'));
     $("#repo_name").text(getFilenameForPath(repo_id) + '/').show();
     // repo: populate all files
     await populateFiles(sel, repo_id, "", {});
+    finishSelector(sel);
+  } else if (localfs_id) {
+    sel.append($("<option />").val('/').text('Leave local file system'));
+    $("#repo_name").text(localfs_id + '/').show();
+    // localfs: list files from the picked local directory.
+    await populateLocalfsFiles(sel);
+    finishSelector(sel);
+  } else {
+    var foundFiles = populateExamples(sel);
+    populateRepos(sel);
+    populateLocalDirs(sel);
+    await populateFiles(sel, "Browser Projects", "", foundFiles);
     finishSelector(sel);
   }
   // set click handlers
@@ -1526,6 +1655,7 @@ function setupDebugControls() {
   $("#item_new_file").click(_createNewFile);
   $("#item_upload_file").click(_uploadNewFile);
   $("#item_open_directory").click(_openLocalDirectory);
+  $("#item_localfs_forget").click(_forgetLocalDirectory);
   $("#item_github_login").click(_loginToGithub);
   $("#item_github_logout").click(_logoutOfGithub);
   $("#item_github_import").click(_importProjectFromGithub);
@@ -1991,7 +2121,7 @@ function installGAHooks() {
         gaEvent('menu', e.target.id);
       }
     });
-    gaPageView(location.pathname + '?platform=' + platform_id + (repo_id ? ('&repo=' + repo_id) : ('&file=' + qs.file)));
+    gaPageView(location.pathname + '?platform=' + platform_id + (repo_id ? ('&repo=' + repo_id) : localfs_id ? ('&localfs=' + localfs_id) : ('&file=' + qs.file)));
   }
 }
 
@@ -2005,9 +2135,9 @@ async function startPlatform() {
   const PRESETS = platform.getPresets ? platform.getPresets() : [];
   if (!qs.file) {
     // try to load last file (redirect)
-    var lastid = userPrefs.getLastPreset();
-    // load first preset file, unless we're in a repo
-    var defaultfile = lastid || (repo_id ? null : PRESETS[0].id);
+    var lastid = localfs_id ? null : userPrefs.getLastPreset();
+    // load first preset file, unless we're in a repo or localfs
+    var defaultfile = lastid || (repo_id || localfs_id ? null : PRESETS[0].id);
     qs.file = defaultfile || 'DEFAULT';
     if (!defaultfile) {
       alertError("There is no default main file for this project. Try selecting one from the pulldown.");
@@ -2166,9 +2296,12 @@ export function getPlatformAndRepo() {
   // lookup repository for this platform (TODO: enable cross-platform repos)
   platform_id = qs.platform || userPrefs.getLastPlatformID();
   repo_id = qs.repo;
+  localfs_id = qs.localfs;
   // only look at cached repo_id if file= is not present, so back button works
   if (!qs.repo && !qs.file)
     repo_id = userPrefs.getLastRepoID(platform_id);
+  if (qs.localfs == null && !qs.file)
+    localfs_id = userPrefs.getLastLocalfsID(platform_id);
   // are we in a repo?
   if (hasLocalStorage && repo_id && repo_id !== '/') {
     var repo = getRepos()[repo_id];
@@ -2186,6 +2319,20 @@ export function getPlatformAndRepo() {
   } else {
     repo_id = '';
     delete qs.repo;
+  }
+  // are we in a localfs?
+  if (hasLocalStorage && localfs_id && localfs_id !== '/') {
+    var localmeta = getLocalDirs()[localfs_id];
+    qs.localfs = localfs_id;
+    if (localmeta) {
+      if (localmeta.platform_id && !qs.platform)
+        qs.platform = platform_id = localmeta.platform_id;
+      if (localmeta.mainPath && !qs.file)
+        qs.file = localmeta.mainPath;
+    }
+  } else {
+    localfs_id = '';
+    delete qs.localfs;
   }
   // add default platform
   if (!platform_id) {
@@ -2229,7 +2376,7 @@ async function loadAndStartPlatform() {
     var module = await importPlatform(getRootBasePlatform(platform_id));
     console.log("starting platform", platform_id); // loaded required <platform_id>.js file
     await startPlatform();
-    projectWindows.titlePrefix = document.title + " [" + platform_id + "] - " + (repo_id ? ('[' + repo_id + '] - ') : '');
+    projectWindows.titlePrefix = document.title + " [" + platform_id + "] - " + (repo_id ? ('[' + repo_id + '] - ') : localfs_id ? ('[' + localfs_id + '] - ') : '');
     projectWindows.updateTitle(projectWindows.getActiveID() || current_project.mainPath);
   } catch (e) {
     console.log(e);

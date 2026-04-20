@@ -37,9 +37,6 @@ body {
     <ul class="dropdown-menu dropdown-menu-left" aria-labelledby="dropdownMenuButton" style="left:auto">
       <li><a class="dropdown-item" href="javascript:void(0)" id="item_new_file">New Project...</a></li>
       <li><a class="dropdown-item" href="javascript:void(0)" id="item_upload_file">Upload...</a></li>
-      <!--
-      -->
-        <li><a class="dropdown-item" href="javascript:void(0)" id="item_open_directory">Open Local Directory...</a></li>
       <hr>
       <li class="dropdown dropdown-submenu">
         <a tabindex="-1" href="javascript:void(0)">File</a>
@@ -58,7 +55,7 @@ body {
         </ul>
       </li>
       <li class="dropdown dropdown-submenu">
-        <a tabindex="-1" href="javascript:void(0)">Sync</a>
+        <a tabindex="-1" href="javascript:void(0)">GitHub Sync</a>
         <ul class="dropdown-menu">
           <li><a class="dropdown-item" href="javascript:void(0)" id="item_github_login">Sign in to GitHub...</a></li>
           <li><a class="dropdown-item" href="javascript:void(0)" id="item_github_logout">Log out</a></li>
@@ -70,6 +67,13 @@ body {
           <li><a class="dropdown-item" href="javascript:void(0)" id="item_github_push">Push Changes to Repository...</a></li>
           <hr>
           <li><a class="dropdown-item" href="javascript:void(0)" id="item_repo_delete">Delete Local Repository...</a></li>
+        </ul>
+      </li>
+      <li class="dropdown dropdown-submenu">
+        <a tabindex="-1" href="javascript:void(0)">Local File System</a>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="javascript:void(0)" id="item_open_directory">Open Local Directory...</a></li>
+          <li><a class="dropdown-item" href="javascript:void(0)" id="item_localfs_forget">Forget Local Directory...</a></li>
         </ul>
       </li>
       <li class="dropdown dropdown-submenu">
